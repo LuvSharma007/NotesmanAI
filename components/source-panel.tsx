@@ -131,10 +131,10 @@ export function SourcePanel({onSourceSelect}:SourcePanelProps){
 
         {/* Upload Area */}
         <label htmlFor="file-upload" className="cursor-pointer">
-          <div className="flex flex-col items-center justify-center py-3 border-2 border-dashed border-muted-foreground/25 rounded-lg hover:border-primary/50 transition-colors">
+          <div className="flex flex-col items-center justify-center py-3 border-2 border-dashed border-muted-foreground/25 rounded-lg">
             {loading ? <Spinner className="h-6 w-6" /> : <Upload className="h-6 w-6 text-muted-foreground mb-1" />}
             <p className="text-xs text-foreground text-center">
-              Drop files or click to upload
+              {sources.length >= 1 ? "Remove existing file to upload new one" : "Drop file or click to upload"}
             </p>
             <p className="text-xs text-muted-foreground">PDF, DOCX, TXT</p>
           </div>
@@ -142,7 +142,8 @@ export function SourcePanel({onSourceSelect}:SourcePanelProps){
         <input
           id="file-upload"
           type="file"
-          multiple
+          multiple={false}
+          disabled={sources.length >= 1}
           accept=".pdf,.docx,.txt"
           onChange={handleFileUpload}
           className="hidden"
@@ -174,7 +175,7 @@ export function SourcePanel({onSourceSelect}:SourcePanelProps){
                   variant="ghost"
                   size="sm"
                   onClick={(e) => { e.stopPropagation(); removeSource(source.name) }}
-                  className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive flex items-center justify-center"
+                  className="h-6 w-6 p-0 text-muted-foreground flex items-center justify-center"
                 >
                   {deleting.includes(source.name) ? <Spinner className="h-3 w-3" /> : <X className="h-3 w-3" />}
                 </Button>

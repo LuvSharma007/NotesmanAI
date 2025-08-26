@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, Bot, User, MessageSquare, ArrowRight } from "lucide-react"
+import axios from "axios"
 
 interface Message {
   id: string
@@ -16,22 +17,41 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  selectedSource?: { name: string } | null
+  selectedSource?: { id:string; name: string } | null
 }
 
 export function ChatInterface({ selectedSource }: ChatInterfaceProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content:
-        "Hello! I'm ready to help you analyze your sources. Upload some documents and ask me questions about them.",
-      sender: "ai",
-      timestamp: new Date(),
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+
+//   useEffect(() => {
+//   const fetchMessages = async () => {
+//     if (!selectedSource) return;
+
+//     try {
+//       const res = await axios.get("/api/getChatMessages", {
+//         params: { fileId: selectedSource.id },
+//       });
+
+//       if (res.data.success) {
+//         const formatted = res.data.messages.map((msg: any) => ({
+//           id: msg._id,
+//           content: msg.content,
+//           sender: msg.role === "assistant" ? "ai" : "user",
+//           timestamp: new Date(msg.createdAt),
+//         }));
+//         setMessages(formatted);
+//       }
+//     } catch (err) {
+//       console.error("Failed to load messages:", err);
+//     }
+//   };
+
+//   fetchMessages();
+// }, [selectedSource]);
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -40,33 +60,53 @@ export function ChatInterface({ selectedSource }: ChatInterfaceProps) {
   }, [messages])
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return
+    if (!inputValue.trim()) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputValue,
-      sender: "user",
-      timestamp: new Date(),
-    }
+    const userMessage: Message = { id: Date.now().toString(), content: inputValue, sender: "user", timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue("");
+    setIsLoading(true);
 
-    setMessages((prev) => [...prev, userMessage])
-    setInputValue("")
-    setIsLoading(true)
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: inputValue, fileId: selectedSource?.id }),
+      });
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        content: selectedSource
-          ? `Based on "${selectedSource.name}", I can help you with that. ${inputValue.includes("summarize") ? "Here's a summary of the key points from your document..." : "Let me analyze the content and provide insights..."}`
-          : "Please upload a source document first so I can provide specific insights based on your content.",
-        sender: "ai",
-        timestamp: new Date(),
+      if (!res.body) throw new Error("No response body");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let aiText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        aiText += decoder.decode(value, { stream: true });
+
+        // Optional: show partial streaming text in UI
+        setMessages(prev => [
+          ...prev.filter(m => m.sender !== "ai"),
+          { id: "ai-stream", content: aiText, sender: "ai", timestamp: new Date() },
+        ]);
       }
-      setMessages((prev) => [...prev, aiResponse])
-      setIsLoading(false)
-    }, 1000)
-  }
+
+      // Final AI message
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== "ai-stream"),
+        { id: Date.now().toString(), content: aiText, sender: "ai", timestamp: new Date() },
+      ]);
+    } catch (err) {
+      setMessages(prev => [
+        ...prev,
+        { id: Date.now().toString(), content: "Error: " + (err as any).message, sender: "ai", timestamp: new Date() },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -77,7 +117,7 @@ export function ChatInterface({ selectedSource }: ChatInterfaceProps) {
 
   return (
     <div className="flex-1 flex flex-col h-178 ">
-      <Card className="flex-1 flex flex-col ml-5 border-border">
+      <Card className="flex-1 flex flex-col ml-5 border-border scroll-auto">
         <CardHeader className="border-b border-border">
           <CardTitle className="flex items-center space-x-2">
             <MessageSquare className="h-5 w-5 text-primary" />

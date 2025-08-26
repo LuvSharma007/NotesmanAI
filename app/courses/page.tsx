@@ -17,10 +17,10 @@ const courseSelect = () => {
             <CardHeader className="pb-3">
               <div className="relative mx-auto h-48 w-full overflow-hidden rounded-lg">
                 <Image src="https://hiteshchoudhary.com/images/nodejs-udemy.jpg"
+                priority={false}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 alt="Web Development Course"
                 fill
-                priority={false}
                 className="object-cover" />
               </div>
               <h3 className="mt-6 text-xl font-medium transition">Nodejs Basic to Advance</h3>
@@ -42,10 +42,10 @@ const courseSelect = () => {
             <CardHeader className="pb-3">
               <div className="relative mx-auto h-48 w-full overflow-hidden rounded-lg">
                 <Image src="https://hiteshchoudhary.com/images/python-udemy.jpg"
+                priority={false}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 alt="Data Science Course"
                 fill
-                priority={false}
                 className="object-cover" />
               </div>
               <h3 className="mt-6 text-xl font-medium">Data Science & Analytics With Python</h3>

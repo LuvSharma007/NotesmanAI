@@ -41,7 +41,7 @@ export default function HeroSection() {
                                         asChild>
                                         <Link href="#">
                                             <Rocket className="relative size-4" />
-                                            <span className="text-nowrap">Become Notesman</span>
+                                            <span className="text-nowrap">Be a Notesman</span>
                                         </Link>
                                     </Button>
                                 </div>
