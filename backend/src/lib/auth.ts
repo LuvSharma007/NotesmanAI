@@ -1,0 +1,45 @@
+import { betterAuth } from "better-auth";
+import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { username } from "better-auth/plugins";
+import { MongoClient } from 'mongodb'
+
+const mongoUri = process.env.MONGODB_URI
+const mongodbName = process.env.MONGODB_NAME
+const googleClientId = process.env.GOOGLE_CLIENT_ID
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
+
+if(!mongoUri || !mongodbName || !googleClientId || !googleClientSecret){
+    throw new Error('Missing MongoDB Environment variables')
+}
+
+const mongodb = new MongoClient(mongoUri).db('NotesmanAI')
+
+export const auth = betterAuth({
+    database: mongodbAdapter(mongodb),
+    baseURL:process.env.BETTER_AUTH_URL,
+
+    user:{
+        additionalFields:{
+            username:{
+                type:"string",
+                required:false,
+                unique:true
+            }
+        }
+    },
+    
+    emailAndPassword:{
+        enabled:true
+    },
+    plugins:[
+        username()
+    ],
+    socialProviders: {
+        google: { 
+            prompt: "select_account",
+            clientId: process.env.GOOGLE_CLIENT_ID as string, 
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
+        }, 
+    },
+    trustedOrigins: ["http://localhost:3000", "http://localhost:4000"],
+});
