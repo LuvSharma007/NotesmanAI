@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { username } from "better-auth/plugins";
 import { MongoClient } from 'mongodb'
+import { resend } from "./resend.js";
 
 const mongoUri = process.env.MONGODB_URI
 const mongodbName = process.env.MONGODB_NAME
@@ -17,20 +18,21 @@ const mongodb = new MongoClient(mongoUri).db('NotesmanAI')
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
     baseURL:process.env.BETTER_AUTH_URL,
-
-    user:{
-        additionalFields:{
-            username:{
-                type:"string",
-                required:false,
-                unique:true
-            }
-        }
-    },
     
-    emailAndPassword:{
-        enabled:true
+    emailAndPassword: {
+        enabled: true,
+        sendResetPassword: async ({ user, url, token }) => {
+                        
+            await resend.emails.send({
+                from: "onboarding@resend.dev",
+                to: user.email,
+                subject: "Reset Your Password",
+                text: `Click the link to reset your password: ${url}`
+            })
+        },
+        requireEmailVerification:false
     },
+
     plugins:[
         username()
     ],
