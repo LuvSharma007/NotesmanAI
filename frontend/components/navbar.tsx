@@ -28,7 +28,7 @@ const Navbar = () => {
     { name: 'Chat', href: '/c' },
     { name: 'Features', href: "/#features" },
     { name: 'Pricing', href: '/#pricing' },
-    { name: 'ContactUs', href: '/contact-us' },
+    { name: 'ContactUs', href: '/contactUs' },
   ]
   const [session,setSession]= useState<any>(null);
   const [isPending,setIsPending] = useState(true);

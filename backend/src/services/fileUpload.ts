@@ -1,9 +1,6 @@
 import {v2 as cloudinary} from "cloudinary"
 import streamifier from 'streamifier'
 
-console.log("cloud_name:",process.env.CLOUDINARY_CLOUD_NAME);
-console.log("api_key:",process.env.CLOUDINARY_API_KEY);
-console.log("api_secret:",process.env.CLOUDINARY_SECRET_KEY);
 
 cloudinary.config({
     cloud_name:process.env.CLOUDINARY_CLOUD_NAME,
@@ -13,11 +10,14 @@ cloudinary.config({
 
 export const uploadTOCloudinary = (file:Express.Multer.File)=>{
     return new Promise((resolve,reject)=>{
-        const stream = cloudinary.uploader.upload_stream({folder:"uploads"},(err,result)=>{
+        const stream = cloudinary.uploader.upload_stream({
+            folder:"uploads",
+            resource_type:"auto",
+            timeout:120000,   //120 seconds
+        },(err,result)=>{
             if(err)return reject(err);
             resolve(result)
         });
-        console.log("File stream",stream);
         
         streamifier.createReadStream(file.buffer).pipe(stream)
     })

@@ -8,6 +8,7 @@ export interface IFile extends Document{
     qdrantCollection:string
     url:string
     publicId:string
+    status:string
 }
 
 const fileSchema:Schema<IFile> = new Schema({
@@ -25,8 +26,7 @@ const fileSchema:Schema<IFile> = new Schema({
         required:true
     },
     qdrantCollection:{
-        type:String,
-        required:true
+        type:String,    
     },
     url:{
         type:String,
@@ -34,6 +34,10 @@ const fileSchema:Schema<IFile> = new Schema({
     },
     publicId:{
         type:String,
+    },
+    status:{
+        type:String,
+        default:"pending"
     }
 })
 
