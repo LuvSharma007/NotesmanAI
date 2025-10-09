@@ -1,19 +1,13 @@
 "use client"
 
-import type React from "react"
+import React, { useRef, useState, useEffect } from "react"
 import { CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FileText, Upload, X } from "lucide-react"
-import { useRef, useState } from "react"
-
 import { toast } from "sonner"
-
-
 import { Spinner } from "./ui/shadcn-io/spinner"
-
 import { useParams } from "next/navigation"
-
 
 interface Source {
   id: string
@@ -28,25 +22,70 @@ interface SourcePanelProps {
   onSourceDelete?: (deletedId: string) => void
 }
 
-export function SourcePanel({ onSourceSelect, onSourceDelete}: SourcePanelProps) {
-
-  
+export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [sources , setSources] = useState<Source[]>([])
-  const [loading,setLoading] = useState(false)
+  const [sources, setSources] = useState<Source[]>([])
+  const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<string[]>([])
+  const [file, setFile] = useState<File | null>(null)
 
-  // const [selectedFile , setSelectedFile] = useState<File | null>(null)
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile) setFile(selectedFile)
+  }
 
+  // Auto upload when file changes
+  useEffect(() => {
+    if (!file) return
+    const uploadFile = async () => {
+      if (sources.length >= 3) {
+        toast.error("Remove an existing file to upload a new one.")
+        return
+      }
 
+      try {
+        setLoading(true)
+        const formData = new FormData()
+        formData.append("file", file)
+        console.log("Before request");
+        
+        
+        // Example: Adjust this API endpoint to your backend route
+        const res = await fetch(`http://localhost:4000/api/v1/users/upload`, {
+          method: "POST",
+          body: formData,
+          credentials:"include"
+        })
+        console.log("After request",res);
+        
+        if (!res.ok) throw new Error("Upload failed")
 
-  
-  // console.log("Files of the user",files);
+        const data = await res.json()
 
-  // upload the file
-  
+        const newSource: Source = {
+          id: data.id || Date.now().toString(),
+          name: file.name,
+          type: file.name.split(".").pop()?.toLowerCase() as "pdf" | "docx" | "txt",
+          uploadDate: new Date().toISOString(),
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+        }
 
-   
+        setSources((prev) => [...prev, newSource])
+        toast.success("File uploaded successfully!")
+      } catch (err) {
+        console.error("Failed to upload file",err)
+        toast.error("Failed to upload file.")
+      } finally {
+        setLoading(false)
+        setFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = ""
+      }
+    }
+
+    uploadFile()
+  }, [file]) // runs automatically when file changes
+
   return (
     <div className="w-[280px] border-r border-border flex-shrink-0 rounded-2xl">
       {/* Header */}
@@ -57,23 +96,25 @@ export function SourcePanel({ onSourceSelect, onSourceDelete}: SourcePanelProps)
         <label htmlFor="file-upload" className="cursor-pointer">
           <div className="flex flex-col items-center justify-center py-4 border-2 border-dashed border-muted-foreground/25 rounded-lg hover:bg-muted/20 transition">
             {loading ? (
-          <Spinner className="h-6 w-6" />
-        ) : (
-          <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-        )}
-        <p className="text-xs text-foreground text-center">
-          {sources.length >= 3
-            ? "Remove existing file to upload new one"
-            : "Drop file or click to upload"}
-        </p>
-        <p className="text-xs text-muted-foreground">PDF, DOCX, TXT</p>
-        </div>
+              <Spinner className="h-6 w-6" />
+            ) : (
+              <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+            )}
+            <p className="text-xs text-foreground text-center">
+              {sources.length >= 3
+                ? "Remove existing file to upload new one"
+                : "Drop file or click to upload"}
+            </p>
+            <p className="text-xs text-muted-foreground">PDF, DOCX, TXT</p>
+          </div>
         </label>
-        <input id="file-upload" 
-        type="file"
-        className="hidden"
-        ref={fileInputRef}
-        // onChange={handleFileSelect}
+
+        <input
+          id="file-upload"
+          type="file"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleFileSelect}
         />
       </div>
 
@@ -114,15 +155,15 @@ export function SourcePanel({ onSourceSelect, onSourceDelete}: SourcePanelProps)
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
-                      // handleDeleteFile(source.id,source.name)
+                      // handleDeleteFile(source.id, source.name)
                     }}
                     className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
                   >
                     {deleting.includes(source.id) ? (
-                  <Spinner className="h-3 w-3" />
-                ) : (
-                  <X className="h-3 w-3" />
-                )}
+                      <Spinner className="h-3 w-3" />
+                    ) : (
+                      <X className="h-3 w-3" />
+                    )}
                   </Button>
                 </div>
               </CardContent>

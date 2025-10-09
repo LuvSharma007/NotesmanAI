@@ -26,8 +26,11 @@ app.get("/api/me", async (req, res) => {
 	return res.json(session);
 });
 
-
 app.use(express.json())
+import userRouter from "./routes/user.routes.js"
+
+app.use("/api/v1/users",userRouter)
+
 
 
 export default app;
