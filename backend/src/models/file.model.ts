@@ -1,5 +1,11 @@
 import mongoose, { Model, Schema } from "mongoose";
 
+export enum FileStatus{
+    Pending = "pending",
+    Processing = "processing",
+    Done = 'done'
+}
+
 export interface IFile extends Document{
     userId:mongoose.Types.ObjectId;
     fileName:string
@@ -8,7 +14,7 @@ export interface IFile extends Document{
     qdrantCollection:string
     url:string
     publicId:string
-    status:string
+    status:FileStatus
 }
 
 const fileSchema:Schema<IFile> = new Schema({
@@ -25,6 +31,10 @@ const fileSchema:Schema<IFile> = new Schema({
         type:String,
         required:true
     },
+    fileType:{
+        type:String,
+        required:true
+    },
     qdrantCollection:{
         type:String,    
     },
@@ -37,7 +47,8 @@ const fileSchema:Schema<IFile> = new Schema({
     },
     status:{
         type:String,
-        default:"pending"
+        enum:Object.values(FileStatus),
+        default:FileStatus.Pending
     }
 })
 

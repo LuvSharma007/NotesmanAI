@@ -8,7 +8,7 @@ export const uploadFile = async(req:Request,res:Response)=>{
 
         if(!file){
             return res.status(400).json({
-                success:false,
+                success:false,  
                 error:"No file Provided"
             })
         }
