@@ -40,6 +40,7 @@ export const uploadFile = async(req:Request,res:Response)=>{
         const userId = (req as any).user.id
         const qdrantCollection = `user_${userId}_${Date.now()}`
 
+        
         const fileSaved = await fileModel.create({
             userId,
             fileName:file.originalname,
@@ -62,7 +63,9 @@ export const uploadFile = async(req:Request,res:Response)=>{
 
         // // add a job to the queue
         console.log("Adding job to processing queue...");
-        
+
+        await fileModel.findByIdAndUpdate(fileSaved._id,{status:"processing"})
+
         const job = await fileProcessingQueue.add("file-processing-queue",{
             fileId: fileSaved._id.toString(),
             fileUrl: (fileSaved as any).url,

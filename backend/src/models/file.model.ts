@@ -1,10 +1,6 @@
 import mongoose, { Model, Schema } from "mongoose";
 
-export enum FileStatus{
-    Pending = "pending",
-    Processing = "processing",
-    Done = 'done'
-}
+
 
 export interface IFile extends Document{
     userId:mongoose.Types.ObjectId;
@@ -15,7 +11,7 @@ export interface IFile extends Document{
     qdrantCollection:string
     url:string
     publicId:string
-    status:FileStatus
+    status:string
 }
 
 const fileSchema:Schema<IFile> = new Schema({
@@ -52,8 +48,8 @@ const fileSchema:Schema<IFile> = new Schema({
     },
     status:{
         type:String,
-        enum:Object.values(FileStatus),
-        default:FileStatus.Pending
+        enum:['pending','processing','completed','failed'],
+        default:'pending'
     }
 })
 

@@ -37,9 +37,12 @@ await DB()
 const worker = new Worker('file-processing-queue',async (job:Job)=>{
     console.log('starting worker');
     let tempFilePath;
+    let fileId;
 
     try {
-        const {fileId ,publicId ,fileUrl,fileName , diskName , fileType, userId,qdrantCollection} = job.data;
+        const { publicId ,fileUrl,fileName , diskName , fileType, userId,qdrantCollection} = job.data;
+        fileId = job.data.fileId
+
 
         console.log(`Processing Job ${job.id} for file:${fileName}`);
         console.log("Downloading URL......");
@@ -131,6 +134,7 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
         return { message: 'File processed successfully' };
 
     } catch (error) {
+        await fileModel.findByIdAndUpdate(fileId,{status:"failed"})
          console.error("Worker job failed:", error);
         throw new Error("Error , worker is not working , LOL")        
     }finally {
@@ -145,9 +149,9 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
 )
 
 worker.on('completed', (job) => {
-  console.log(`✅ Job ${job.id} completed successfully.`);
+  console.log(`Job ${job.id} completed successfully.`);
 });
 
 worker.on('failed', (job, err) => {
-  console.error(`❌ Job ${job?.id} failed: ${err.message}`);
+  console.error(`Job ${job?.id} failed: ${err.message}`);
 });
