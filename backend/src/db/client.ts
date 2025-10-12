@@ -2,14 +2,17 @@ import * as mongoose from 'mongoose'
 
 import {MongoClient} from 'mongodb'
 
-const mongoUri = process.env.MONGODB_URI
-const mongodbName = process.env.MONGODB_NAME
-
-if(!mongoUri || !mongodbName){
-    throw new Error('Missing MongoDB Environment variables')
-}
-
 const DB = async ()=>{
+    const mongoUri = process.env.MONGODB_URI
+    const mongodbName = process.env.MONGODB_NAME
+    
+    console.log(`MonogDBUri:${process.env.MONGODB_URI}`);
+    console.log(`MonogDBName:${process.env.MONGODB_NAME}`);
+    
+    if(!mongoUri || !mongodbName){
+        throw new Error('Missing MongoDB Environment variables')
+    }
+    
     try {
         const conn = await mongoose.connect(`${mongoUri}/${mongodbName}`,{
             autoIndex:true

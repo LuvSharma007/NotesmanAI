@@ -1,9 +1,9 @@
-
 import fileModel from "../models/file.model.js";
 import { Request, Response } from "express";
 import uploadOnCloudinary from "../lib/cloudinary.js";
 import fs from 'fs'
-import path from "path";
+import { fileProcessingQueue } from "../bullmq/queues/upload.queue.js";
+
 
 export const uploadFile = async(req:Request,res:Response)=>{
     try {
@@ -43,10 +43,11 @@ export const uploadFile = async(req:Request,res:Response)=>{
         const fileSaved = await fileModel.create({
             userId,
             fileName:file.originalname,
+            diskName:file.filename,
             fileType:file.mimetype,
             fileSize:file.size,
             url:(uploadedFile as any).secure_url,
-            publicId:(uploadedFile as any).publicId,
+            publicId:(uploadedFile as any).public_id,
             qdrantCollection            
         })
 
@@ -59,13 +60,22 @@ export const uploadFile = async(req:Request,res:Response)=>{
 
         console.log("File saved mongoDB",fileSaved);
 
-
-
         // // add a job to the queue
+        console.log("Adding job to processing queue...");
+        
+        const job = await fileProcessingQueue.add("file-processing-queue",{
+            fileId: fileSaved._id.toString(),
+            fileUrl: (fileSaved as any).url,
+            fileName: fileSaved.fileName,
+            diskName:fileSaved.diskName,
+            fileType: fileSaved.fileType,
+            publicId:fileSaved.publicId,
+            userId,
+            qdrantCollection,
+        })
 
-        // fileProcessingQueue.add("file-processing-queue",{
-
-        // })
+        console.log(`Job added to the queue ${job}`);
+        
 
 
         fs.unlinkSync(filePath);
@@ -75,11 +85,11 @@ export const uploadFile = async(req:Request,res:Response)=>{
         res.status(200).json({
             success: true,
             message: "File uploaded successfully",
-            file: {
-                id: fileSaved._id,
-                name: fileSaved.fileName,
-                url: fileSaved.url,
-            },
+            // file: {
+            //     id: fileSaved._id,
+            //     name: fileSaved.fileName,
+            //     url: fileSaved.url,
+            // },
 })
     } catch (error) {
         console.error("Error uploading file:",error);

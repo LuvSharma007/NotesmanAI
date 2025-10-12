@@ -9,6 +9,7 @@ export enum FileStatus{
 export interface IFile extends Document{
     userId:mongoose.Types.ObjectId;
     fileName:string
+    diskName:string
     fileType:"pdf" | "docx" | "txt" | string
     fileSize:string
     qdrantCollection:string
@@ -27,6 +28,10 @@ const fileSchema:Schema<IFile> = new Schema({
         type:String,
         required:true
     },
+    diskName:{
+        type:String,
+        required:true
+    },  
     fileSize:{
         type:String,
         required:true

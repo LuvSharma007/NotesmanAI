@@ -16,7 +16,7 @@ const uploadOnCloudinary = async (localFilePath: string)=>{
         }
         
         const response = await cloudinary.uploader.upload(localFilePath,{
-            resource_type:"auto",
+            resource_type:"raw",
             folder:'notesman-fullstack'
         })
         
