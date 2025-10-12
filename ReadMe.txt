@@ -1,2 +1,2 @@
-1.) Google login is incomplete
+1.) add Google Login
 2.) add Middlewares
