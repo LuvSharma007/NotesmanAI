@@ -2,6 +2,8 @@
 import fileModel from "../models/file.model.js";
 import { Request, Response } from "express";
 import uploadOnCloudinary from "../lib/cloudinary.js";
+import fs from 'fs'
+import path from "path";
 
 export const uploadFile = async(req:Request,res:Response)=>{
     try {
@@ -57,6 +59,8 @@ export const uploadFile = async(req:Request,res:Response)=>{
 
         console.log("File saved mongoDB",fileSaved);
 
+
+
         // // add a job to the queue
 
         // fileProcessingQueue.add("file-processing-queue",{
@@ -64,6 +68,8 @@ export const uploadFile = async(req:Request,res:Response)=>{
         // })
 
 
+        fs.unlinkSync(filePath);
+        console.log("Temp file deleted:", filePath);
         
 
         res.status(200).json({
@@ -82,7 +88,6 @@ export const uploadFile = async(req:Request,res:Response)=>{
             error:"Upload failed",
             details:(error as Error).message
         })
-        
     }
-    // remove the temp file from the server
+    
 }
