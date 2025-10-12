@@ -1,3 +1,4 @@
 import {Queue} from "bullmq"
 
-export const afterUploadQueue = new Queue('upload-queue')
+export const fileProcessingQueue = new Queue('file-processing-queue')
+
