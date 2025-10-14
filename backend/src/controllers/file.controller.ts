@@ -3,7 +3,8 @@ import { Request, Response } from "express";
 import uploadOnCloudinary from "../lib/cloudinary.js";
 import fs from 'fs'
 import { fileProcessingQueue } from "../bullmq/queues/upload.queue.js";
-
+import mongoose from "mongoose";
+import { deleteFileQueue } from "../bullmq/queues/delete.queue.js";
 
 
 export const uploadFile = async(req:Request,res:Response)=>{
@@ -104,8 +105,7 @@ export const uploadFile = async(req:Request,res:Response)=>{
             error:"Upload failed",
             details:(error as Error).message
         })
-    }
-    
+    }   
 }
 
 export const getAllFiles = async(req:Request,res:Response)=>{
@@ -136,9 +136,32 @@ export const getAllFiles = async(req:Request,res:Response)=>{
 
 export const deleteFile = async(req:Request,res:Response)=>{
     try {
-        const userId = (req as any).user.id
-        await fileModel.find({userId}).sort
-    } catch (error) {
+        const userId = (req as any).user.id;
+        const {fileId} = req.params;
+
+        if(!mongoose.Types.ObjectId.isValid(fileId)){
+            return res.status(400).json({success:false,message:"Invalid file ID"});
+        }
+
+        const file = await fileModel.findOne({_id:fileId,userId});
+        if(!file){
+            return res.status(404).json({success:false,message:"File not found"})
+        }
+
+        const deletionJob = await deleteFileQueue.add('delete-file-queue',{
+            fileId:file.id,
+            userId:file.userId,
+            publicId:file.publicId,
+            qdrantCollection:file.qdrantCollection
+        })
+
+        console.log(`Job added to the queue ${deletionJob}`);
+
         
+        return res.status(200).json({success:true,message:"File deleted"})
+        
+    } catch (error) {
+        console.error("Error deleting file:",error);
+        res.status(500).json({success:false,message:"File Deletion Error"})
     }
 }

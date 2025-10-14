@@ -26,7 +26,6 @@ import fileModel from '../../models/file.model.js';
 import {Redis} from "ioredis";
 import { DB } from "../../db/client.js";
 
-const redis = new Redis()
 const connection = new Redis({
     host: "localhost", // or "redis" if using docker-compose
     port: 6379,
@@ -134,7 +133,7 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
 
     } catch (error) {
         await fileModel.findByIdAndUpdate(fileId,{status:"failed"})
-         console.error("Worker job failed:", error);
+        console.error("Worker job failed:", error);
         throw new Error("Error , worker is not working , LOL")        
     }finally {
         // **7. Clean up the temporary file**
