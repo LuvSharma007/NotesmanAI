@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { FileText, Upload, X } from "lucide-react"
 import { toast } from "sonner"
 import { Spinner } from "./ui/shadcn-io/spinner"
-import axios from "axios"
+
 
 interface Source {
   id: string
@@ -137,6 +137,26 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
   getAllFiles();
 }, []);
 
+const handleDeleteFile = async (fileId:string)=>{
+  try {
+    setDeleting((prev)=>[...prev,fileId]);
+    const res = await fetch(`http://localhost:4000/api/v1/users/delete-file/${fileId}`,{
+      method:'DELETE',
+      credentials:"include",
+    })
+    if(!res.ok){
+      throw new Error("Failed to delete")
+    }
+    setSources((prev)=>prev.filter((s)=>s.id !== fileId))
+    toast.success("File deleted");
+  } catch (error) {
+    toast.error("Error deleting file")
+    console.log("error uploading file:",error);
+  }finally{
+    setDeleting((prev)=>prev.filter((id)=>id !== fileId))
+  }
+}
+
 
   return (
     <div className="w-[280px] border-r border-border flex-shrink-0 rounded-2xl">
@@ -207,7 +227,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
-                      // handleDeleteFile(source.id, source.name)
+                      handleDeleteFile(source.id)
                     }}
                     className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
                   >
