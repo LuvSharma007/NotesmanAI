@@ -12,7 +12,7 @@ cloudinary.config({
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
-import { OpenAIEmbeddings } from '@langchain/openai';
+// import { OpenAIEmbeddings } from '@langchain/openai';
 import { QdrantVectorStore } from '@langchain/qdrant';
 import {Job, Worker} from 'bullmq'
 import { TextLoader } from 'langchain/document_loaders/fs/text';
@@ -26,6 +26,7 @@ import fileModel from '../../models/file.model.js';
 import {Redis} from "ioredis";
 import { DB } from "../../db/client.js";
 
+const redis = new Redis()
 const connection = new Redis({
     host: "localhost", // or "redis" if using docker-compose
     port: 6379,
@@ -106,17 +107,17 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
 
         // using Google Gemini
 
-        // const embeddings = new GoogleGenerativeAIEmbeddings({
-        //     apiKey: process.env.GOOGLE_API_KEY,
-        //     model: 'gemini-embedding-001'
-        // })
+        const embeddings = new GoogleGenerativeAIEmbeddings({
+            apiKey: process.env.GEMINI_API_KEY,
+            model: 'gemini-embedding-001'
+        })
 
         // openAI embeddings model
 
-        const embeddings = new OpenAIEmbeddings({
-            apiKey:process.env.OPENAI_API_KEY,
-            model:"text-embedding-3-large"
-        })
+        // const embeddings = new OpenAIEmbeddings({
+        //     apiKey:process.env.OPENAI_API_KEY,
+        //     model:"text-embedding-3-large"
+        // })
 
         console.log("Embeddings setup done");
 
@@ -130,8 +131,6 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
 
         await fileModel.findByIdAndUpdate(fileId,{status:"completed"})
         console.log(`File ${fileId} marked as completed in MongoDB`);
-
-        return { message: 'File processed successfully' };
 
     } catch (error) {
         await fileModel.findByIdAndUpdate(fileId,{status:"failed"})

@@ -1,7 +1,19 @@
+import http from 'http'
 import app from "./app.js"
 import { DB } from "./db/client.js";
+import {Server} from 'socket.io'
+import {createClient} from 'redis'
+import {createAdapter} from '@socket.io/redis-adapter'
 
 const PORT = process.env.PORT || 4000
+
+
+const pubClient = createClient({url:'redis://localhost:6379'})
+const subClient = pubClient.duplicate();
+
+await pubClient.connect()
+await subClient.connect()
+
 
 const port = process.env.PORT
 const monogDBUri = process.env.MONGODB_URI

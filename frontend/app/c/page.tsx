@@ -14,11 +14,11 @@ export default function DashboardPage() {
       <SourcePanel
         onSourceSelect={(src) => {
           setActiveFileId(src.id)
-          router.push(`/dashboard/${src.id}`)  // ✅ navigate into [fileId]
+          router.push(`/c/${src.id}`)  // ✅ navigate into [fileId]
         }}
         onSourceDelete={() => {
           setActiveFileId(null)
-          router.push(`/dashboard`)
+          router.push(`/c`)
         }}
       />
 

@@ -5,16 +5,20 @@ import { SourcePanel } from "@/components/sourcePanel"
 import { ChatInterface } from "@/components/chatInterface"
 import { useParams , useRouter } from "next/navigation"
 
-
 export default function dashboardPage() {
   const {fileId} =useParams<{fileId:string}>()
   const router = useRouter()
 
+  if (!fileId) {
+    router.push("/c")
+    return null
+  }
+
   return (
     <div className="flex h-screen bg-background">
       <SourcePanel
-      onSourceSelect={(src)=>router.push(`/dashboard/${src.id}`)}
-      onSourceDelete={()=>router.push(`/dashboard`)} 
+      onSourceSelect={(src)=>router.push(`/c/${src.id}`)}
+      onSourceDelete={()=>router.push(`/c`)} 
       />
       <ChatInterface fileId={fileId}/>
     </div>

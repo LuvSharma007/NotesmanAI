@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   description: "Your personal AI knowledge companion",
 };
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,7 +40,6 @@ export default function RootLayout({
           
           <Navbar/>
           {children}
-          
         <Toaster/>
         </ThemeProvider>
       </body>

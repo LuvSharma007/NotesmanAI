@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { FileText, Upload, X } from "lucide-react"
 import { toast } from "sonner"
 import { Spinner } from "./ui/shadcn-io/spinner"
-import { useParams } from "next/navigation"
+import axios from "axios"
 
 interface Source {
   id: string
@@ -16,6 +16,16 @@ interface Source {
   uploadDate: string
   size: string
 }
+
+interface FileResponse {
+  _id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  createdAt: string;
+  status?: string;
+}
+
 
 interface SourcePanelProps {
   onSourceSelect: (source: Source) => void
@@ -61,12 +71,16 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         
         if (!res.ok) throw new Error("Upload failed")
 
-        const data = await res.json()
+        const data = await res.json();
+
+        if (!data.success) throw new Error("Upload failed");
+
+        const uploadedFile = data.file;
 
         const newSource: Source = {
-          id: data.id || Date.now().toString(),
-          name: file.name,
-          type: file.name.split(".").pop()?.toLowerCase() as "pdf" | "docx" | "txt",
+          id: uploadedFile.id,
+          name: uploadedFile.name,
+          type: uploadedFile.name.split(".").pop()?.toLowerCase() as "pdf" | "docx" | "txt",
           uploadDate: new Date().toISOString(),
           size: `${(file.size / 1024).toFixed(1)} KB`,
         }
@@ -85,6 +99,44 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
 
     uploadFile()
   }, [file]) // runs automatically when file changes
+
+  useEffect(() => {
+  const getAllFiles = async () => {
+    try {
+      const res = await fetch("http://localhost:4000/api/v1/users/get-files", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch files");
+
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.files)) {
+        const mappedFiles: Source[] = (data.files as FileResponse[]).map((f) => ({
+          id: f._id,
+          name: f.fileName,
+          type: f.fileType.includes("pdf")
+            ? "pdf"
+            : f.fileType.includes("word")
+              ? "docx"
+              : "txt",
+          uploadDate: f.createdAt,
+          size: `${(f.fileSize / 1024).toFixed(1)} KB`,
+          status: f.status || "processing",
+        }));
+
+        setSources(mappedFiles);
+      }
+    } catch (error) {
+      console.error("Error fetching files:", error);
+      toast.error("Failed to load your files");
+    }
+  };
+
+  getAllFiles();
+}, []);
+
 
   return (
     <div className="w-[280px] border-r border-border flex-shrink-0 rounded-2xl">

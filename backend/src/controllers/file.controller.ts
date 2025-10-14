@@ -5,6 +5,7 @@ import fs from 'fs'
 import { fileProcessingQueue } from "../bullmq/queues/upload.queue.js";
 
 
+
 export const uploadFile = async(req:Request,res:Response)=>{
     try {
         console.log("Controller runned");
@@ -88,12 +89,14 @@ export const uploadFile = async(req:Request,res:Response)=>{
         res.status(200).json({
             success: true,
             message: "File uploaded successfully",
-            // file: {
-            //     id: fileSaved._id,
-            //     name: fileSaved.fileName,
-            //     url: fileSaved.url,
-            // },
-})
+            file: {
+                id: fileSaved._id.toString(),
+                name: fileSaved.fileName,
+                url: fileSaved.url,
+                type: fileSaved.fileType,
+                size: fileSaved.fileSize,
+            },
+    })
     } catch (error) {
         console.error("Error uploading file:",error);
         res.status(500).json({
@@ -103,4 +106,39 @@ export const uploadFile = async(req:Request,res:Response)=>{
         })
     }
     
+}
+
+export const getAllFiles = async(req:Request,res:Response)=>{
+    try {
+        const userId = (req as any).user.id
+        const allFiles = await fileModel.find({userId}).sort({createdAt:-1})
+        if(!allFiles || allFiles.length === 0){
+            res.status(200).json({
+                success:false,
+                files:[],
+                message:"No files uploaded"
+            })
+        }
+        res.status(200).json({
+            success:true,
+            files:allFiles
+            
+        })
+    } catch (error) {
+        console.error("Error fetching files:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error fetching files",
+            details: (error as Error).message,
+        });
+    }
+}
+
+export const deleteFile = async(req:Request,res:Response)=>{
+    try {
+        const userId = (req as any).user.id
+        await fileModel.find({userId}).sort
+    } catch (error) {
+        
+    }
 }
