@@ -11,7 +11,6 @@ interface Message {
   id: string;
   content: string |null;
   sender: "user" | "ai";
-  timestamp: Date;
 }
 
 export function ChatInterface({
@@ -23,8 +22,57 @@ export function ChatInterface({
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
-  const [threadId , setThreadId] = useState<string | null>(null);
-  // const messages = useQuery(api.messages.list, { threadId });
+
+  const handelChat = async ()=>{
+
+    if(!input.trim() || !fileId){
+      throw new Error("input or FileId is missing")
+    }
+    console.log("Input:",input);
+    console.log("FileId:",fileId);
+    
+
+    const userMessage:Message = {
+      id:crypto.randomUUID(),
+      content:input,
+      sender:'user'
+    }
+    setMessages((prev)=>[...prev,userMessage])
+
+
+      try {
+        const res = await fetch(`http://localhost:4000/api/v1/userchats/c`,{
+          method:'POST',
+          credentials:'include',
+          headers:{
+            "Content-Type":"application/json",
+          },
+          body:JSON.stringify({
+            query:input,
+            fileId
+          })
+        })
+        
+        
+        const data = await res.json()
+        console.log("data:",data);
+
+        if(!res.ok) throw new Error(data.message || "Failed to get response")
+        console.log("response:",res);
+        
+        
+          const aiMessage:Message={
+            id:crypto.randomUUID(),
+            content:data.output,
+            sender:"ai"
+          }
+          setMessages((prev) => [...prev, aiMessage]);
+          setInput("");
+
+      } catch (error) {
+        console.log("Error generating response",error);
+      }
+  }
   
 
   return (
@@ -72,12 +120,6 @@ export function ChatInterface({
                     <p className="text-sm leading-relaxed">
                       {message.content}
                     </p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
                   </div>
 
                   {message.sender === "user" && (
@@ -100,7 +142,9 @@ export function ChatInterface({
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter"}
               />
-              <Button size="sm" className="mt-0.5">
+              <Button size="sm" className="mt-0.5"
+              onClick={ handelChat}
+              >
                 <ArrowRight className="size-4" />
               </Button>
             </div>
