@@ -117,20 +117,19 @@ export const getAllFiles = async(req:Request,res:Response)=>{
             .sort({ createdAt: -1 });
 
         if(!allFiles || allFiles.length === 0){
-            res.status(200).json({
+            return res.status(200).json({
                 success:false,
                 files:[],
                 message:"No files uploaded"
             })
         }
-        res.status(200).json({
+        return res.status(200).json({
             success:true,
             files:allFiles
-            
         })
     } catch (error) {
         console.error("Error fetching files:", error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Server error fetching files",
             details: (error as Error).message,
