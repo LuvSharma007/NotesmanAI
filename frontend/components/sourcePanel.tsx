@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { FileText, Upload, X } from "lucide-react"
 import { toast } from "sonner"
 import { Spinner } from "./ui/shadcn-io/spinner"
+import { useRouter } from "next/navigation"
 
 
 interface Source {
-  id: string
+  _id: string
   name: string
   type: "pdf" | "docx" | "txt"
   uploadDate: string
@@ -38,6 +39,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<string[]>([])
   const [file, setFile] = useState<File | null>(null)
+  const router = useRouter()
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +80,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         const uploadedFile = data.file;
 
         const newSource: Source = {
-          id: uploadedFile.id,
+          _id: uploadedFile.id,
           name: uploadedFile.name,
           type: uploadedFile.name.split(".").pop()?.toLowerCase() as "pdf" | "docx" | "txt",
           uploadDate: new Date().toISOString(),
@@ -86,6 +88,8 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         }
 
         setSources((prev) => [...prev, newSource])
+        console.log("sources:",sources);
+        
         toast.success("File uploaded successfully!")
       } catch (err) {
         console.error("Failed to upload file",err)
@@ -114,7 +118,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
 
       if (data.success && Array.isArray(data.files)) {
         const mappedFiles: Source[] = (data.files as FileResponse[]).map((f) => ({
-          id: f._id,
+          _id: f._id,
           name: f.fileName,
           type: f.fileType.includes("pdf")
             ? "pdf"
@@ -147,7 +151,11 @@ const handleDeleteFile = async (fileId:string)=>{
     if(!res.ok){
       throw new Error("Failed to delete")
     }
-    setSources((prev)=>prev.filter((s)=>s.id !== fileId))
+    setSources((prev)=>prev.filter((s)=>s._id !== fileId))
+    if (onSourceDelete) {
+      onSourceDelete(fileId)
+    }
+    
     toast.success("File deleted");
   } catch (error) {
     toast.error("Error deleting file")
@@ -199,7 +207,7 @@ const handleDeleteFile = async (fileId:string)=>{
           <div className="space-y-2">
             {sources.map((source) => (
               <CardContent
-                key={source.id}
+                key={source._id}
                 className="p-2 rounded-lg border hover:bg-muted/30 transition cursor-pointer"
               >
                 <div className="flex items-start justify-between">
@@ -227,11 +235,11 @@ const handleDeleteFile = async (fileId:string)=>{
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleDeleteFile(source.id)
+                      handleDeleteFile(source._id)
                     }}
                     className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
                   >
-                    {deleting.includes(source.id) ? (
+                    {deleting.includes(source._id) ? (
                       <Spinner className="h-3 w-3" />
                     ) : (
                       <X className="h-3 w-3" />

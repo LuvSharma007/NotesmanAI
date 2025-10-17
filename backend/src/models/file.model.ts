@@ -48,7 +48,7 @@ const fileSchema:Schema<IFile> = new Schema({
     },
     status:{
         type:String,
-        enum:['pending','processing','completed','failed'],
+        enum:['pending','processing','completed','failed','deleting'],
         default:'pending'
     }
 })

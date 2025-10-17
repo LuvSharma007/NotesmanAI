@@ -40,7 +40,7 @@ export const uploadFile = async(req:Request,res:Response)=>{
 
 
         const userId = (req as any).user.id
-        const qdrantCollection = `user_${userId}_${Date.now()}`
+        const qdrantCollection = `user_${userId}_${file.originalname}}`
 
         
         const fileSaved = await fileModel.create({
@@ -111,7 +111,11 @@ export const uploadFile = async(req:Request,res:Response)=>{
 export const getAllFiles = async(req:Request,res:Response)=>{
     try {
         const userId = (req as any).user.id
-        const allFiles = await fileModel.find({userId}).sort({createdAt:-1})
+
+        const allFiles = await fileModel
+            .find({ userId, status: { $nin: ["deleting", "deleted"] } })
+            .sort({ createdAt: -1 });
+
         if(!allFiles || allFiles.length === 0){
             res.status(200).json({
                 success:false,
@@ -138,6 +142,10 @@ export const deleteFile = async(req:Request,res:Response)=>{
     try {
         const userId = (req as any).user.id;
         const {fileId} = req.params;
+
+        const fileUpdated = await fileModel.findOneAndUpdate({_id:fileId,userId},{status:"deleting"},{new:true})
+        console.log("file status updated:",fileUpdated);
+        
 
         if(!mongoose.Types.ObjectId.isValid(fileId)){
             return res.status(400).json({success:false,message:"Invalid file ID"});

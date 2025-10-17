@@ -11,8 +11,7 @@ cloudinary.config({
 
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
-import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
-// import { OpenAIEmbeddings } from '@langchain/openai';
+// import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { QdrantVectorStore } from '@langchain/qdrant';
 import {Job, Worker} from 'bullmq'
 import { TextLoader } from 'langchain/document_loaders/fs/text';
@@ -25,6 +24,7 @@ import fs from 'fs'
 import fileModel from '../../models/file.model.js';
 import {Redis} from "ioredis";
 import { DB } from "../../db/client.js";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const connection = new Redis({
     host: "localhost", // or "redis" if using docker-compose
@@ -69,7 +69,7 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
         response.data.pipe(writer);
 
         await new Promise<void>((resolve, reject) => {
-            writer.on('finish', () => resolve()); // Wrap resolve in a function that takes no arguments
+            writer.on('finish', () => resolve());
             writer.on('error', reject);
         });
 
@@ -106,17 +106,17 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
 
         // using Google Gemini
 
-        const embeddings = new GoogleGenerativeAIEmbeddings({
-            apiKey: process.env.GEMINI_API_KEY,
-            model: 'gemini-embedding-001'
-        })
+        // const embeddings = new GoogleGenerativeAIEmbeddings({
+        //     apiKey: process.env.GEMINI_API_KEY,
+        //     model: 'gemini-embedding-001'
+        // })
 
         // openAI embeddings model
 
-        // const embeddings = new OpenAIEmbeddings({
-        //     apiKey:process.env.OPENAI_API_KEY,
-        //     model:"text-embedding-3-large"
-        // })
+        const embeddings = new OpenAIEmbeddings({
+            apiKey:process.env.OPENAI_API_KEY,
+            model:"text-embedding-3-large"
+        })
 
         console.log("Embeddings setup done");
 

@@ -16,7 +16,7 @@ export default function dashboardPage() {
   return (
     <div className="flex h-screen bg-background">
       <SourcePanel
-      onSourceSelect={(src)=>router.push(`/c/${src.id}`)}
+      onSourceSelect={(src)=>router.push(`/c/${src._id}`)}
       onSourceDelete={()=>router.push(`/c`)} 
       />
       <ChatInterface fileId={fileId}/>

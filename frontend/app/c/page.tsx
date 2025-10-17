@@ -13,8 +13,8 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-background">
       <SourcePanel
         onSourceSelect={(src) => {
-          setActiveFileId(src.id)
-          router.push(`/c/${src.id}`)  // ✅ navigate into [fileId]
+          setActiveFileId(src._id)
+          router.push(`/c/${src._id}`)
         }}
         onSourceDelete={() => {
           setActiveFileId(null)
