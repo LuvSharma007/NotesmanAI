@@ -31,14 +31,13 @@ export function ChatInterface({
     console.log("Input:",input);
     console.log("FileId:",fileId);
     
-
     const userMessage:Message = {
       id:crypto.randomUUID(),
       content:input,
       sender:'user'
     }
     setMessages((prev)=>[...prev,userMessage])
-
+    setInput("");
 
       try {
         const res = await fetch(`http://localhost:4000/api/v1/userchats/c`,{
@@ -53,22 +52,27 @@ export function ChatInterface({
           })
         })
         
-        
-        const data = await res.json()
-        console.log("data:",data);
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        let aiMessage: Message = {
+          id: crypto.randomUUID(),
+          content: "",
+          sender: "ai",
+        };
+        setMessages((prev) => [...prev, aiMessage]);
 
-        if(!res.ok) throw new Error(data.message || "Failed to get response")
-        console.log("response:",res);
-        
-        
-          const aiMessage:Message={
-            id:crypto.randomUUID(),
-            content:data.output,
-            sender:"ai"
-          }
-          setMessages((prev) => [...prev, aiMessage]);
-          setInput("");
+        while (true) {
+          const { done, value } = await reader!.read();
+          if (done) break;
 
+          const chunk = decoder.decode(value, { stream: true });
+          aiMessage.content += chunk;
+
+          // live update chat UI
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === aiMessage.id ? { ...msg, content: aiMessage.content } : msg))
+          );
+        }
       } catch (error) {
         console.log("Error generating response",error);
       }

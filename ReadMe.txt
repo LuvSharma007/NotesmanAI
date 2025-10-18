@@ -5,5 +5,5 @@
 5.) add confirm message to delete file
 5.) Redirect back to user on /c after deletion
 
-
 run worker - npx --yes --locally tsx src/bullmq/workers/upload.worker.ts
+ 

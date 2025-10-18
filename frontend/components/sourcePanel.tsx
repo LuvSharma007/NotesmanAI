@@ -13,9 +13,9 @@ import { useRouter } from "next/navigation"
 interface Source {
   _id: string
   name: string
-  type: "pdf" | "docx" | "txt"
-  uploadDate: string
-  size: string
+  // type: "pdf" | "docx" | "txt"
+  // uploadDate: string
+  // size: string
 }
 
 interface FileResponse {
@@ -82,9 +82,9 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         const newSource: Source = {
           _id: uploadedFile.id,
           name: uploadedFile.name,
-          type: uploadedFile.name.split(".").pop()?.toLowerCase() as "pdf" | "docx" | "txt",
-          uploadDate: new Date().toISOString(),
-          size: `${(file.size / 1024).toFixed(1)} KB`,
+          // type: uploadedFile.name.split(".").pop()?.toLowerCase() as "pdf" | "docx" | "txt",
+          // uploadDate: new Date().toISOString(),
+          // size: `${(file.size / 1024).toFixed(1)} KB`,
         }
 
         setSources((prev) => [...prev, newSource])
@@ -219,14 +219,14 @@ const handleDeleteFile = async (fileId:string)=>{
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{source.name}</p>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant="secondary" className="text-xs">
+                        {/* <Badge variant="secondary" className="text-xs">
                           {source.type.toUpperCase()}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">{source.size}</span>
+                        </Badge> */}
+                        {/* <span className="text-xs text-muted-foreground">{source.size}</span> */}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      {/* <p className="text-xs text-muted-foreground mt-1">
                         {new Date(source.uploadDate).toLocaleDateString()}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
 

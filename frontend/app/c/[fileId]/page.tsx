@@ -10,7 +10,7 @@ export default function dashboardPage() {
 
   if (!fileId) {
     router.push("/c")
-    return null
+    throw new Error("No fileID found in URL")
   }
 
   return (
