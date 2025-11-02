@@ -8,14 +8,13 @@ cloudinary.config({
     api_secret:process.env.CLOUDINARY_SECRET_KEY
 })
 
-
-import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
-import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text"
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 // import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { QdrantVectorStore } from '@langchain/qdrant';
 import {Job, Worker} from 'bullmq'
-import { TextLoader } from 'langchain/document_loaders/fs/text';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import {v2 as cloudinary} from "cloudinary"
 import axios from 'axios';
 import path from 'path';
@@ -95,7 +94,7 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
 
         const splitter = new RecursiveCharacterTextSplitter({
             chunkSize:1000,
-            chunkOverlap:200
+            chunkOverlap:100
         })
 
         const splitDocs = await splitter.splitDocuments(docs)

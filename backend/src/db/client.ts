@@ -1,11 +1,9 @@
 import * as mongoose from 'mongoose'
-
 import {MongoClient} from 'mongodb'
 
 const DB = async ()=>{
     const mongoUri = process.env.MONGODB_URI
     const mongodbName = process.env.MONGODB_NAME
-    
     console.log(`MonogDBUri:${process.env.MONGODB_URI}`);
     console.log(`MonogDBName:${process.env.MONGODB_NAME}`);
     

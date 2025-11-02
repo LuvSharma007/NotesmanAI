@@ -9,7 +9,7 @@ import { Bot, User, MessageSquare, ArrowRight } from "lucide-react";
 
 interface Message {
   id: string;
-  content: string |null;
+  content: string | null;
   sender: "user" | "ai";
 }
 
@@ -23,61 +23,73 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
 
-  const handelChat = async ()=>{
+  const handleChat = async () => {
+    const trimmedInput = input.trim();
+    if (!trimmedInput || !fileId) {
+      console.error("Input or FileId is missing");
+      return;
+    }
 
-    if(!input.trim() || !fileId){
-      throw new Error("input or FileId is missing")
-    }
-    console.log("Input:",input);
-    console.log("FileId:",fileId);
-    
-    const userMessage:Message = {
-      id:crypto.randomUUID(),
-      content:input,
-      sender:'user'
-    }
-    setMessages((prev)=>[...prev,userMessage])
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      content: trimmedInput,
+      sender: "user",
+    };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-      try {
-        const res = await fetch(`http://localhost:4000/api/v1/userchats/c`,{
-          method:'POST',
-          credentials:'include',
-          headers:{
-            "Content-Type":"application/json",
-          },
-          body:JSON.stringify({
-            query:input,
-            fileId
-          })
-        })
-        
-        const reader = res.body?.getReader();
-        const decoder = new TextDecoder();
-        let aiMessage: Message = {
-          id: crypto.randomUUID(),
-          content: "",
-          sender: "ai",
-        };
-        setMessages((prev) => [...prev, aiMessage]);
+    let aiMessage: Message = {
+      id: crypto.randomUUID(),
+      content: "",
+      sender: "ai",
+    };
+    setMessages((prev) => [...prev, aiMessage]);
 
-        while (true) {
-          const { done, value } = await reader!.read();
-          if (done) break;
+    try {
+      const res = await fetch(`http://localhost:4000/api/v1/userchats/c`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: trimmedInput,
+          fileId,
+        }),
+      });
 
-          const chunk = decoder.decode(value, { stream: true });
-          aiMessage.content += chunk;
-
-          // live update chat UI
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === aiMessage.id ? { ...msg, content: aiMessage.content } : msg))
-          );
-        }
-      } catch (error) {
-        console.log("Error generating response",error);
+      if (!res.body) {
+        console.error("No response body received from the stream.");
+        return;
       }
-  }
-  
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        
+        setMessages((prevMessages) => {
+          return prevMessages.map((msg) => {
+            if (msg.id === aiMessage.id) {
+              return { ...msg, content: (msg.content || "") + chunk };
+            }
+            return msg;
+          });
+        });
+      }
+    } catch (error) {
+      console.error("Error generating response", error);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === aiMessage.id ? { ...msg, content: "Error: Failed to fetch response." } : msg
+        )
+      );
+    }
+  };
 
   return (
     <div className="flex-col h-full flex-1 flex overflow-hidden">
@@ -103,9 +115,7 @@ export function ChatInterface({
                 <div
                   key={message.id}
                   className={`flex items-start space-x-3 ${
-                    message.sender === "user"
-                      ? "justify-end"
-                      : "justify-start"
+                    message.sender === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
                   {message.sender === "ai" && (
@@ -140,15 +150,17 @@ export function ChatInterface({
           <div className="border-t border-border p-4 flex-shrink-0 bg-background/95 backdrop-blur-sm">
             <div className="flex space-x-2">
               <Input
-                placeholder="Ask questions about your sources..."
+                placeholder="Ask questions"
                 className="flex-1 h-10"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter"}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleChat();
+                  }
+                }}
               />
-              <Button size="sm" className="mt-0.5"
-              onClick={ handelChat}
-              >
+              <Button size="sm" className="mt-0.5" onClick={handleChat}>
                 <ArrowRight className="size-4" />
               </Button>
             </div>
