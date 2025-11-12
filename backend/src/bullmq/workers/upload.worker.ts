@@ -93,8 +93,8 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
         // split into chunks
 
         const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize:1000,
-            chunkOverlap:100
+            chunkSize:2000,
+            chunkOverlap:200
         })
 
         const splitDocs = await splitter.splitDocuments(docs)

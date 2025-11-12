@@ -3,8 +3,6 @@
 3.) implement web sockets for Real time update on frontend using (socket.io) (pending) 
 4.) store one user files data in one qdrant collection (pending)
 5.) add confirm message to delete file
-6.) Redirect back to user on /c after deletion
-7.) improve system prompt
-8.) check if the agents gets tool data or not
+6.) query Re-writing
 
 run worker - npx --yes --locally tsx src/bullmq/workers/upload.worker.ts

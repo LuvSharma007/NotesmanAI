@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
-import { createAgent } from "langchain";
+import { createAgent , summarizationMiddleware } from "langchain";
 import fileModel from "../models/file.model.js";
 import { getContext } from "../agents/tools/getContextTool.js";
 import { z } from 'zod'
+import { checkpointer } from "../db/client.js";
+import { ChatOpenAI } from "@langchain/openai";
 
 const SYSTEM_PROMPT=`You're an AI Assistent that answer the user query based on the available context from the files.
 You always answer the from the context to the query.
@@ -14,6 +16,8 @@ if you did not get the revlant data from the vector DB. politely say i don't fin
 4.) Always get the context about the query and then formulate your answer.
 5.) Do not repeat or echo the full context from tool back to the user.
 `
+
+const summaryModel = new ChatOpenAI({model:'gpt-4.1-nano'});
 
 export const chat = async (req: Request, res: Response) => {
   try {
@@ -34,6 +38,7 @@ export const chat = async (req: Request, res: Response) => {
     const agent = createAgent({
       model: "gpt-4.1-nano",
       tools: [getContext],
+      checkpointer,
       description: `You're an AI agent that gave answers based on the avilable context.`,
       contextSchema: z.object({
         qdrantCollectionName: z.string()
@@ -53,6 +58,9 @@ export const chat = async (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-cache");
     res.flushHeaders?.();
 
+    
+    
+
     const stream = await agent.stream(
       {
         messages: [
@@ -62,10 +70,12 @@ export const chat = async (req: Request, res: Response) => {
       },
       {
         streamMode: "messages",
-        context: { qdrantCollectionName }
+        context: { 
+          qdrantCollectionName,
+         },
+        configurable:{thread_id:`${userId}_${fileId}`}
       }
     );
-
 
   for await (const chunk of stream) {
   if (Array.isArray(chunk)) {

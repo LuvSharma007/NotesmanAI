@@ -16,15 +16,15 @@ export const getContext = tool(
     }
     // console.log("Qdrant collection",qdrantCollection);
     
-    const embeddings = new GoogleGenerativeAIEmbeddings({
-      apiKey: process.env.GEMINI_API_KEY,
-      model: "gemini-embedding-001",
-    });
+    // const embeddings = new GoogleGenerativeAIEmbeddings({
+    //   apiKey: process.env.GEMINI_API_KEY,
+    //   model: "gemini-embedding-001",
+    // });
 
-    // const embeddings = new OpenAIEmbeddings({
-    //         apiKey:process.env.OPENAI_API_KEY,
-    //         model:"text-embedding-3-large"
-    // })
+    const embeddings = new OpenAIEmbeddings({
+            apiKey:process.env.OPENAI_API_KEY,
+            model:"text-embedding-3-large"
+    })
     
     // console.log("Embeddings Setup Done");
     
@@ -35,7 +35,7 @@ export const getContext = tool(
 
     const searchResult = await client.search(qdrantCollection, {
       vector: queryEmbedding,
-      limit: 3,
+      limit: 5,
     });
 
     if (!searchResult) {
