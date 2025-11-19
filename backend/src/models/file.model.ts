@@ -1,7 +1,5 @@
 import mongoose, { Model, Schema } from "mongoose";
 
-
-
 export interface IFile extends Document{
     userId:mongoose.Types.ObjectId;
     fileName:string

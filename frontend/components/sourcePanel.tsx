@@ -39,7 +39,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<string[]>([])
   const [file, setFile] = useState<File | null>(null)
-  const router = useRouter()
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

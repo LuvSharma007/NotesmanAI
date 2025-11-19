@@ -3,8 +3,7 @@ import { createAgent , summarizationMiddleware } from "langchain";
 import fileModel from "../models/file.model.js";
 import { getContext } from "../agents/tools/getContextTool.js";
 import { z } from 'zod'
-import { checkpointer } from "../db/client.js";
-import { ChatOpenAI } from "@langchain/openai";
+import { messageQueue } from "../bullmq/queues/message.queue.js";
 
 const SYSTEM_PROMPT=`You're an AI Assistent that answer the user query based on the available context from the files.
 You always answer the from the context to the query.
@@ -16,8 +15,6 @@ if you did not get the revlant data from the vector DB. politely say i don't fin
 4.) Always get the context about the query and then formulate your answer.
 5.) Do not repeat or echo the full context from tool back to the user.
 `
-
-const summaryModel = new ChatOpenAI({model:'gpt-4.1-nano'});
 
 export const chat = async (req: Request, res: Response) => {
   try {
@@ -38,7 +35,6 @@ export const chat = async (req: Request, res: Response) => {
     const agent = createAgent({
       model: "gpt-4.1-nano",
       tools: [getContext],
-      checkpointer,
       description: `You're an AI agent that gave answers based on the avilable context.`,
       contextSchema: z.object({
         qdrantCollectionName: z.string()
@@ -58,9 +54,6 @@ export const chat = async (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-cache");
     res.flushHeaders?.();
 
-    
-    
-
     const stream = await agent.stream(
       {
         messages: [
@@ -73,23 +66,39 @@ export const chat = async (req: Request, res: Response) => {
         context: { 
           qdrantCollectionName,
          },
-        configurable:{thread_id:`${userId}_${fileId}`}
       }
     );
+    let aiResponse="";
+    for await (const chunk of stream) {
+      if (Array.isArray(chunk)) {
+        for (const c of chunk) {
+          if (c.constructor.name === 'ToolMessage') continue;
 
-  for await (const chunk of stream) {
-  if (Array.isArray(chunk)) {
-    for (const c of chunk) {
-      if (c.constructor.name === 'ToolMessage') continue;
-      
-      if (c.content && typeof c.content === "string") {
-        res.write(c.content);
+          if (c.content && typeof c.content === "string") {           
+            aiResponse += c.content;
+            res.write(c.content);
+          }
+        }
       }
     }
-  }
-}
-        
-    res.end()
+    console.log("aiResponse:",aiResponse);
+    
+
+    res.end();
+
+    // Starting worker
+    console.log("Adding job to processing queue");
+
+    const job = await messageQueue.add("save-message",{
+      userId,
+      fileId,
+      fileName:file.fileName,
+      userMessage:query,
+      aiMessage:aiResponse
+    }) 
+
+    console.log(`Job added to the queue ${job}`)
+
 
   } catch (error) {
     console.error("Error in chat controller", error);

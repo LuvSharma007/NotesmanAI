@@ -29,9 +29,11 @@ app.get("/api/me", async (req, res) => {
 app.use(express.json())
 import userRouter from "./routes/user.routes.js"
 import chatRouter from "./routes/chat.routes.js"
+import messageRouter from "./routes/messages.routes.js";
 
 app.use("/api/v1/users",userRouter)
 app.use("/api/v1/userchats",chatRouter)
+app.use("/api/v1/userMessages",messageRouter)
 
 
 

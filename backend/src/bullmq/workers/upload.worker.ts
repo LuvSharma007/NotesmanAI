@@ -135,7 +135,6 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
         console.error("Worker job failed:", error);
         throw new Error("Error , worker is not working , LOL")        
     }finally {
-        // **7. Clean up the temporary file**
         if (tempFilePath && fs.existsSync(tempFilePath)) {
             fs.unlinkSync(tempFilePath);
             console.log(`Temporary file deleted: ${tempFilePath}`);

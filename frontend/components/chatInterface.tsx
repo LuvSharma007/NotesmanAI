@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, User, MessageSquare, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { Spinner } from "./ui/shadcn-io/spinner";
 
 interface Message {
   id: string;
@@ -15,13 +17,16 @@ interface Message {
 
 export function ChatInterface({
   fileId,
+  fileName,
   messages: initialMessages = [],
 }: {
   fileId?: string;
+  fileName?: string,
   messages?: Message[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
+  const [localFileName,setLocalFileName] = useState()
 
   const handleChat = async () => {
     const trimmedInput = input.trim();
@@ -83,6 +88,7 @@ export function ChatInterface({
       }
     } catch (error) {
       console.error("Error generating response", error);
+      toast.error("Opps , something went wrong");
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === aiMessage.id ? { ...msg, content: "Error: Failed to fetch response." } : msg
@@ -91,6 +97,41 @@ export function ChatInterface({
     }
   };
 
+  useEffect(()=>{
+    if(!fileId) return;
+    // console.log("FileId not found");
+    
+    const getMessages = async ()=>{
+      console.log("Filename:",fileName);
+      
+      try {
+        const res = await fetch(`http://localhost:4000/api/v1/userMessages/getAllMessages?fileId=${fileId}`,{
+          method:"GET",
+          credentials:"include",
+        })
+        console.log("Response:",res);
+        
+
+        const data = await res.json();
+
+        if(data.success && data.file){
+          const formatted = data.messages.map((msg:any)=>({
+            id:msg._id,
+            sender:msg.role,
+            content:msg.content
+          }));
+          setMessages(formatted)
+          setLocalFileName(data.file.Filename)
+        }
+
+      } catch (error) {
+        // console.log("Error fetching messages",error);
+        toast.error("Error Fetching messages");
+      }
+    }
+    getMessages();
+  },[fileId])
+
   return (
     <div className="flex-col h-full flex-1 flex overflow-hidden">
       <Card className="flex-1 flex flex-col ml-5 border border-border overflow-hidden bg-background">
@@ -98,7 +139,9 @@ export function ChatInterface({
           <CardTitle className="flex items-center space-x-2">
             <MessageSquare className="h-5 w-5 text-primary" />
             {fileId ? (
-              <span>Chat with your source</span>
+              <span
+              className="text-sm text-muted-foreground"
+              >Chat with your sources</span>
             ) : (
               <span className="text-sm text-muted-foreground">
                 Please select a source to chat
