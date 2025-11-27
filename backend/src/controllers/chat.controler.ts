@@ -1,20 +1,31 @@
 import { Request, Response } from "express";
-import { createAgent , summarizationMiddleware } from "langchain";
+import { createAgent } from "langchain";
 import fileModel from "../models/file.model.js";
 import { getContext } from "../agents/tools/getContextTool.js";
 import { z } from 'zod'
 import { messageQueue } from "../bullmq/queues/message.queue.js";
+import { getConversation } from "../agents/tools/getConversation.js";
+
 
 const SYSTEM_PROMPT=`You're an AI Assistent that answer the user query based on the available context from the files.
 You always answer the from the context to the query.
 Rules:
-1.) First understand the user query if the user is asking some questions try to call the getContext Tool to get some context about the user's query
-if you did not get the revlant data from the vector DB. politely say i don't find any revlant data related to your query.
-2.) If the user is causally talking to you like , hi , hey , hello , how are you , who are you , don't call the tool unnecessary , first undertand what is the user's question. 
-3.) Also tell the user about the page number from the documents.
-4.) Always get the context about the query and then formulate your answer.
-5.) Do not repeat or echo the full context from tool back to the user.
-`
+1.) You have two tools "getContext" which returns the data of Documents and "getConversation" which returns the history of conversation of AI and User.
+use the data from both tools and generate the answer.
+2.) always call getConversation tool before getContext tool to aware about the conversation context.
+3.) Do not include the summarised conversation in the final answer.
+4.) You have getConversation tool which return's the summarised Conversation History of AI and user , to have better context about the conversation , if there is no conversation history , return NULL.
+use the summarized AI and user Chat to generate better answers.
+5.) Only call getConversation tool , when the user is asking about previous questions and follow-up questions, fetch the revelant data from the summary , then add it to  the actual answer.
+6.) Do not call getconversation tool unnecessarily, like for casual greetings.
+7.) understand the user query if the user is asking some questions try to call the getContext Tool to get some context about the user's query
+8.) If the user is causally talking to you like , hi , hey , hello , how are you , who are you , don't call the tool unnecessary , first undertand what is the user's question. 
+9.) Also tell the user about the page number from the documents.
+10.) Always get the context about the query and then formulate your answer.
+11.) Do not repeat or echo the full context from tool back to the user.
+12.) if you did not get the revlant data from the vector DB. politely say i don't find any revlant data related to your query. don't call getContext tool more than one time.`
+
+const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId")
 
 export const chat = async (req: Request, res: Response) => {
   try {
@@ -34,10 +45,12 @@ export const chat = async (req: Request, res: Response) => {
 
     const agent = createAgent({
       model: "gpt-4.1-nano",
-      tools: [getContext],
-      description: `You're an AI agent that gave answers based on the avilable context.`,
+      tools:[getContext,getConversation],
+      description: `You're an AI agent that gave answers based on the available context.`,
       contextSchema: z.object({
-        qdrantCollectionName: z.string()
+        qdrantCollectionName: z.string(),
+        userId:objectIdSchema,
+        fileId:objectIdSchema,
       })
     });
 
@@ -54,6 +67,7 @@ export const chat = async (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-cache");
     res.flushHeaders?.();
 
+  
     const stream = await agent.stream(
       {
         messages: [
@@ -64,7 +78,7 @@ export const chat = async (req: Request, res: Response) => {
       {
         streamMode: "messages",
         context: { 
-          qdrantCollectionName,
+          qdrantCollectionName,userId,fileId
          },
       }
     );

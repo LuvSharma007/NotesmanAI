@@ -7,5 +7,8 @@ Improvements needed
 5.) add confirm message to delete file
 6.) query Re-writing
 7.) fetch messages from redis to save DB calls
-
+8.) file above 4-5 mb not working , issue from cloudinary to qdrant
 run worker - npx --yes --locally tsx src/bullmq/workers/upload.worker.ts
+
+
+implement short term memory from redis cache

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, User, MessageSquare, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { Spinner } from "./ui/shadcn-io/spinner";
 
 interface Message {
   id: string;
@@ -17,7 +16,6 @@ interface Message {
 
 export function ChatInterface({
   fileId,
-  fileName,
   messages: initialMessages = [],
 }: {
   fileId?: string;
@@ -26,7 +24,6 @@ export function ChatInterface({
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
-  const [localFileName,setLocalFileName] = useState()
 
   const handleChat = async () => {
     const trimmedInput = input.trim();
@@ -99,10 +96,8 @@ export function ChatInterface({
 
   useEffect(()=>{
     if(!fileId) return;
-    // console.log("FileId not found");
     
     const getMessages = async ()=>{
-      console.log("Filename:",fileName);
       
       try {
         const res = await fetch(`http://localhost:4000/api/v1/userMessages/getAllMessages?fileId=${fileId}`,{
@@ -110,18 +105,17 @@ export function ChatInterface({
           credentials:"include",
         })
         console.log("Response:",res);
-        
 
         const data = await res.json();
+        // console.log("Data:",data);
 
-        if(data.success && data.file){
+        if(data.success){
           const formatted = data.messages.map((msg:any)=>({
             id:msg._id,
             sender:msg.role,
             content:msg.content
           }));
           setMessages(formatted)
-          setLocalFileName(data.file.Filename)
         }
 
       } catch (error) {

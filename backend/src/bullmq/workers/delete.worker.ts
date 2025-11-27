@@ -20,7 +20,7 @@ import { Job , Worker} from "bullmq";
 import {v2 as cloudinary} from "cloudinary"
 import fileModel from "../../models/file.model.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
-
+import messageModel from "../../models/messages.model.js";
 
 cloudinary.config({
     cloud_name:process.env.CLOUDINARY_CLOUD_NAME,
@@ -34,7 +34,9 @@ const worker = new Worker('delete-file-queue',async (job:Job)=>{
     console.log("started Worker");
     try {
         const {fileId , userId , qdrantCollection , publicId} = job.data;
-
+        console.log("FileId:",fileId);
+        console.log("UserId:",userId);
+        
         const qdrantCollectionDeleted = await client.deleteCollection(qdrantCollection)
         if(!qdrantCollectionDeleted){
             throw new Error("Error deleted qdrant collection")
@@ -46,6 +48,12 @@ const worker = new Worker('delete-file-queue',async (job:Job)=>{
             throw new Error("Error deletion cloudinary file")
         }
         console.log('Cloudinary file deleted');
+        
+        const messagesDeleted = await messageModel.deleteMany({fileId,userId});
+        if(!messagesDeleted){
+            throw new Error("Error deleting user's file messages")
+        }
+        console.log('User messages deleted');
         
         const mongoDBFile = await fileModel.deleteOne({_id:fileId,userId})
         if(!mongoDBFile){

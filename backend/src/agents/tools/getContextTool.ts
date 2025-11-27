@@ -4,7 +4,7 @@ import z from "zod";
 import { client } from "../../lib/qdrantClient.js";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
-export const getContext = tool(  
+export const getContext = tool(
   async ({ query }, config) => {
     // console.log("User's Query:",query);
     

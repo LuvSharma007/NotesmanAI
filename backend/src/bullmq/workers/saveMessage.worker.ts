@@ -57,7 +57,7 @@ const worker = new Worker('message-queue',async (job:Job)=>{
     const RedisMessageSaved = await connection.rpush(`chat:${userId}:${fileId}`,userMsg,aiMsg);
     await connection.expire(`chat:${userId}:${fileId}`,36000) // expire the messages after one hour
 
-    await connection.ltrim(`chat:${userId}:${fileId}`,-5,-1);
+    await connection.ltrim(`chat:${userId}:${fileId}`,-20,-1);
     console.log("Message Saved in redis:",RedisMessageSaved);
     
 

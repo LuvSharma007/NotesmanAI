@@ -39,7 +39,7 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
     let fileId;
 
     try {
-        const { publicId ,fileUrl,fileName , diskName , fileType, userId,qdrantCollection} = job.data;
+        const { fileUrl,fileName,qdrantCollection} = job.data;
         fileId = job.data.fileId
 
 
@@ -90,16 +90,21 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
             throw new Error('Unsupported File type')
         }
 
+        console.log("Docs:",docs.length);
+        
+
         // split into chunks
 
         const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize:2000,
-            chunkOverlap:200
+            chunkSize:5000,
+            chunkOverlap:500
         })
+        console.log("Splitter:");
+        
 
         const splitDocs = await splitter.splitDocuments(docs)
 
-        console.log("Splitting Done");
+        console.log("--------Splitting Done",splitDocs.length);
 
         // create Embeddings
 
@@ -114,7 +119,8 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
 
         const embeddings = new OpenAIEmbeddings({
             apiKey:process.env.OPENAI_API_KEY,
-            model:"text-embedding-3-large"
+            model:"text-embedding-3-large",
+            batchSize:100  // reduce load
         })
 
         console.log("Embeddings setup done");
@@ -124,6 +130,9 @@ const worker = new Worker('file-processing-queue',async (job:Job)=>{
             url:process.env.QDRANT_URL,
             collectionName:qdrantCollection
         })
+        if(!qdrantRes){
+            throw new Error("Qdrant response is missing")
+        }
 
         console.log("Successfully saved to Qdrant DB",qdrantRes);
 
