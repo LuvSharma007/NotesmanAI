@@ -33,7 +33,7 @@ export const getConversation = tool(
         const summary = summaryResult.content
         console.log("Summary of Conversation:",summary);
 
-        return summary;
+        return {summary:`[INTERNAL CONTEXT - DO NOT DISPLAY TO USER ]\n ${summary}`};
         
 
         // return typeof summary === "string" 

@@ -10,5 +10,4 @@ Improvements needed
 8.) file above 4-5 mb not working , issue from cloudinary to qdrant
 run worker - npx --yes --locally tsx src/bullmq/workers/upload.worker.ts
 
-
-implement short term memory from redis cache
+watched video from course
