@@ -18,6 +18,9 @@ const worker = new Worker('conversation-queue',async(job:Job)=>{
         const messagesId = `chat:${userId}:${fileId}`
         
         const messages = await connection.lrange(messagesId,0,-1);
+        if(!messages){
+            console.error("No messages return from redis");
+        }
         console.log("Messages from redis:",messages);  
         
         return messages;
@@ -34,5 +37,5 @@ worker.on('completed',(job)=>{
 })
 
 worker.on('failed',(job)=>{
-    console.log(`Job ${job?.id} completed successfully`);
+    console.log(`Job ${job?.id} completed failed`);
 })

@@ -64,6 +64,7 @@ const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId")
 const SYSTEM_PROMPT = `You're an Expert AI Assistent at answer the user question based on the available context.
 user can upload the documents like PDF,Docx,Txt.
 Your task is to provide accurate answer from the documents context to the user.
+You can not tell the answer directly by on your own , always get context from getContext tool.
 
 You have two Tools:
 1.) getConversation: which returns the summary if the conversation between AI and user.
@@ -72,6 +73,7 @@ You have two Tools:
 Guidelines:
 - Use the conversation summary to enhance the user experience.
 - If no summary is found make sure you don't say summary oo user and AI is not found.
+- always call the getContext tool to get some context about the user's question. 
 - the is only for your understanding , do not include it in your response.
 - Extract the relevant information from getContext based on the user question.
 - If no relevant information is found just politely say no and provide a general response.
@@ -94,6 +96,8 @@ export const chat = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
     const { query, fileId } = req.body;
+    console.log("Query:",query);
+    
 
     if (!query || !fileId || !userId) {
       return res.status(404).json({ message: "No query found" });
@@ -141,27 +145,51 @@ export const chat = async (req: Request, res: Response) => {
         ],
       },
       {
-        streamMode:"values",
+        streamMode:"messages",
         context: {
           qdrantCollectionName, userId, fileId,
         },
       }
     );
-    let aiResponse = "";
-    
-for await (const chunk of stream) {
-  const latestMessage = chunk.messages?.at(-1);
 
-  if (
-    latestMessage?.constructor.name === 'AIMessage' &&
-    latestMessage.content &&
-    typeof latestMessage.content === "string" &&
-    (!latestMessage.tool_calls || latestMessage.tool_calls.length === 0)
-  ) {
-    aiResponse += latestMessage.content;
-    res.write(latestMessage.content);
+    // for await (const chunk of stream){
+    //   console.log("chunks:",chunk);
+    // }
+
+    let aiResponse = "";
+  //   for await (const chunk of stream) {
+
+  //     if (chunk?.content && chunk?.langgraph_node === "model_request") {
+  //       console.log("→ Got content:", chunk.content);
+  //       aiResponse += chunk.content;
+  //       res.write(chunk.content);
+  //     }
+
+  //     if (Array.isArray(chunk)) {
+  //       for(const item of chunk){
+  //         if(item?.content && item?.langgraph_node === "model_request"){
+  //           console.log("-------------Got the content:",item.content);
+            
+  //           aiResponse += item.content;
+  //           res.write(item.content)
+  //       }
+  //     }
+  //   }
+  // }
+
+  for await (const chunk of stream) {
+  const messageChunk = chunk?.[0];   // contains .content
+  const meta = chunk?.[1];           // contains langgraph_node
+
+  // Only allow model_request text
+  if (meta?.langgraph_node === "model_request" && typeof messageChunk?.content === "string") {
+      aiResponse += messageChunk.content;
+      res.write(messageChunk.content);
   }
 }
+res.end();
+
+
   
   console.log("aiResponse:", aiResponse);
 

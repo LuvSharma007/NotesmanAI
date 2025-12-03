@@ -20,6 +20,11 @@ const worker = new Worker('message-queue',async (job:Job)=>{
     try {
         const {fileId,userId,userMessage,aiMessage,fileName} = job.data;
         
+        if(!fileId || !userId || userMessage || aiMessage || fileName){
+            console.error("Context is misssing:",aiMessage);
+        }
+        
+        
         console.log(`Processing Job ${job.id} for file:${fileName}`);
 
         const messageSaved = await messageModel.insertMany(
