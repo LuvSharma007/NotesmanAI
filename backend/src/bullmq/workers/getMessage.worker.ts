@@ -20,6 +20,7 @@ const worker = new Worker('conversation-queue',async(job:Job)=>{
         const messages = await connection.lrange(messagesId,0,-1);
         if(!messages){
             console.error("No messages return from redis");
+            return null;
         }
         console.log("Messages from redis:",messages);  
         

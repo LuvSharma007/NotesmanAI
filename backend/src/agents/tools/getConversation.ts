@@ -4,7 +4,7 @@ import { conversationQueue ,conversationQueueEvents} from "../../bullmq/queues/c
 import { ChatOpenAI } from "@langchain/openai";
 
 export const getConversation = tool(
-    async({},config)=>{
+    async({},config):Promise<{conversationSummary:string}>=>{
         console.log("get conversation tool called");
         
         const {userId,fileId} = config.context;
@@ -33,7 +33,7 @@ export const getConversation = tool(
         const summary = summaryResult.content
         console.log("Summary of Conversation:",summary);
 
-        return {summary:`[INTERNAL CONTEXT - DO NOT DISPLAY TO USER ]\n ${summary}`};
+        return {conversationSummary:summary as string};
         
 
         // return typeof summary === "string" 

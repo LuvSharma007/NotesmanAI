@@ -10,4 +10,13 @@ Improvements needed
 8.) file above 4-5 mb not working , issue from cloudinary to qdrant
 run worker - npx --yes --locally tsx src/bullmq/workers/upload.worker.ts
 
-watched video from course
+
+
+- load documents in stream not as a whole in memory at once
+then save the data in queue as a micro batching and upsert in qdrant
+- used convertAPI
+
+When ready, setup a distributed system for production ----- from qdrant Docs
+
+
+ 

@@ -1,6 +1,6 @@
 import fileModel from "../models/file.model.js";
 import { Request, Response } from "express";
-import uploadOnCloudinary from "../lib/cloudinary.js";
+import {uploadOnCloudinary} from "../lib/cloudinary.js";
 import fs from 'fs'
 import { fileProcessingQueue } from "../bullmq/queues/upload.queue.js";
 import mongoose from "mongoose";
@@ -12,32 +12,36 @@ export const uploadFile = async(req:Request,res:Response)=>{
         console.log("Controller runned");
         
         const file = req.file;
-        console.log("got the file",file);
         
-
+        
         if(!file){
             return res.status(400).json({
                 success:false,  
                 error:"No file Provided"
             })
         }
-        console.log("Uploading to cloudinary.....");
+        console.log("got the file and Size ",file.size);
+        
+        // validate file type
+        
+        console.log("Uploading to cloudinary");
         
         const filePath = req.file?.path;
         if(!filePath){
-            console.log("No file path found 1");
+            // console.log("No file path found 1");
             
             throw new Error("No file path found")
         }
 
-        const uploadedFile = await uploadOnCloudinary(filePath)
+        console.log("-----------------------",filePath);        
 
-        if(!uploadFile){
+        const uploadedFile = await uploadOnCloudinary(filePath)
+               
+
+        if(!uploadedFile){
             throw new Error("File required")
         }
-
-        console.log("Uploaded to cloudinary:",uploadedFile);
-
+        console.log("Uploaded to cloudinary:",uploadedFile);        
 
         const userId = (req as any).user.id
         const qdrantCollection = `user_${userId}_${file.originalname}}`
@@ -53,6 +57,7 @@ export const uploadFile = async(req:Request,res:Response)=>{
             publicId:(uploadedFile as any).public_id,
             qdrantCollection            
         })
+
 
         if(!fileSaved){
             return res.status(400).json({
@@ -77,14 +82,15 @@ export const uploadFile = async(req:Request,res:Response)=>{
             publicId:fileSaved.publicId,
             userId,
             qdrantCollection,
+            filePath,
         })
 
         console.log(`Job added to the queue ${job}`);
         
 
-
-        fs.unlinkSync(filePath);
-        console.log("Temp file deleted:", filePath);
+        // removing the file from disk after being processed
+        // fs.unlinkSync(filePath);
+        // console.log("Temp file deleted:", filePath);
         
 
         res.status(200).json({
@@ -146,7 +152,7 @@ export const deleteFile = async(req:Request,res:Response)=>{
         console.log("file status updated:",fileUpdated);
         
 
-        if(!mongoose.Types.ObjectId.isValid(fileId)){
+        if(!mongoose.Types.ObjectId.isValid(fileId)){ 
             return res.status(400).json({success:false,message:"Invalid file ID"});
         }
 

@@ -9,25 +9,28 @@ cloudinary.config({
 
 const uploadOnCloudinary = async (localFilePath: string)=>{
     try {
-        if(!localFilePath){
-            console.log("No file path found 1");
-            
+        if(!localFilePath){            
             throw new Error("No file path found")
         }
         
         const response = await cloudinary.uploader.upload(localFilePath,{
-            resource_type:"raw",
-            folder:'notesman-fullstack'
+            resource_type:"auto",
+            folder:'notesman-fullstack',
+            use_filename:true,
+            overwrite:false,    
+            // type:'authenticated'     
         })
         
         console.log("File has been uploaded to cloudinary:",response);
         return response;
         
     } catch (error) {
-        console.log("No file path found 2",error);
         fs.unlinkSync(localFilePath)
+        console.log("Error:",error);        
         throw new Error("Error uploading file")
     }
 }
 
-export default uploadOnCloudinary;
+export {
+    uploadOnCloudinary
+};

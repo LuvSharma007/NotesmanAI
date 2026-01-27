@@ -1,84 +1,34 @@
 import { Request, Response } from "express";
-import { createAgent, createMiddleware } from "langchain";
+import { createAgent } from "langchain";
 import fileModel from "../models/file.model.js";
 import { getContext } from "../agents/tools/getContextTool.js";
 import { z } from 'zod'
 import { messageQueue } from "../bullmq/queues/message.queue.js";
-import { getConversation } from "../agents/tools/getConversation.js";
-
-
+import {getConversation} from "../agents/tools/getConversation.js";
+import { entrypoint, task } from "@langchain/langgraph";
+import { ChatOpenAI } from "@langchain/openai";
 
 const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId");
-
-// const conversationLoaderMiddleware = createMiddleware({
-//   name: "ConversationLoader",
-//   contextSchema: z.object({
-//     userId: objectIdSchema,
-//     fileId: objectIdSchema,
-//   }),
-//   beforeAgent: async (state, runtime) => {
-//     const userId = runtime.context?.userId;
-//     const fileId = runtime.context?.fileId;
-
-//     console.log("Running conversation middleware in parallel");
-
-//     if (!userId || !fileId) {
-//       console.log("Missing context data");
-//       return null;
-//     }
-
-//     try {
-//       console.log("Messages",state.messages);
-      
-
-//       let conversationSummary = await getConversation.invoke({}, {
-//         context: { userId, fileId }
-//       });
-
-// //       const updatedMessages = [
-// //         {
-// //           role: "system",
-// //           content: `${SYSTEM_PROMPT}
-
-// // FOR CONTEXT ONLY (DO NOT SHOW IN ANSWER):
-// // Previous Conversation Summary:
-// // ${conversationSummary || "No previous conversation"}`,
-// //           ...state.messages.slice(1),
-// //         },
-// //       ];
-
-//       return {
-//         context: {
-//           conversationSummary
-//         }
-//       };
-
-//     } catch (error) {
-//       console.error("Error in middleware", error)
-//       return null;
-//     }
-//   }
-// })
 
 
 const SYSTEM_PROMPT = `You're an Expert AI Assistent at answer the user question based on the available context.
 user can upload the documents like PDF,Docx,Txt.
-Your task is to provide accurate answer from the documents context to the user.
-You can not tell the answer directly by on your own , always get context from getContext tool.
+Your task is to provide accurate answer from the documents context to the user and provide the summary of the document along with page numbers references.
 
 You have two Tools:
 1.) getConversation: which returns the summary if the conversation between AI and user.
 2.) getContext : which returns the most relevent information from the vector DB for the user question.
 
 Guidelines:
-- Use the conversation summary to enhance the user experience.
-- If no summary is found make sure you don't say summary oo user and AI is not found.
-- always call the getContext tool to get some context about the user's question. 
-- the is only for your understanding , do not include it in your response.
+- first always call the getconversation tool to get some context about the conversation going on between AI and user.
+- If no summary is found make sure you don't say no summary for user and AI is not found.
+- second always call the getContext tool to get some context about the user's question. 
+- Do not call tools again and again or more than ones.
+- wait for both tools to return data , then generate the response.
 - Extract the relevant information from getContext based on the user question.
 - If no relevant information is found just politely say no and provide a general response.
+- then after extracting the summary of conversation and context about the user's question , generate the final response.
 - do not include the summary in the final response. instead use it to get a idea about the user's query.
-- wait for both tools to return data , then generate the response.
 
 Rules:
 1.) use conversationSummary as only conversation context.
@@ -89,9 +39,92 @@ Rules:
 7.) If the user is causally talking to you like , hi , hey , hello , how are you , who are you , don't call the tool unnecessary , first undertand what is the user's question.
 8.) Do not repeat or echo the full context from tool back to the user.
 
-Important:"the user should never see the conversation summary. do not include it the response "
-
+Important:
+1.) the user should never see the conversation summary. do not include it the response.
+2.) Do not call both tools more than ones.
+3.) Do not include works like conversation summary in final response.
 `
+
+// const getConversationTask = task("getConversation",async(params: {
+//   userId:string;
+//   fileId:string;
+// }):Promise<{conversationSummary:string}> =>{
+//   console.log("Running getConversation task");
+//   const result = await getConversation.invoke(
+//     {},
+//     { context:{userId:params.userId,fileId:params.fileId}}
+//   )
+//   console.log("getConversation task completed");
+//   return {conversationSummary:result as unknown as string}
+// })
+
+// const getContextTask = task("getContext",async(params:{
+//   userId:string;
+//   fileId:string;
+//   qdrantCollectionName:string;
+//   query:string
+// })=>{
+//   console.log("Running getContext task");
+//   const result = await getContext.invoke(
+//     {query:params.query},
+//     {context:{userId:params.userId,fileId:params.fileId,qdrantCollectionName:params.qdrantCollectionName}}
+//   )
+//   console.log("getContext task completed");
+//   return {context:result as string}
+// } )
+
+// const generateResponseTask = task(
+//   "generateResponse",
+//   async (params: {
+//     conversationSummary: string;
+//     documentContext: string;
+//     query: string;
+//   }): Promise<string> => {
+//     console.log("→ Generating final response...");
+    
+//     const prompt = `User Question: ${params.query}
+
+// Conversation History: ${params.conversationSummary}
+// Document Context: ${params.documentContext}
+
+// Answer the user's question using the conversation history and document context above. 
+// Do NOT include the conversation history or document context in your response.
+// Focus on answering the current question concisely.`;
+
+//     const model = new ChatOpenAI({ model: "gpt-4-turbo-mini" });
+//     const response = await model.invoke(prompt);
+//     return response.content as string;
+//   }
+// );
+
+
+// const parallelWorkflow = entrypoint(
+//   "chatWorkflow",
+//   async(params:{
+//     userId:string,
+//     fileId:string;
+//     qdrantCollectionName:string
+//     query:string
+//   })=>{
+//     console.log("Starting parallel workflow");
+
+//     const [conversationResult,contextResult] = await Promise.all([
+//       getConversationTask({userId:params.userId,fileId:params.fileId}),
+//       getContextTask(params),
+//     ])
+
+//     // generate final response
+//     const finalResponse = await generateResponseTask({
+//         conversationSummary:conversationResult.conversationSummary,
+//         documentContext:contextResult.context,
+//         query:params.query
+//     })
+
+//     return finalResponse;    
+//   }
+// )
+
+
 export const chat = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
@@ -112,9 +145,9 @@ export const chat = async (req: Request, res: Response) => {
 
     const agent = createAgent({
       model: "gpt-4.1-nano",
-      tools: [getContext,getConversation],
-      // middleware: [conversationLoaderMiddleware],
-      description: `${SYSTEM_PROMPT}`,
+      tools: [getConversation,getContext],
+      // middleware: [parallelContextLoaderMiddleware],
+      description: `You are an AI Expert Agent that give answer based on the available context.`,
       contextSchema: z.object({
         qdrantCollectionName: z.string(),
         userId: objectIdSchema,
@@ -147,7 +180,7 @@ export const chat = async (req: Request, res: Response) => {
       {
         streamMode:"messages",
         context: {
-          qdrantCollectionName, userId, fileId,
+          qdrantCollectionName, userId, fileId
         },
       }
     );
@@ -156,38 +189,17 @@ export const chat = async (req: Request, res: Response) => {
     //   console.log("chunks:",chunk);
     // }
 
-    let aiResponse = "";
-  //   for await (const chunk of stream) {
+  let aiResponse = "";
+    for await (const chunk of stream) {
+      const messageChunk = chunk?.[0];   // contains .content
+      const meta = chunk?.[1];           // contains langgraph_node
 
-  //     if (chunk?.content && chunk?.langgraph_node === "model_request") {
-  //       console.log("→ Got content:", chunk.content);
-  //       aiResponse += chunk.content;
-  //       res.write(chunk.content);
-  //     }
-
-  //     if (Array.isArray(chunk)) {
-  //       for(const item of chunk){
-  //         if(item?.content && item?.langgraph_node === "model_request"){
-  //           console.log("-------------Got the content:",item.content);
-            
-  //           aiResponse += item.content;
-  //           res.write(item.content)
-  //       }
-  //     }
-  //   }
-  // }
-
-  for await (const chunk of stream) {
-  const messageChunk = chunk?.[0];   // contains .content
-  const meta = chunk?.[1];           // contains langgraph_node
-
-  // Only allow model_request text
-  if (meta?.langgraph_node === "model_request" && typeof messageChunk?.content === "string") {
-      aiResponse += messageChunk.content;
-      res.write(messageChunk.content);
-  }
-}
-res.end();
+      // Only allow model_request text
+      if (meta?.langgraph_node === "model_request" && typeof messageChunk?.content === "string") {
+        aiResponse += messageChunk.content;
+        res.write(messageChunk.content);
+      }
+    }
 
 
   
