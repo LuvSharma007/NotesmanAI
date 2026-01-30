@@ -31,13 +31,21 @@ import { isGeneratorFunction } from "util/types";
 import { Readable, Transform } from "stream";
 import readline from "readline";
 import { batchQueue } from "../queues/batches.queue.js";
-import {client} from "../../lib/qdrantClient.js"
+// import { client } from "../../lib/qdrantClient.js"
 import { promisify } from "util";
+import { error } from "console";
+import { string } from "better-auth";
+import { QdrantClient } from "@qdrant/js-client-rest";
 
 const connection = new Redis({
     host: "localhost",
     port: 6379,
     maxRetriesPerRequest: null
+});
+
+const client = new QdrantClient({
+    url: process.env.QDRANT_URL,
+    apiKey:process.env.QDRANT_API_KEY,
 });
 
 await DB()
@@ -51,7 +59,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
     let fileId;
 
     try {
-        const { fileUrl, fileName, qdrantCollection, filePath,userId } = job.data;
+        const { fileUrl, fileName, qdrantCollection, filePath, userId, fileSize } = job.data;
         fileId = job.data.fileId
 
 
@@ -60,8 +68,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
 
         // const format = fileName.split('.').pop() || 'pdf'; // fallback to pdf
         // const downloadUrl = cloudinary.utils.private_download_url(publicId, format, {
-            //     attachment: true, // force download
-            //     resource_type:"raw",
+        //     attachment: true, // force download
+        //     resource_type:"raw",
         // });
         console.log("File URL", fileUrl);
         // try {
@@ -70,7 +78,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         //         url: fileUrl,
         //         responseType: 'stream',
         //     })
-        
+
         //     tempFilePath = path.join(os.tmpdir(), fileName);
         //     const writer = fs.createWriteStream(tempFilePath);
         //     response.data.pipe(writer);
@@ -89,14 +97,14 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         const extension = path.extname(filePath).toLowerCase().replace('.', '');
         console.log("Extension", extension);
         console.log(filePath);
-        
+
 
         // convert the file and save in public/convertedFile
 
         // const EncodedUrl = encodeURI(fileUrl)
         // console.log("EncodedUrl:",EncodedUrl);
 
-        
+
         async function convertDocument() {
             try {
                 let result;
@@ -129,7 +137,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                     })
                     console.log("Response Streaming end");
                     // const cleaner = new Transform({
-                        
+
                     //     transform(chunk,encoding,callback){
                     //         const cleaned = chunk.toString()
                     //         .replace(/[ \t]+/g,' ')
@@ -137,8 +145,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                     //         callback(null,cleaned)                            
                     //     }
                     // })
-                    
-                    
+
+
                     const writer = fs.createWriteStream(textFilePath);
                     // await pipeline(response.data,cleaner,writer)
                     await response.data.pipe(writer)
@@ -171,20 +179,61 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
 
         await convertDocument();
 
+        // calculating the perfect batch size according to the fileSize
+
+        // async function calculateBatchsize(sizeInBytes:number):Promise<number> {
+
+        //     const mbValue = sizeInBytes / 1_000_000;  // convert butes to MB using decimal formaula (1e+6)
+        //     let batchSize = 0
+        //     if(mbValue <=10){
+        //         batchSize = mbValue/5;
+        //     }else if(mbValue > 10 && mbValue <=15){
+        //         batchSize = mbValue/7;
+        //     }else if(mbValue > 15 && mbValue <=20){
+        //         batchSize = mbValue/10
+        //     }else{
+        //         batchSize = mbValue / 20;
+        //     }
+        //     console.log("batchSize in MB:",batchSize);
+
+        //     return Math.floor(batchSize*1_000_000)
+        // }
+
+        // const batchSizeInBytes = await calculateBatchsize(fileSize)
+        // console.log("batchSize in Bytes:",batchSizeInBytes);
 
         // processing the file stream in bacthes
 
-        async function processStreamBatches(batchSizeInBytes: 1024) {
+        async function processStreamBatches(
+            // batchSizeInBytes:number
+
+        ) {
             const splitter = new RecursiveCharacterTextSplitter({
-                chunkSize: 5000,
-                chunkOverlap: 500
+                chunkSize: 2000,
+                chunkOverlap: 200
             })
 
             try {
                 const parsedPath = path.parse(filePath);
                 const textFilePath = path.join(parsedPath.dir, parsedPath.name + ".txt");
 
-                // line by line approach
+                // creating qdrant Collection
+
+                // create qdrant collection with user + userId + fileName
+                console.log("Collection Name", qdrantCollection);
+                const collectionCreated = await client.createCollection(qdrantCollection, {
+                    vectors: {
+                        size: 1000,
+                        distance: "Dot"
+                    }
+                })
+
+                if (!collectionCreated) {
+                    throw new Error("Error creating collection")
+                }
+                console.log("Qdrant collection created",collectionCreated);
+
+                // 1. )  line by line approach
                 // const stream = fs.createReadStream(textFilePath)
                 // const rl = readline.createInterface({
                 //     input: stream,
@@ -206,13 +255,15 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 //     for (const chunk of chunks){
                 //         batch.push(chunk);
 
-                //         if(batch.length === batchSize){
+                //         if(batch.length === batchSizeInBytes){
                 //             await batchQueue.add("batchesForText",{
                 //                 data:batch,
                 //                 userId,
                 //                 fileName,
                 //                 qdrantCollection
                 //             });
+                //             console.log("Batch created-----:",batch);
+
 
                 //             batch = [];
                 //         }
@@ -230,29 +281,55 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 // }
                 // console.log("batches completed");
 
-                const stream = fs.createReadStream(textFilePath,{
-                    encoding:'utf-8',
-                    highWaterMark:batchSizeInBytes
+                // 2.) approuch through highwatermark
+                const stream = fs.createReadStream(textFilePath, {
+                    encoding: 'utf-8',
+                    highWaterMark: 1024 * 16
                 })
+                let buffer: string | undefined = "";
+                let bulkJobs: any[] = [];
 
-                for await (const chunk of stream){
-                    await batchQueue.add("batchesForText",{
-                        data:chunk,
-                        userId,
-                        fileName,
-                        qdrantCollection
+                for await (const streamChunk of stream) {
+                    buffer += streamChunk;
+                    const chunks = await splitter.splitText(buffer);
+                    if (chunks.length > 1) {
+                        buffer = chunks.pop() ?? "";
+                    }
+                    for await (const chunk of chunks) {
+                        console.log("chunk:", chunk);
+                        bulkJobs.push({
+                            name: "batchesForText",
+                            data: { data: chunk, userId, fileName, qdrantCollection },
+                            opts: { removeOnComplete: true, removeOnFail: true }
+                        });
+
+                        if (bulkJobs.length >= 50) {
+                            await batchQueue.addBulk(bulkJobs);
+                            bulkJobs.length = 0;
+                        }
+                    }
+                }
+                if (bulkJobs.length > 0) {
+                    await batchQueue.addBulk(bulkJobs);
+                }
+
+                // leftover chunks in case
+                if (buffer.length > 0) {
+                    await batchQueue.add("batchesForText", {
+                        data: buffer, userId, fileName, qdrantCollection
                     })
                 }
-                
-                console.log("Stream processing completed");                                
+
+
+                console.log("Stream processing completed");
                 console.log("data pused to queue");
-                
+
             } catch (error) {
                 console.log("Error processing streams:", error);
             }
         }
 
-        await processStreamBatches(1024);
+        await processStreamBatches();
 
         // 1 approach
 

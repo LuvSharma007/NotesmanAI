@@ -8,13 +8,13 @@ export const getContext = tool(
   async ({ query }, config) => {
     // console.log("User's Query:",query);
     
-    // console.log("Tool Called");
+    console.log("getContext Tool Called");
     
     const qdrantCollection = config.context.qdrantCollectionName;
     if (!qdrantCollection) {
       throw new Error("Qdrant collection is missing");
     }
-    // console.log("Qdrant collection",qdrantCollection);
+    console.log("Qdrant collection",qdrantCollection);
     
     // const embeddings = new GoogleGenerativeAIEmbeddings({
     //   apiKey: process.env.GEMINI_API_KEY,
@@ -22,32 +22,33 @@ export const getContext = tool(
     // });
 
     const embeddings = new OpenAIEmbeddings({
-            apiKey:process.env.OPENAI_API_KEY,
-            model:"text-embedding-3-large"
+        apiKey:process.env.OPENAI_API_KEY,
+        model:"text-embedding-3-large",
+        dimensions:1000
     })
     
-    // console.log("Embeddings Setup Done");
+    console.log("Embeddings Setup Done");
     
     const queryEmbedding = await embeddings.embedQuery(query);
-    console.log("Embeddings Response:",queryEmbedding);
+    console.log("Vector Embeddings of user's query:",queryEmbedding);
     // const queryEmbedding = embeddingResponse[0];
     // console.log("Embeddings Response:",queryEmbedding);
 
-    const searchResult = await client.search(qdrantCollection, {
-      vector: queryEmbedding,
-      limit: 5,
-    });
-
-    if (!searchResult) {
-      throw new Error("No search result");
+    let searchResult:any[]=[];
+    try {
+      searchResult = await client.search(qdrantCollection, {
+        vector: queryEmbedding,
+        limit: 5,
+      });
+      console.log("Search Result:",searchResult);
+    } catch (error) {
+      console.log("Error connecting to qdrant client",error);
     }
-    // console.log("Search Result:",searchResult);
     
-    const contexts = searchResult
-  .map(r => r.payload?.content)
-  .filter((content): content is string => typeof content === 'string' && content.trim() !== "")
+    const contexts = searchResult.map(r => r.payload?.text)
+  .filter((text): text is string => typeof text === 'string' && text.trim() !== "")
   .join("\n\n");
-    // console.log("context:",contexts);
+    console.log("context:",contexts);
     
     return contexts || "No relevant context found.";
 

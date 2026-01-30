@@ -17,7 +17,9 @@ const uploadOnCloudinary = async (localFilePath: string)=>{
             resource_type:"auto",
             folder:'notesman-fullstack',
             use_filename:true,
-            overwrite:false,    
+            overwrite:false,   
+            timeout:60000 
+            
             // type:'authenticated'     
         })
         

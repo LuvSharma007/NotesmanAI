@@ -80,7 +80,7 @@ Important:
 //     documentContext: string;
 //     query: string;
 //   }): Promise<string> => {
-//     console.log("→ Generating final response...");
+//     console.log("Generating final response...");
     
 //     const prompt = `User Question: ${params.query}
 
@@ -145,7 +145,7 @@ export const chat = async (req: Request, res: Response) => {
 
     const agent = createAgent({
       model: "gpt-4.1-nano",
-      tools: [getConversation,getContext],
+      tools: [getContext,getConversation],
       // middleware: [parallelContextLoaderMiddleware],
       description: `You are an AI Expert Agent that give answer based on the available context.`,
       contextSchema: z.object({
@@ -201,10 +201,7 @@ export const chat = async (req: Request, res: Response) => {
       }
     }
 
-
-  
   console.log("aiResponse:", aiResponse);
-
 
     res.end();
 
@@ -217,7 +214,7 @@ export const chat = async (req: Request, res: Response) => {
       fileName: file.fileName,
       userMessage: query,
       aiMessage: aiResponse
-    })
+    },{removeOnComplete:true,removeOnFail:true})
 
     console.log(`Job added to the queue ${job}`);
 

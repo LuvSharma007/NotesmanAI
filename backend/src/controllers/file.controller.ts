@@ -21,6 +21,7 @@ export const uploadFile = async(req:Request,res:Response)=>{
             })
         }
         console.log("got the file and Size ",file.size);
+        const fileSize = file.size
         
         // validate file type
         
@@ -37,7 +38,6 @@ export const uploadFile = async(req:Request,res:Response)=>{
 
         const uploadedFile = await uploadOnCloudinary(filePath)
                
-
         if(!uploadedFile){
             throw new Error("File required")
         }
@@ -83,7 +83,8 @@ export const uploadFile = async(req:Request,res:Response)=>{
             userId,
             qdrantCollection,
             filePath,
-        })
+            fileSize
+        },{removeOnComplete:true,removeOnFail:true})
 
         console.log(`Job added to the queue ${job}`);
         
@@ -166,7 +167,7 @@ export const deleteFile = async(req:Request,res:Response)=>{
             userId:file.userId,
             publicId:file.publicId,
             qdrantCollection:file.qdrantCollection
-        })
+        },{removeOnComplete:true,removeOnFail:true})
 
         console.log(`Job added to the queue ${deletionJob}`);
 
