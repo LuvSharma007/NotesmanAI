@@ -39,6 +39,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<string[]>([])
   const [file, setFile] = useState<File | null>(null)
+  const router = useRouter()
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,8 +112,10 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to fetch files");
-
+      if(!res.ok){
+        router.push("/login")
+      }
+      
       const data = await res.json();
 
       if (data.success && Array.isArray(data.files)) {

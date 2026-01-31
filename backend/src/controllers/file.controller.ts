@@ -1,7 +1,6 @@
 import fileModel from "../models/file.model.js";
 import { Request, Response } from "express";
 import {uploadOnCloudinary} from "../lib/cloudinary.js";
-import fs from 'fs'
 import { fileProcessingQueue } from "../bullmq/queues/upload.queue.js";
 import mongoose from "mongoose";
 import { deleteFileQueue } from "../bullmq/queues/delete.queue.js";
@@ -20,10 +19,17 @@ export const uploadFile = async(req:Request,res:Response)=>{
                 error:"No file Provided"
             })
         }
+        if(file.size > 15728640){
+            res.status(400).json({
+                success:false,
+                message:"File should be lower than 15mb"
+            })
+        }
         console.log("got the file and Size ",file.size);
         const fileSize = file.size
         
         // validate file type
+        // pending-----------------
         
         console.log("Uploading to cloudinary");
         

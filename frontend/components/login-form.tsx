@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Spinner } from "./ui/shadcn-io/spinner"
 import { authClient } from "@/lib/auth-client"
@@ -22,35 +22,36 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
 
 
-  const [email , setEmail] = useState("")
-  const [password , setPassword] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleLogin = async (e:React.FormEvent)=>{
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true)
     try {
-      const {data,error} = await authClient.signIn.email({
+      const { data, error } = await authClient.signIn.email({
         email,
         password
       })
-      if(data){
+      if (data) {
         router.push("/c")
-        console.log("User Login successfully",data);
+        console.log("User Login successfully", data);
         toast.success("Login successfully")
-      }else{
-        console.log("Error Login user",error);
-        toast.error(error?.message || "Login failed")        
+      } else {
+        console.log("Error Login user", error);
+        toast.error(error?.message || "Login failed")
       }
     } catch (error) {
       setLoading(false)
-      console.log("Error Login user",error);
-      toast.error("Something went wrong") 
-    }finally{
+      console.log("Error Login user", error);
+      toast.error("Something went wrong")
+    } finally {
       setLoading(false)
     }
   }
+
 
   // const handleGoogleLogin = async()=>{
   //   try {
@@ -63,7 +64,7 @@ export function LoginForm({
   //     toast.error("Something went wrong")
   //   }
   // }
-  
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -71,12 +72,12 @@ export function LoginForm({
           <CardTitle className="text-xl font-bold">LOGIN</CardTitle>
         </CardHeader>
         <CardContent>
-          <form 
-          onSubmit={handleLogin}
+          <form
+            onSubmit={handleLogin}
           >
             <div className="grid gap-6">
-              <div className="flex flex-col gap-4">  
-                <Button variant="outline" className="w-full" 
+              <div className="flex flex-col gap-4">
+                <Button variant="outline" className="w-full"
                 // onClick={handleGoogleLogin}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -100,7 +101,7 @@ export function LoginForm({
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e)=>setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="m@example.com"
                     required
                   />
@@ -115,13 +116,13 @@ export function LoginForm({
                       Forgot your password?
                     </a>
                   </div>
-                  <Input id="password" type="password" 
-                  value={password}
-                  onChange={(e)=>setPassword(e.target.value)}
-                  required />
+                  <Input id="password" type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required />
                 </div>
                 <Button type="submit" className="w-full">
-                  {loading ? <Spinner/> : "Login"}
+                  {loading ? <Spinner /> : "Login"}
                 </Button>
               </div>
               <div className="text-center text-sm">

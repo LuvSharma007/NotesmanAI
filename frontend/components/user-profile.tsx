@@ -14,12 +14,13 @@ export const UserProfile = () => {
   useEffect(()=>{
     const getUser = async ()=>{
       try {
-        const { data } = await axios.get(`http://localhost:4000/api/me`, {
+        const response = await axios.get(`http://localhost:4000/api/me`, {
           withCredentials: true,
         });
-        console.log(data);
+        console.log(response)
+        console.log(response.data);
         
-        setSession(data);
+        setSession(response.data);
       } catch (err) {
         setSession(null);
       } finally {
