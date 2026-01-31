@@ -34,8 +34,15 @@ const worker = new Worker('delete-file-queue',async (job:Job)=>{
     console.log("started Worker");
     try {
         const {fileId , userId , qdrantCollection , publicId} = job.data;
+
+        if(!fileId || !userId || !publicId){
+            throw new Error("FileId or userId not found")
+        }
         console.log("FileId:",fileId);
         console.log("UserId:",userId);
+        console.log("PublicId:",publicId);
+
+
         
         const qdrantCollectionDeleted = await client.deleteCollection(qdrantCollection)
         if(!qdrantCollectionDeleted){
@@ -43,11 +50,11 @@ const worker = new Worker('delete-file-queue',async (job:Job)=>{
         }
         console.log('Qdrant collection deleted');
         
-        const cloudinaryDeletion = await cloudinary.uploader.destroy(publicId,{resource_type:'raw'})
+        const cloudinaryDeletion = await cloudinary.uploader.destroy(publicId,{resource_type:'raw',invalidate:true})
         if(!cloudinaryDeletion){
             throw new Error("Error deletion cloudinary file")
         }
-        console.log('Cloudinary file deleted');
+        console.log('Cloudinary file deleted',cloudinaryDeletion);
         
         const messagesDeleted = await messageModel.deleteMany({fileId,userId});
         if(!messagesDeleted){

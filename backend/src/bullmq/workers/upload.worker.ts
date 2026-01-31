@@ -172,8 +172,10 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 console.error("Error converting file", error)
             } finally {
                 // removing the file from disk after being processed
-                // fs.unlinkSync(filePath);
-                // console.log("Temp file deleted:", filePath);
+                if(["pdf","doc","docx"].includes(extension.toLowerCase())){
+                    fs.unlinkSync(filePath);
+                    console.log("Temp file deleted:", filePath);
+                }
             }
         }
 
@@ -213,9 +215,9 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 chunkOverlap: 200
             })
 
+            const parsedPath = path.parse(filePath);
+            const textFilePath = path.join(parsedPath.dir, parsedPath.name + ".txt");
             try {
-                const parsedPath = path.parse(filePath);
-                const textFilePath = path.join(parsedPath.dir, parsedPath.name + ".txt");
 
                 // creating qdrant Collection
 
@@ -326,11 +328,17 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
 
             } catch (error) {
                 console.log("Error processing streams:", error);
+                fs.unlinkSync(textFilePath);
+                console.log("Temp file deleted:", textFilePath);
+            }finally{
+                // removing the converted file from disk after being processed
+                fs.unlinkSync(textFilePath);
+                console.log("Temp file deleted:", textFilePath);
             }
         }
-
+        
         await processStreamBatches();
-
+        
         // 1 approach
 
         // let docs;

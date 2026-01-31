@@ -13,15 +13,17 @@ const uploadOnCloudinary = async (localFilePath: string)=>{
             throw new Error("No file path found")
         }
         
+        
         const response = await cloudinary.uploader.upload(localFilePath,{
-            resource_type:"auto",
+            resource_type:"raw",
             folder:'notesman-fullstack',
             use_filename:true,
             overwrite:false,   
             timeout:60000 
-            
             // type:'authenticated'     
         })
+        
+
         
         console.log("File has been uploaded to cloudinary:",response);
         return response;
