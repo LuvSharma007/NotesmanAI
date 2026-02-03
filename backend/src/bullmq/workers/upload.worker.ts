@@ -8,12 +8,9 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET_KEY
 })
 
-import { TextLoader } from "@langchain/classic/document_loaders/fs/text"
+
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 // import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
-import { QdrantVectorStore } from '@langchain/qdrant';
 import { Job, tryCatch, Worker } from 'bullmq'
 import { v2 as cloudinary } from "cloudinary"
 import axios from 'axios';
@@ -23,18 +20,8 @@ import fs, { write } from 'fs'
 import fileModel from '../../models/file.model.js';
 import { Redis } from "ioredis";
 import { DB } from "../../db/client.js";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { createRequire } from "module";
-import { pipeline } from "stream/promises";
-import { url } from "inspector";
-import { isGeneratorFunction } from "util/types";
-import { Readable, Transform } from "stream";
-import readline from "readline";
 import { batchQueue } from "../queues/batches.queue.js";
-// import { client } from "../../lib/qdrantClient.js"
-import { promisify } from "util";
-import { error } from "console";
-import { string } from "better-auth";
 import { QdrantClient } from "@qdrant/js-client-rest";
 
 const connection = new Redis({
@@ -66,31 +53,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         console.log(`Processing Job ${job.id} for file:${fileName}`);
         console.log("Downloading URL");
 
-        // const format = fileName.split('.').pop() || 'pdf'; // fallback to pdf
-        // const downloadUrl = cloudinary.utils.private_download_url(publicId, format, {
-        //     attachment: true, // force download
-        //     resource_type:"raw",
-        // });
+
         console.log("File URL", fileUrl);
-        // try {
-        //     const response = await axios({
-        //         method: 'GET',
-        //         url: fileUrl,
-        //         responseType: 'stream',
-        //     })
-
-        //     tempFilePath = path.join(os.tmpdir(), fileName);
-        //     const writer = fs.createWriteStream(tempFilePath);
-        //     response.data.pipe(writer);
-
-        //     await new Promise<void>((resolve, reject) => {
-        //         writer.on('finish', () => resolve());
-        //         writer.on('error', reject);
-        //     });
-        // } catch (error) {
-        //     console.log("Error getting response:",error);
-        //     throw new Error("Error getting FileUrl")
-        // }
 
         tempFilePath = path.join(os.tmpdir(), fileName);
         console.log(`File downloaded to temporary location: ${tempFilePath}`);
@@ -338,113 +302,15 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         }
         
         await processStreamBatches();
-        
-        // 1 approach
-
-        // let docs;
-
-        // if (extension === 'pdf') {
-        //     docs = await new PDFLoader(filePath).load()   // load everthing in memory (BAD)
-        // } else if (extension === 'txt') {
-        //     docs = await new TextLoader(filePath).load()
-        // } else if (extension === 'docx') {
-        //     docs = await new DocxLoader(filePath).load()
-        // } else {
-        //     throw new Error('Unsupported File type')
-        // }
-
-        // // // validate
-
-        // if (docs.length === 0) {
-        //     throw new Error("Document does not load properly")
-        // } else {
-        //     console.log("Docs:", docs.length);
-        //     console.log("Docs:", docs);
-        // }
-
-
-        // // split into chunks
-
-        // const splitter = new RecursiveCharacterTextSplitter({
-        //     chunkSize:5000,
-        //     chunkOverlap:500
-        // })    
-
-        // const splitDocs = await splitter.   // splitter can't receive data as streams
-
-        // if(splitDocs.length === 0){
-        //     throw new Error("Document does not split properly")
-        // }else{
-        //     console.log("Splitting Done",splitDocs.length);
-        //     console.log("Splitting Done",splitDocs);
-        // }
-
-
-        // 2 approach
-
-        // const readStream = fs.createReadStream(tempFilePath)
-
-        // readStream.on("data",(chunk)=>{
-        //     // chunks come in buffer default
-        //     console.log(`${chunk.length}, Chunk:${chunk}`);
-        // })
-
-        // readStream.on("end",()=>{
-        //     console.log("Streaming end");            
-        // })
-
-        // readStream.on("error",(err)=>{
-        //     throw new Error("Error during streaming",err)
-        // })
-
-        // // create Embeddings
-
-        // // using Google Gemini
-
-        // const embeddings = new GoogleGenerativeAIEmbeddings({
-        //     apiKey: process.env.GEMINI_API_KEY,
-        //     model: 'gemini-embedding-001'
-        // })
-
-        // openAI embeddings model
-
-        // const embeddings = new OpenAIEmbeddings({
-        //     apiKey: process.env.OPENAI_API_KEY,
-        //     model: "text-embedding-3-large",
-        //     batchSize: 100  // reduce load
-        // })
-
-        // console.log("Embeddings setup done");
-
-        // const qdrantRes = await QdrantVectorStore.fromDocuments(docs, embeddings, {
-        //     apiKey: process.env.QDRANT_API_KEY,
-        //     url: process.env.QDRANT_URL,
-        //     collectionName: qdrantCollection
-        // })
-        // if (!qdrantRes) {
-        //     throw new Error("Qdrant response is missing")
-        // }
-
-        // console.log("Successfully saved to Qdrant DB", qdrantRes);
-
-        // await fileModel.findByIdAndUpdate(fileId, { status: "completed" })
-        // console.log(`File ${fileId} marked as completed in MongoDB`);
 
     } catch (error) {
         await fileModel.findByIdAndUpdate(fileId, { status: "failed" })
         console.error("Worker job failed:", error);
         throw new Error("Error , worker is not working , LOL")
-    } finally {
-        if (tempFilePath && fs.existsSync(tempFilePath)) {
-            fs.unlinkSync(tempFilePath);
-            console.log(`Temporary file deleted: ${tempFilePath}`);
-        }
     }
 },
     {
         connection,
-        removeOnComplete: { count: 10 }
-
     }
 )
 
