@@ -15,7 +15,6 @@ export const isAuthenticated = async (
     const session = await auth.api.getSession({ headers });
     console.log("user's Session",session);
     
-
     if (!session || !session.user) {
       return res.status(401).json({
         success: false,

@@ -119,7 +119,7 @@ export function ChatInterface({
         }
 
       } catch (error) {
-        // console.log("Error fetching messages",error);
+        console.log("Error fetching messages",error);
         toast.error("Error Fetching messages");
       }
     }

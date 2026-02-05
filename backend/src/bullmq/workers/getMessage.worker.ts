@@ -18,7 +18,7 @@ const worker = new Worker('conversation-queue',async(job:Job)=>{
         const messagesId = `chat:${userId}:${fileId}`
         
         const messages = await connection.lrange(messagesId,0,-1);
-        if(!messages){
+        if(messages.length === 0){
             console.error("No messages return from redis");
             return null;
         }

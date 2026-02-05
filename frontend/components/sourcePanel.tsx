@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from "react"
 import { CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Upload, X } from "lucide-react"
+import { ArrowRight, FileText, Upload, X } from "lucide-react"
 import { toast } from "sonner"
 import { Spinner } from "./ui/shadcn-io/spinner"
 import { useRouter } from "next/navigation"
@@ -39,6 +39,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<string[]>([])
   const [file, setFile] = useState<File | null>(null)
+  const [url, setUrl] = useState("");
   const router = useRouter()
 
   // Handle file selection
@@ -61,16 +62,16 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         const formData = new FormData()
         formData.append("file", file)
         console.log("Before request");
-        
-        
+
+
         // Example: Adjust this API endpoint to your backend route
         const res = await fetch(`http://localhost:4000/api/v1/users/upload`, {
           method: "POST",
           body: formData,
-          credentials:"include"
+          credentials: "include"
         })
-        console.log("After request",res);
-        
+        console.log("After request", res);
+
         if (!res.ok) throw new Error("Upload failed")
 
         const data = await res.json();
@@ -88,11 +89,11 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         }
 
         setSources((prev) => [...prev, newSource])
-        console.log("sources:",sources);
-        
+        console.log("sources:", sources);
+
         toast.success("File uploaded successfully!")
       } catch (err) {
-        console.error("Failed to upload file",err)
+        console.error("Failed to upload file", err)
         toast.error("Failed to upload file.")
       } finally {
         setLoading(false)
@@ -105,67 +106,94 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
   }, [file]) // runs automatically when file changes
 
   useEffect(() => {
-  const getAllFiles = async () => {
+    const getAllFiles = async () => {
+      try {
+        const res = await fetch("http://localhost:4000/api/v1/users/get-files", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          router.push("/login")
+        }
+
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.files)) {
+          const mappedFiles: Source[] = (data.files as FileResponse[]).map((f) => ({
+            _id: f._id,
+            name: f.fileName,
+            type: f.fileType.includes("pdf")
+              ? "pdf"
+              : f.fileType.includes("word")
+                ? "docx"
+                : "txt",
+            uploadDate: f.createdAt,
+            size: `${(f.fileSize / 1024).toFixed(1)} KB`,
+            status: f.status || "processing",
+          }));
+
+          setSources(mappedFiles);
+        }
+      } catch (error) {
+        console.error("Error fetching files:", error);
+        toast.error("Failed to load your files");
+      }
+    };
+
+    getAllFiles();
+  }, []);
+
+  const handleDeleteFile = async (fileId: string) => {
     try {
-      const res = await fetch("http://localhost:4000/api/v1/users/get-files", {
-        method: "GET",
+      setDeleting((prev) => [...prev, fileId]);
+      const res = await fetch(`http://localhost:4000/api/v1/users/delete-file/${fileId}`, {
+        method: 'DELETE',
         credentials: "include",
-      });
-
-      if(!res.ok){
-        router.push("/login")
+      })
+      if (!res.ok) {
+        throw new Error("Failed to delete")
       }
-      
-      const data = await res.json();
-
-      if (data.success && Array.isArray(data.files)) {
-        const mappedFiles: Source[] = (data.files as FileResponse[]).map((f) => ({
-          _id: f._id,
-          name: f.fileName,
-          type: f.fileType.includes("pdf")
-            ? "pdf"
-            : f.fileType.includes("word")
-              ? "docx"
-              : "txt",
-          uploadDate: f.createdAt,
-          size: `${(f.fileSize / 1024).toFixed(1)} KB`,
-          status: f.status || "processing",
-        }));
-
-        setSources(mappedFiles);
+      setSources((prev) => prev.filter((s) => s._id !== fileId))
+      if (onSourceDelete) {
+        onSourceDelete(fileId)
       }
+
+      toast.success("File deleted");
     } catch (error) {
-      console.error("Error fetching files:", error);
-      toast.error("Failed to load your files");
+      toast.error("Error deleting file")
+      console.log("error uploading file:", error);
+    } finally {
+      setDeleting((prev) => prev.filter((id) => id !== fileId))
     }
-  };
-
-  getAllFiles();
-}, []);
-
-const handleDeleteFile = async (fileId:string)=>{
-  try {
-    setDeleting((prev)=>[...prev,fileId]);
-    const res = await fetch(`http://localhost:4000/api/v1/users/delete-file/${fileId}`,{
-      method:'DELETE',
-      credentials:"include",
-    })
-    if(!res.ok){
-      throw new Error("Failed to delete")
-    }
-    setSources((prev)=>prev.filter((s)=>s._id !== fileId))
-    if (onSourceDelete) {
-      onSourceDelete(fileId)
-    }
-    
-    toast.success("File deleted");
-  } catch (error) {
-    toast.error("Error deleting file")
-    console.log("error uploading file:",error);
-  }finally{
-    setDeleting((prev)=>prev.filter((id)=>id !== fileId))
   }
-}
+
+  const handleUrlSubmit = async () => {
+    try {
+      if (!url.trim()) {
+        toast.error("URL is required")
+        return;
+      }
+      console.log("function runned");
+
+      const res = await fetch(`http://localhost:4000/api/v1/url/getUrl`, {
+        method: 'POST',
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      })
+
+      if (!res.ok) {
+        throw new Error("Error Scrape URL")
+      }
+      toast.success("Processing URL")
+    } catch (error) {
+      toast.error("Error Sending URl")
+      console.log("error sendings URL:", error);
+    }
+  }
 
 
   return (
@@ -190,6 +218,26 @@ const handleDeleteFile = async (fileId:string)=>{
             <p className="text-xs text-muted-foreground">PDF, DOCX, TXT</p>
           </div>
         </label>
+        <label>
+          <div className="relative mt-2">
+            <input
+              type="text"
+              placeholder="paste url here"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="w-full px-2 py-3 pr-10 text-sm text-center
+             border-2 border-dashed border-muted-foreground/25
+             rounded-lg outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleUrlSubmit}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+              <ArrowRight className="size-4 text-muted-foreground hover:text-foreground" />
+            </button>
+          </div>
+        </label>
 
         <input
           id="file-upload"
@@ -198,13 +246,16 @@ const handleDeleteFile = async (fileId:string)=>{
           ref={fileInputRef}
           onChange={handleFileSelect}
         />
+
       </div>
+
+
 
       {/* Sources */}
       <div className="flex-1 overflow-y-auto p-4">
         <h2 className="text-sm font-medium mb-3">Sources</h2>
         {sources.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No files uploaded yet.</p>
+          <p className="text-xs text-muted-foreground">No files uploaded yet</p>
         ) : (
           <div className="space-y-2">
             {sources.map((source) => (

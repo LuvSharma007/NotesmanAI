@@ -16,7 +16,7 @@ import { v2 as cloudinary } from "cloudinary"
 import axios from 'axios';
 import path from 'path';
 import os from 'os'
-import fs, { write } from 'fs'
+import fs from 'fs'
 import fileModel from '../../models/file.model.js';
 import { Redis } from "ioredis";
 import { DB } from "../../db/client.js";
@@ -247,7 +247,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 // }
                 // console.log("batches completed");
 
-                // 2.) approuch through highwatermark
+                // 2.) approuch through highwatermark with batches
                 const stream = fs.createReadStream(textFilePath, {
                     encoding: 'utf-8',
                     highWaterMark: 1024 * 16
@@ -263,7 +263,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                     }
                     for await (const chunk of chunks) {
                         console.log("chunk:", chunk);
-                        bulkJobs.push({
+                    bulkJobs.push({
                             name: "batchesForText",
                             data: { data: chunk, userId, fileName, qdrantCollection },
                             opts: { removeOnComplete: true, removeOnFail: true }

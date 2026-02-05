@@ -100,7 +100,7 @@ export const uploadFile = async(req:Request,res:Response)=>{
         // console.log("Temp file deleted:", filePath);
         
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "File uploaded successfully",
             file: {

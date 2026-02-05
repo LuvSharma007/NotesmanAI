@@ -62,7 +62,7 @@ const worker = new Worker('message-queue',async (job:Job)=>{
     const RedisMessageSaved = await connection.rpush(`chat:${userId}:${fileId}`,userMsg,aiMsg);
     await connection.expire(`chat:${userId}:${fileId}`,36000) // expire the messages after one hour
 
-    await connection.ltrim(`chat:${userId}:${fileId}`,-20,-1);
+    await connection.ltrim(`chat:${userId}:${fileId}`,-20,-1);  // Negative indexes: Negative numbers can be used to specify offsets from the end of the list, where -1 is the last element, -2 is the penultimate
     console.log("Message Saved in redis:",RedisMessageSaved);
     
 

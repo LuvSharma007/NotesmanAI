@@ -7,8 +7,7 @@ export async function middleware(request:NextRequest){
         if(!cookie){
             console.log("Unauthorized Access");        
             return NextResponse.redirect(new URL("/login",request.url))
-        }
-        console.log(cookie);        
+        } 
         return NextResponse.next()
     } catch (error) {
         console.log("Error:",error);

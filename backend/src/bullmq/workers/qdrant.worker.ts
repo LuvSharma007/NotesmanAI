@@ -20,11 +20,13 @@ const client = new QdrantClient({
 
 
 const worker = new Worker("batch-queue", async job => {
-    const {qdrantCollection,userId,fileName} = job.data;
+    const {qdrantCollection,userId,fileName,url} = job.data;
     try {
         console.log("Starting batch queue");
+        console.log("User Url",url);
         
-        if (job.name === "batchesForText") {
+        
+        if (job.name === "batchesForText" || job.name==="BatchesForUrl") {
             console.log("Job data:---", job.data.data);
             const embeddings = new OpenAIEmbeddings({
                 apiKey: process.env.OPENAI_API_KEY,
@@ -37,6 +39,21 @@ const worker = new Worker("batch-queue", async job => {
             console.log("creating vectors");
 
             let inputData = Array.isArray(job.data.data) ? job.data.data : [job.data.data]
+            let payload:{};
+            if(fileName){
+                payload = {
+                    text:job.data.data,
+                    source:fileName,
+                    userId
+                }
+            }else{
+                payload = {
+                    text:job.data.data,
+                    source:url,
+                    metadata:job.data.metadata,
+                    userId
+                }
+            }
 
             const vectors = await embeddings.embedDocuments(inputData);
             console.log("vectors", vectors);
@@ -44,11 +61,7 @@ const worker = new Worker("batch-queue", async job => {
             await client.upsert(qdrantCollection, {
                 batch:{
                     ids:[crypto.randomUUID()],
-                    payloads:[{
-                        text:job.data.data,
-                        source:fileName,
-                        userId
-                    }],
+                    payloads:[{payload}],
                     vectors:vectors
                 }
             })

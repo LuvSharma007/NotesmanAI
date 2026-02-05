@@ -10,14 +10,14 @@ export const getMessage = async(req:Request,res:Response)=>{
         console.log("User Id:",userId);
         console.log("File Id:",fileId);
 
-        if(!fileId){
-            return res.status(400).json({success:false,message:"filedId is required"})
+        if(!fileId || !userId){
+            return res.status(400).json({success:false,message:"filedId or userId is required"})
         }
 
         const cacheMessages = client.lrange(`chat:${userId}:${fileId}`,0,4)
         console.log("Messages from redis",cacheMessages);       
 
-        const userMessages = await messageModel.find({userId,fileId}).sort({createdAt:1});
+        const userMessages = await messageModel.find({userId,fileId}).sort({createdAt:1});  // returns the messages in asc order(oldest to newest)
         console.log("User Messages Found:",userMessages);     
 
         if(userMessages.length === 0){
