@@ -6,6 +6,7 @@ import { Worker } from "bullmq";
 import { Redis } from "ioredis";
 // import { client } from "../../lib/qdrantClient.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
+import { batchQueue } from "../queues/batches.queue.js";
 
 const connection = new Redis({
     host: "localhost",
@@ -21,6 +22,8 @@ const client = new QdrantClient({
 
 const worker = new Worker("batch-queue", async job => {
     const {qdrantCollection,userId,fileName,url} = job.data;
+    // await worker.pause(true)
+    // await batchQueue.obliterate({ force: true })
     try {
         console.log("Starting batch queue");
         console.log("User Url",url);
@@ -39,20 +42,10 @@ const worker = new Worker("batch-queue", async job => {
             console.log("creating vectors");
 
             let inputData = Array.isArray(job.data.data) ? job.data.data : [job.data.data]
-            let payload:{};
-            if(fileName){
-                payload = {
+            let payload = {
                     text:job.data.data,
-                    source:fileName,
+                    source:fileName || url,
                     userId
-                }
-            }else{
-                payload = {
-                    text:job.data.data,
-                    source:url,
-                    metadata:job.data.metadata,
-                    userId
-                }
             }
 
             const vectors = await embeddings.embedDocuments(inputData);
@@ -61,7 +54,7 @@ const worker = new Worker("batch-queue", async job => {
             await client.upsert(qdrantCollection, {
                 batch:{
                     ids:[crypto.randomUUID()],
-                    payloads:[{payload}],
+                    payloads:[payload],
                     vectors:vectors
                 }
             })

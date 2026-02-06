@@ -283,7 +283,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 if (buffer.length > 0) {
                     await batchQueue.add("batchesForText", {
                         data: buffer, userId, fileName, qdrantCollection
-                    })
+                    },{removeOnComplete:true,removeOnFail:true})
                 }
 
 

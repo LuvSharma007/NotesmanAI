@@ -174,8 +174,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         toast.error("URL is required")
         return;
       }
-      console.log("function runned");
-
       const res = await fetch(`http://localhost:4000/api/v1/url/getUrl`, {
         method: 'POST',
         credentials: "include",
