@@ -2,7 +2,7 @@ import mongoose, { Model, Schema } from "mongoose";
 
 export interface IFile extends Document{
     userId:mongoose.Types.ObjectId;
-    fileName:string
+    name:string
     diskName:string
     fileType:"pdf" | "docx" | "txt" | string
     fileSize:string
@@ -18,7 +18,7 @@ const fileSchema:Schema<IFile> = new Schema({
         ref:"user",
         required:true
     },
-    fileName:{
+    name:{
         type:String,
         required:true
     },

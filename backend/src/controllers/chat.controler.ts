@@ -5,6 +5,7 @@ import { getContext } from "../agents/tools/getContextTool.js";
 import { z } from 'zod'
 import { messageQueue } from "../bullmq/queues/message.queue.js";
 import {getConversation} from "../agents/tools/getConversation.js";
+import urlModel from "../models/url.model.js";
 
 const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId");
 
@@ -126,20 +127,31 @@ Important:
 export const chat = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { query, fileId } = req.body;
+    const { query, id ,sourceType} = req.body;
+    console.log("Id:",id);
+    console.log("SourceType:",sourceType);    
     console.log("Query:",query);
     
 
-    if (!query || !fileId || !userId) {
-      return res.status(404).json({ message: "No query found" });
+    if (!query || !id || !userId || !sourceType) {
+      return res.status(404).json({ message: "Missing required fields" });
+    }
+    if(!["file","url"].includes(sourceType)){
+      return res.status(400).json({message:"Invalid sourceType"})
     }
 
-    const file = await fileModel.findOne({ _id: fileId, userId });
-    if (!file) {
-      return res.status(404).json({ message: "File not found" });
+    let source;
+
+    if(sourceType === "file"){
+      source = await fileModel.findOne({ _id: id, userId });
+    }else{
+      source = await urlModel.findOne({_id:id,userId})
+    }
+    if (!source) {
+      return res.status(404).json({ message: "Source not found" });
     }
 
-    const qdrantCollectionName = file.qdrantCollection;
+    const qdrantCollectionName = source.qdrantCollection;
 
     const agent = createAgent({
       model: "gpt-4.1-nano",
@@ -149,7 +161,7 @@ export const chat = async (req: Request, res: Response) => {
       contextSchema: z.object({
         qdrantCollectionName: z.string(),
         userId: objectIdSchema,
-        fileId: objectIdSchema,
+        id: objectIdSchema,
         conversationSummary: z.string().optional()
       })
     });
@@ -178,7 +190,7 @@ export const chat = async (req: Request, res: Response) => {
       {
         streamMode:"messages",
         context: {
-          qdrantCollectionName, userId, fileId
+          qdrantCollectionName, userId, id
         },
       }
     );
@@ -199,7 +211,7 @@ export const chat = async (req: Request, res: Response) => {
       }
     }
 
-  console.log("aiResponse:", aiResponse);
+    console.log("aiResponse:", aiResponse);
 
     res.end();
 
@@ -208,8 +220,8 @@ export const chat = async (req: Request, res: Response) => {
 
     const job = await messageQueue.add("save-message", {
       userId,
-      fileId,
-      fileName: file.fileName,
+      id,
+      name: source.name,
       userMessage: query,
       aiMessage: aiResponse
     },{removeOnComplete:true,removeOnFail:true})

@@ -46,17 +46,16 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
     let fileId;
 
     try {
-        const { fileUrl, fileName, qdrantCollection, filePath, userId, fileSize } = job.data;
-        fileId = job.data.fileId
+        const { fileUrl, name, qdrantCollection, filePath, userId, fileSize } = job.data;
 
 
-        console.log(`Processing Job ${job.id} for file:${fileName}`);
+        console.log(`Processing Job ${job.id} for file:${name}`);
         console.log("Downloading URL");
 
 
         console.log("File URL", fileUrl);
 
-        tempFilePath = path.join(os.tmpdir(), fileName);
+        tempFilePath = path.join(os.tmpdir(),"public", "temp", name);
         console.log(`File downloaded to temporary location: ${tempFilePath}`);
         const extension = path.extname(filePath).toLowerCase().replace('.', '');
         console.log("Extension", extension);
@@ -81,7 +80,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 } else if (['pdf', 'doc', 'docx',].includes(extension.toLowerCase())) {
                     result = await convertApi.convert("txt", {
                         File: fileUrl,
-                        FileName: fileName,
+                        FileName: name,
                     }, extension);
 
                     console.log("result:", result);
@@ -265,7 +264,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                         console.log("chunk:", chunk);
                     bulkJobs.push({
                             name: "batchesForText",
-                            data: { data: chunk, userId, fileName, qdrantCollection },
+                            data: { data: chunk, userId, name, qdrantCollection },
                             opts: { removeOnComplete: true, removeOnFail: true }
                         });
 
@@ -282,7 +281,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 // leftover chunks in case
                 if (buffer.length > 0) {
                     await batchQueue.add("batchesForText", {
-                        data: buffer, userId, fileName, qdrantCollection
+                        data: buffer, userId, name, qdrantCollection
                     },{removeOnComplete:true,removeOnFail:true})
                 }
 

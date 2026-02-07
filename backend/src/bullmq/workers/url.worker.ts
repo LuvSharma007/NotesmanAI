@@ -28,7 +28,7 @@ await DB();
 
 const worker = new Worker("url-queue", async (job: Job) => {
     console.log("started worker");
-    const { userId, url, qdrantCollection } = job.data;
+    const { userId, url, qdrantCollection,name } = job.data;
     // making a file for batches 
             const rootDir = process.cwd();
             const dirPath = path.join(rootDir, "public", "temp");
@@ -107,7 +107,7 @@ const worker = new Worker("url-queue", async (job: Job) => {
                         buffer = chunks.pop() ?? "";
                     }
                     for await (const chunk of chunks) {
-                        console.log("chunk:-----", chunk);
+                        console.log("chunk:-----", chunk.length);
                         bulkJobs.push({
                             name: "BatchesForUrl",
                             data: { data: chunk, userId, url, qdrantCollection },
@@ -118,9 +118,12 @@ const worker = new Worker("url-queue", async (job: Job) => {
                             await batchQueue.addBulk(bulkJobs);
                             bulkJobs.length = 0;
                         }                        
-                        console.log("Data pused to queue:------------",chunk);
+                        console.log("Data pused to queue:------------",chunk.length);
                     }
                     
+                }
+                if(bulkJobs.length > 0){
+                    await batchQueue.addBulk(bulkJobs)
                 }
                 // leftover chunks in case
                 if (buffer.length > 0) {
@@ -146,8 +149,8 @@ const worker = new Worker("url-queue", async (job: Job) => {
         throw new Error("Error , worker failed")
     }finally{
         // removing the converted file from disk after being processed
-        // fs.unlinkSync(filePath);
-        // console.log("Temp file deleted:", filePath);
+        fs.unlinkSync(filePath);
+        console.log("Temp file deleted:", filePath);
     }
 }, { connection })
 

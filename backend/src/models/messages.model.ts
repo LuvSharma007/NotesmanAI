@@ -2,10 +2,11 @@ import mongoose, { Model, Schema } from 'mongoose'
 
 export interface IMessage extends Document{
     userId:mongoose.Types.ObjectId,
-    fileId:mongoose.Types.ObjectId,
-    fileName:string,
+    id:mongoose.Types.ObjectId,
+    name:string,
     role:"user" | "assistant",
     content:string,
+    linkModel:"file"|"url"
 }
 
 const messageSchema:Schema<IMessage> = new Schema({
@@ -14,10 +15,15 @@ const messageSchema:Schema<IMessage> = new Schema({
         ref:'user',
         required:true
     },
-    fileId:{
+    id:{
         type:Schema.Types.ObjectId,
-        ref:"file",
+        refPath:'linkModel',
         required:true
+    },
+    linkModel:{
+        type:String,
+        required:true,
+        enum:['file','url']
     },
     role:{
         type:String,
@@ -28,7 +34,7 @@ const messageSchema:Schema<IMessage> = new Schema({
         type:String,
         required:true,
     },
-    // fileName:{
+    // name:{
     //     type:String,
     //     required:true
     // },

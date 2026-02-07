@@ -18,25 +18,25 @@ const worker = new Worker('message-queue',async (job:Job)=>{
     console.log("Starting worker");
 
     try {
-        const {fileId,userId,userMessage,aiMessage,fileName} = job.data;
+        const {id,userId,userMessage,aiMessage,name} = job.data;
         
-        if(!fileId || !userId || userMessage || aiMessage || fileName){
+        if(!id || !userId || userMessage || aiMessage || name){
             console.error("Context is misssing:",aiMessage);
         }
         
         
-        console.log(`Processing Job ${job.id} for file:${fileName}`);
+        console.log(`Processing Job ${job.id} for file:${name}`);
 
         const messageSaved = await messageModel.insertMany(
             [
             {
-                fileId,
+                id,
                 userId,
                 role:'user',
                 content:userMessage
             },
             {
-                fileId,
+                id,
                 userId,
                 role:'assisstant',
                 content:aiMessage
@@ -59,10 +59,10 @@ const worker = new Worker('message-queue',async (job:Job)=>{
         createdAt:new Date()
     })
 
-    const RedisMessageSaved = await connection.rpush(`chat:${userId}:${fileId}`,userMsg,aiMsg);
-    await connection.expire(`chat:${userId}:${fileId}`,36000) // expire the messages after one hour
+    const RedisMessageSaved = await connection.rpush(`chat:${userId}:${id}`,userMsg,aiMsg);
+    await connection.expire(`chat:${userId}:${id}`,36000) // expire the messages after one hour
 
-    await connection.ltrim(`chat:${userId}:${fileId}`,-20,-1);  // Negative indexes: Negative numbers can be used to specify offsets from the end of the list, where -1 is the last element, -2 is the penultimate
+    await connection.ltrim(`chat:${userId}:${id}`,-20,-1);  // Negative indexes: Negative numbers can be used to specify offsets from the end of the list, where -1 is the last element, -2 is the penultimate
     console.log("Message Saved in redis:",RedisMessageSaved);
     
 

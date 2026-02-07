@@ -11,11 +11,11 @@ const worker = new Worker('conversation-queue',async(job:Job)=>{
     console.log("Get messages worker runned");
 
     try {
-        const {fileId,userId} = job.data;
-        console.log("FileId",fileId);
+        const {id,userId} = job.data;
+        console.log("id",id);
         console.log("UserId",userId);
 
-        const messagesId = `chat:${userId}:${fileId}`
+        const messagesId = `chat:${userId}:${id}`
         
         const messages = await connection.lrange(messagesId,0,-1);
         if(messages.length === 0){

@@ -33,16 +33,14 @@ await DB();
 const worker = new Worker('delete-file-queue',async (job:Job)=>{
     console.log("started Worker");
     try {
-        const {fileId , userId , qdrantCollection , publicId} = job.data;
+        const {id , userId , qdrantCollection , publicId} = job.data;
 
-        if(!fileId || !userId || !publicId){
+        if(!id || !userId || !publicId){
             throw new Error("FileId or userId not found")
         }
-        console.log("FileId:",fileId);
+        console.log("FileId:",id);
         console.log("UserId:",userId);
-        console.log("PublicId:",publicId);
-
-
+        // console.log("PublicId:",publicId);
         
         const qdrantCollectionDeleted = await client.deleteCollection(qdrantCollection)
         if(!qdrantCollectionDeleted){
@@ -50,19 +48,21 @@ const worker = new Worker('delete-file-queue',async (job:Job)=>{
         }
         console.log('Qdrant collection deleted');
         
-        const cloudinaryDeletion = await cloudinary.uploader.destroy(publicId,{resource_type:'raw',invalidate:true})
-        if(!cloudinaryDeletion){
-            throw new Error("Error deletion cloudinary file")
+        if(publicId){
+            const cloudinaryDeletion = await cloudinary.uploader.destroy(publicId,{resource_type:'raw',invalidate:true})
+            if(!cloudinaryDeletion){
+                throw new Error("Error deletion cloudinary file")
+            }
+            console.log('Cloudinary file deleted',cloudinaryDeletion);
         }
-        console.log('Cloudinary file deleted',cloudinaryDeletion);
         
-        const messagesDeleted = await messageModel.deleteMany({fileId,userId});
+        const messagesDeleted = await messageModel.deleteMany({id,userId});
         if(!messagesDeleted){
             throw new Error("Error deleting user's file messages")
         }
         console.log('User messages deleted');
         
-        const mongoDBFile = await fileModel.deleteOne({_id:fileId,userId})
+        const mongoDBFile = await fileModel.deleteOne({_id:id,userId})
         if(!mongoDBFile){
             throw new Error("Error deleting MongoDB file")
         }

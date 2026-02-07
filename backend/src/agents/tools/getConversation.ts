@@ -7,11 +7,14 @@ export const getConversation = tool(
     async({},config):Promise<{conversationSummary:string}>=>{
         console.log("get conversation tool called");
         
-        const {userId,fileId} = config.context;
+        const {userId,id} = config.context;
+        console.log("UserId:",userId);
+        console.log("id:",id);
+        
 
         const job = await conversationQueue.add("get-conversation",{
             userId,
-            fileId
+            id
         });
 
         const messages = await job.waitUntilFinished(conversationQueueEvents);
