@@ -4,27 +4,29 @@ import React, { useRef, useState, useEffect } from "react"
 import { CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, FileText, Upload, X } from "lucide-react"
+import { ArrowRight, FileText, Link2, Upload, X } from "lucide-react"
 import { toast } from "sonner"
 import { Spinner } from "./ui/shadcn-io/spinner"
-import { useRouter } from "next/navigation"
 
 
-interface Source {
+export interface Source {
   _id: string
-  name: string
-  // type: "pdf" | "docx" | "txt"
-  // uploadDate: string
-  // size: string
+  name: string,
+  sourceType: "file" | "url"
 }
 
 interface FileResponse {
   _id: string;
-  fileName: string;
+  name: string;
   fileType: string;
   fileSize: number;
   createdAt: string;
   status?: string;
+}
+
+interface UrlResponse {
+  _id: string,
+  name: string
 }
 
 
@@ -40,7 +42,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
   const [deleting, setDeleting] = useState<string[]>([])
   const [file, setFile] = useState<File | null>(null)
   const [url, setUrl] = useState("");
-  const router = useRouter()
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +64,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         formData.append("file", file)
         console.log("Before request");
 
-
         // Example: Adjust this API endpoint to your backend route
         const res = await fetch(`http://localhost:4000/api/v1/users/upload`, {
           method: "POST",
@@ -78,20 +78,16 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
 
         if (!data.success) throw new Error("Upload failed");
 
-        const uploadedFile = data.file;
-
         const newSource: Source = {
-          _id: uploadedFile.id,
-          name: uploadedFile.name,
-          // type: uploadedFile.name.split(".").pop()?.toLowerCase() as "pdf" | "docx" | "txt",
-          // uploadDate: new Date().toISOString(),
-          // size: `${(file.size / 1024).toFixed(1)} KB`,
+          _id: data.file.id,
+          name: data.file.name,
+          sourceType: "file"
         }
 
         setSources((prev) => [...prev, newSource])
         console.log("sources:", sources);
 
-        toast.success("File uploaded successfully!")
+        toast.success("File uploaded successfully")
       } catch (err) {
         console.error("Failed to upload file", err)
         toast.error("Failed to upload file.")
@@ -105,58 +101,59 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
     uploadFile()
   }, [file]) // runs automatically when file changes
 
-  useEffect(() => {
-    const getAllFiles = async () => {
-      try {
-        const res = await fetch("http://localhost:4000/api/v1/users/get-files", {
-          method: "GET",
-          credentials: "include",
-        });
+  // useEffect(() => {
+  //   const getAllFiles = async () => {
+  //     try {
+  //       const res = await fetch(`http://localhost:4000/api/v1/users/get-files`, {
+  //         method: "GET",
+  //         credentials: "include",
+  //       });
 
-        if (!res.ok) {
-          router.push("/login")
-        }
+  //       if (!res.ok) {
+  //         throw new Error("Error fetching All files");
+  //       }
 
-        const data = await res.json();
+  //       const data = await res.json();
 
-        if (data.success && Array.isArray(data.files)) {
-          const mappedFiles: Source[] = (data.files as FileResponse[]).map((f) => ({
-            _id: f._id,
-            name: f.fileName,
-            type: f.fileType.includes("pdf")
-              ? "pdf"
-              : f.fileType.includes("word")
-                ? "docx"
-                : "txt",
-            uploadDate: f.createdAt,
-            size: `${(f.fileSize / 1024).toFixed(1)} KB`,
-            status: f.status || "processing",
-          }));
+  //       if (data.success && Array.isArray(data.files)) {
+  //         const mappedFiles: Source[] = (data.files as FileResponse[]).map((f) => ({
+  //           _id: f._id,
+  //           name: f.fileName,
+  //           type: f.fileType.includes("pdf")
+  //             ? "pdf"
+  //             : f.fileType.includes("word")
+  //               ? "docx"
+  //               : "txt",
+  //           uploadDate: f.createdAt,
+  //           size: `${(f.fileSize / 1024).toFixed(1)} KB`,
+  //           status: f.status || "processing",
+  //           sourceType:"file"
+  //         }));
 
-          setSources(mappedFiles);
-        }
-      } catch (error) {
-        console.error("Error fetching files:", error);
-        toast.error("Failed to load your files");
-      }
-    };
+  //         setSources(mappedFiles);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching files:", error);
+  //       toast.error("Failed to load files");
+  //     }
+  //   };
 
-    getAllFiles();
-  }, []);
+  //   getAllFiles();
+  // }, []);
 
-  const handleDeleteFile = async (fileId: string) => {
+  const handleDeleteFile = async (id: string, sourceType: "file" | "url") => {
     try {
-      setDeleting((prev) => [...prev, fileId]);
-      const res = await fetch(`http://localhost:4000/api/v1/users/delete-file/${fileId}`, {
+      setDeleting((prev) => [...prev, id]);
+      const res = await fetch(`http://localhost:4000/api/v1/users/delete-file/${id}?sourceType=${sourceType}`, {
         method: 'DELETE',
         credentials: "include",
       })
       if (!res.ok) {
         throw new Error("Failed to delete")
       }
-      setSources((prev) => prev.filter((s) => s._id !== fileId))
+      setSources((prev) => prev.filter((s) => s._id !== id))
       if (onSourceDelete) {
-        onSourceDelete(fileId)
+        onSourceDelete(id)
       }
 
       toast.success("File deleted");
@@ -164,17 +161,17 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
       toast.error("Error deleting file")
       console.log("error uploading file:", error);
     } finally {
-      setDeleting((prev) => prev.filter((id) => id !== fileId))
+      setDeleting((prev) => prev.filter((id) => id !== id))
     }
   }
 
   const handleUrlSubmit = async () => {
     try {
-      if (!url.trim()) {
+      if (!url) {
         toast.error("URL is required")
         return;
       }
-      const res = await fetch(`http://localhost:4000/api/v1/url/getUrl`, {
+      const res = await fetch(`http://localhost:4000/api/v1/url/uploadUrl`, {
         method: 'POST',
         credentials: "include",
         headers: {
@@ -182,17 +179,93 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         },
         body: JSON.stringify({ url }),
       })
+      console.log("Response:", res);
+
 
       if (!res.ok) {
         throw new Error("Error Scrape URL")
       }
-      toast.success("Processing URL")
+
+      const data = await res.json()
+      if (!data) throw new Error("Url processing Failed")
+
+      const urlSource: Source = {
+        _id: data.url.id,
+        name: data.url.name,
+        sourceType: "url"
+      }
+
+      setSources((prev) => [...prev, urlSource])
+      setUrl("");
+      console.log("Sources:", sources);
+
+      toast.success("URL processing successfull")
     } catch (error) {
       toast.error("Error Sending URl")
       console.log("error sendings URL:", error);
     }
   }
 
+  // useEffect(()=>{
+  //   const getAllUrls = async ()=>{
+  //     try {
+  //       const res = await fetch(`http://localhost:4000/api/v1/url/getAllUrls`,{
+  //         method:"GET",
+  //         credentials:"include"
+  //       });
+  //       if(!res.ok || res.status !== 200){
+  //           throw new Error("Error fetching all Urls")
+  //       }
+  //       const data = await res.json()
+
+  //       if(data.success && Array.isArray(data.urls)){
+  //         const mappedUrls:Source[] = data.urls.map((url: UrlResponse)=>({
+  //             _id:url.id,
+  //             name:url.name,
+  //             sourceType:"url"
+  //         }));
+  //         setSources(mappedUrls);
+  //       }
+
+  //     } catch (error) {
+  //       console.error("Error fetching Urls:",error)
+  //       toast.error("Failed to load Urls")
+  //     }
+  //   }
+  //   getAllUrls();
+  // },[]);
+
+  useEffect(() => {
+    const loadSources = async () => {
+      try {
+        const [allFiles, allUrls] = await Promise.all([
+          fetch("http://localhost:4000/api/v1/users/get-files", { credentials: "include" }),
+          fetch("http://localhost:4000/api/v1/url/getAllUrls", { credentials: "include" })
+        ])
+
+        const filesData = await allFiles.json()
+        const urlsData = await allUrls.json()
+
+        const files: Source[] = filesData.files.map((f: FileResponse) => ({
+          _id: f._id,
+          name: f.name,
+          sourceType: "file"
+        }));
+
+        const urls: Source[] = urlsData.urls.map((u: UrlResponse) => ({
+          _id: u._id,
+          name: u.name,
+          sourceType: "url"
+        }))
+        setSources([...files, ...urls])
+        console.log("Sources:", sources);
+
+      } catch (error) {
+        toast.error("Failed to load sources")
+      }
+    }
+    loadSources();
+  }, [])
 
   return (
     <div className="w-[280px] border-r border-border flex-shrink-0 rounded-2xl">
@@ -258,7 +331,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
           <div className="space-y-2">
             {sources.map((source) => (
               <CardContent
-                key={source._id}
+                key={`${source._id}`}
                 className="p-2 rounded-lg border hover:bg-muted/30 transition cursor-pointer"
               >
                 <div className="flex items-start justify-between">
@@ -266,18 +339,13 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
                     className="flex items-start space-x-2 flex-1"
                     onClick={() => onSourceSelect(source)}
                   >
-                    <FileText className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    {source.sourceType === "file" ? (
+                      <FileText className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <Link2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{source.name}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        {/* <Badge variant="secondary" className="text-xs">
-                          {source.type.toUpperCase()}
-                        </Badge> */}
-                        {/* <span className="text-xs text-muted-foreground">{source.size}</span> */}
-                      </div>
-                      {/* <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(source.uploadDate).toLocaleDateString()}
-                      </p> */}
                     </div>
                   </div>
 
@@ -286,7 +354,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleDeleteFile(source._id)
+                      handleDeleteFile(source._id, source.sourceType)
                     }}
                     className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
                   >

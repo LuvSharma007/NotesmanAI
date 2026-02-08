@@ -6,7 +6,7 @@ export interface IMessage extends Document{
     name:string,
     role:"user" | "assistant",
     content:string,
-    linkModel:"file"|"url"
+    sourceType:"file"|"url"
 }
 
 const messageSchema:Schema<IMessage> = new Schema({
@@ -20,7 +20,7 @@ const messageSchema:Schema<IMessage> = new Schema({
         refPath:'linkModel',
         required:true
     },
-    linkModel:{
+    sourceType:{
         type:String,
         required:true,
         enum:['file','url']

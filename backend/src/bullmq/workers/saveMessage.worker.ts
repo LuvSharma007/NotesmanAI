@@ -14,13 +14,13 @@ const connection = new Redis({
 
 await DB();
 
-const worker = new Worker('message-queue',async (job:Job)=>{
+const worker = new Worker('save-message-queue',async (job:Job)=>{
     console.log("Starting worker");
 
     try {
-        const {id,userId,userMessage,aiMessage,name} = job.data;
+        const {id,userId,userMessage,aiMessage,name,sourceType} = job.data;
         
-        if(!id || !userId || userMessage || aiMessage || name){
+        if(!id || !userId || !userMessage || !aiMessage || !sourceType){
             console.error("Context is misssing:",aiMessage);
         }
         
@@ -33,12 +33,14 @@ const worker = new Worker('message-queue',async (job:Job)=>{
                 id,
                 userId,
                 role:'user',
+                sourceType,
                 content:userMessage
             },
             {
                 id,
                 userId,
                 role:'assisstant',
+                sourceType,
                 content:aiMessage
             }
         ]

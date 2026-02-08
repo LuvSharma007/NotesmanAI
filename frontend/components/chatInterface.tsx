@@ -15,11 +15,14 @@ interface Message {
 }
 
 export function ChatInterface({
-  fileId,
+  id,
   messages: initialMessages = [],
+  sourceType,
+  name
 }: {
-  fileId?: string;
-  fileName?: string,
+  id?: string;
+  name?: string,
+  sourceType:"file"|"url"
   messages?: Message[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -27,7 +30,7 @@ export function ChatInterface({
 
   const handleChat = async () => {
     const trimmedInput = input.trim();
-    if (!trimmedInput || !fileId) {
+    if (!trimmedInput || !id) {
       console.error("Input or FileId is missing");
       return;
     }
@@ -56,7 +59,8 @@ export function ChatInterface({
         },
         body: JSON.stringify({
           query: trimmedInput,
-          fileId,
+          id,
+          sourceType
         }),
       });
 
@@ -95,12 +99,12 @@ export function ChatInterface({
   };
 
   useEffect(()=>{
-    if(!fileId) return;
+    if(!id) return;
     
     const getMessages = async ()=>{
       
       try {
-        const res = await fetch(`http://localhost:4000/api/v1/userMessages/getAllMessages?fileId=${fileId}`,{
+        const res = await fetch(`http://localhost:4000/api/v1/userMessages/getAllMessages?id=${id}`,{
           method:"GET",
           credentials:"include",
         })
@@ -124,7 +128,7 @@ export function ChatInterface({
       }
     }
     getMessages();
-  },[fileId])
+  },[id])
 
   return (
     <div className="flex-col h-full flex-1 flex overflow-hidden">
@@ -132,10 +136,12 @@ export function ChatInterface({
         <CardHeader className="border-b border-border flex-shrink-0">
           <CardTitle className="flex items-center space-x-2">
             <MessageSquare className="h-5 w-5 text-primary" />
-            {fileId ? (
+            {id ? (
               <span
               className="text-sm text-muted-foreground"
-              >Chat with your sources</span>
+              >
+              {name}
+              </span>
             ) : (
               <span className="text-sm text-muted-foreground">
                 Please select a source to chat

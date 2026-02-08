@@ -191,7 +191,8 @@ export const deleteFile = async (req: Request, res: Response) => {
                 id: deleteAccordingToSource.id,
                 userId: deleteAccordingToSource.userId,
                 publicId: deleteAccordingToSource.publicId,
-                qdrantCollection: deleteAccordingToSource.qdrantCollection
+                qdrantCollection: deleteAccordingToSource.qdrantCollection,
+                sourceType,
             }, { removeOnComplete: true, removeOnFail: true })
 
             console.log(`Job added to the queue ${deleteJobForFile}`);
@@ -207,7 +208,8 @@ export const deleteFile = async (req: Request, res: Response) => {
             const deleteJobForUrl = await deleteFileQueue.add('delete-file-queue', {
                 id: deleteAccordingToSource.id,
                 userId: deleteAccordingToSource.userId,
-                qdrantCollection: deleteAccordingToSource.qdrantCollection
+                qdrantCollection: deleteAccordingToSource.qdrantCollection,
+                sourceType,
             }, { removeOnComplete: true, removeOnFail: true })
             console.log(`Job added to the queue ${deleteJobForUrl}`);
         }

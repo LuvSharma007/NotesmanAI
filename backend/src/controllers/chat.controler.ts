@@ -218,10 +218,11 @@ export const chat = async (req: Request, res: Response) => {
     // Starting worker
     console.log("Adding job to processing queue");
 
-    const job = await messageQueue.add("save-message", {
+    const job = await messageQueue.add("save-message-queue", {
       userId,
       id,
       name: source.name,
+      sourceType,
       userMessage: query,
       aiMessage: aiResponse
     },{removeOnComplete:true,removeOnFail:true})
