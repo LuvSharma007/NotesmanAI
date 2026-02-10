@@ -3,7 +3,7 @@ import mongoose, { Model, Schema } from "mongoose"
 export interface IUrl extends Document{
     userId:mongoose.Types.ObjectId,
     url:string,
-    qdrantCollection:string,
+    
     name:string
 }
 
@@ -16,10 +16,6 @@ const urlSchema:Schema<IUrl> = new Schema({
     url:{
         type:String,
         required:true
-    },
-    qdrantCollection:{
-        type:String,  
-        required:true  
     },
     name:{
         type:String,

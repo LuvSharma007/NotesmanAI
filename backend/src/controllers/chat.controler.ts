@@ -127,7 +127,8 @@ Important:
 export const chat = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { query, id ,sourceType} = req.body;
+    const { query ,sourceType} = req.body;
+    const {id} = req.params;
     console.log("Id:",id);
     console.log("SourceType:",sourceType);    
     console.log("Query:",query);
@@ -151,7 +152,7 @@ export const chat = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Source not found" });
     }
 
-    const qdrantCollectionName = source.qdrantCollection;
+    const qdrantCollectionName = `user_${userId}`
 
     const agent = createAgent({
       model: "gpt-4.1-nano",

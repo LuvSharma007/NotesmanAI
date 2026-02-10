@@ -179,7 +179,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         },
         body: JSON.stringify({ url }),
       })
-      console.log("Response:", res);
+      // console.log("Response:", res);
 
 
       if (!res.ok) {
@@ -197,7 +197,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
 
       setSources((prev) => [...prev, urlSource])
       setUrl("");
-      console.log("Sources:", sources);
+      // console.log("Sources:", sources);
 
       toast.success("URL processing successfull")
     } catch (error) {
@@ -258,7 +258,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
           sourceType: "url"
         }))
         setSources([...files, ...urls])
-        console.log("Sources:", sources);
+        // console.log("Sources:", sources);
 
       } catch (error) {
         toast.error("Failed to load sources")
@@ -277,7 +277,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         <label htmlFor="file-upload" className="cursor-pointer">
           <div className="flex flex-col items-center justify-center py-4 border-2 border-dashed border-muted-foreground/25 rounded-lg hover:bg-muted/20 transition">
             {loading ? (
-              <Spinner className="h-6 w-6" />
+              <Spinner className="h-6 w-6 mb-1" />
             ) : (
               <Upload className="h-6 w-6 text-muted-foreground mb-1" />
             )}
@@ -316,6 +316,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
           className="hidden"
           ref={fileInputRef}
           onChange={handleFileSelect}
+          disabled={sources.length>=3}
         />
 
       </div>
@@ -359,7 +360,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
                     className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
                   >
                     {deleting.includes(source._id) ? (
-                      <Spinner className="h-3 w-3" />
+                      <Spinner className="h-3 w-3 text-red-500" />
                     ) : (
                       <X className="h-3 w-3" />
                     )}

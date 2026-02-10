@@ -40,7 +40,7 @@ const Navbar = () => {
         const { data } = await axios.get(`http://localhost:4000/api/me`, {
           withCredentials: true,
         });
-        console.log(data);
+        // console.log(data);
         
         setSession(data);
       } catch (err) {

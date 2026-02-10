@@ -4,6 +4,6 @@ import { isAuthenticated } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.post("/c",isAuthenticated,chat)
+router.post("/c/:id",isAuthenticated,chat)
 
 export default router;

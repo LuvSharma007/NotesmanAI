@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import urlModel from "../models/url.model.js"
 import { urlQueue } from "../bullmq/queues/url.queue.js";
 import path from "path";
+import customUserModel from "../models/customUser.model.js";
 
 
 export const scrapeUrl = async (req: Request, res: Response) => {
@@ -36,21 +37,57 @@ export const scrapeUrl = async (req: Request, res: Response) => {
         }
         console.log("response checked");
 
-        const urlHash = crypto.createHash('md5').update(url).digest('hex');
-        const qdrantCollection = `user_${userId}_${urlHash}`;
-
         // send to frontend
         const parsedUrl = new URL(url)
         const fileName = parsedUrl.hostname.replace(/^www\./, '')
-        console.log("Filename:",fileName);
+        console.log("Filename:", fileName);
+
+        // validate sources 
+        // find the user exists in customUserModel
+        // if exists then (matlab qdrant collection hoga)
+        // if not exists then create it
+        try {
+            const customUserExists = await customUserModel.findOne({ userId })
+            console.log("customUserExists:", customUserExists);
+
+            if (customUserExists) {
+                if (customUserExists.sourceLimit >= 3) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Limit exceeds,max upload is 3"
+                    })
+                } else {
+                    // update the sourceLimit
+                    customUserExists.sourceLimit += 1;
+                    await customUserExists.save();
+                }
+                console.log("Successfully updated customUser");
+            } else {
+                // create qdrantCollection 
+                const qdrantCollection = `user_${userId}`
+                console.log("qdrantCollection:", qdrantCollection);
+
+                await customUserModel.create({
+                    userId,
+                    sourceLimit: 1,
+                    qdrantCollection
+                })
+            }
+            console.log("Successfully created customUser");
+
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: "Something went wrong"
+            })
+        }
 
         // save the data into mongoDB
 
         const dataSaved = await urlModel.create({
             userId,
             url,
-            qdrantCollection,
-            name:fileName
+            name: fileName
         })
         if (!dataSaved) {
             return res.status(500).json({
@@ -58,14 +95,15 @@ export const scrapeUrl = async (req: Request, res: Response) => {
                 message: "Server Error"
             })
         }
-        
+
         // push the data into the queue
 
         const job = await urlQueue.add("url-queue", {
+            urlId:dataSaved._id,
             url,
             userId,
-            qdrantCollection,
-            name:fileName
+            qdrantCollection:`user_${userId}`,
+            name: fileName
         }, { removeOnComplete: true, removeOnFail: true })
 
         console.log(`Job added to the queue${job}`);
@@ -73,9 +111,9 @@ export const scrapeUrl = async (req: Request, res: Response) => {
         return res.status(200).json({
             success: true,
             message: "Extracting content through URL",
-            url:{
-                id:dataSaved._id.toString(),
-                name:fileName
+            url: {
+                id: dataSaved._id.toString(),
+                name: fileName
             }
         })
     } catch (error) {
@@ -87,32 +125,32 @@ export const scrapeUrl = async (req: Request, res: Response) => {
     }
 }
 
-export const getAllUrls = async(req:Request,res:Response)=>{
+export const getAllUrls = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id
-        console.log("UserId:",userId);
+        console.log("UserId:", userId);
 
-        const allUrls = await urlModel.find({userId}).sort({createdAt:-1})
-        console.log("allUrls",allUrls);
+        const allUrls = await urlModel.find({ userId }).sort({ createdAt: -1 })
+        console.log("allUrls", allUrls);
 
-        if(!allUrls || allUrls.length === 0){
+        if (!allUrls || allUrls.length === 0) {
             return res.status(200).json({
-                success:false,
-                urls:[],
-                message:"No Urls Found"
+                success: false,
+                urls: [],
+                message: "No Urls Found"
             })
         }
         return res.status(200).json({
-            success:true,
-            urls:allUrls,
-            message:"Successfully reterived all Urls"
+            success: true,
+            urls: allUrls,
+            message: "Successfully reterived all Urls"
         })
     } catch (error) {
-        console.error("Error fetching URLs:",error);
+        console.error("Error fetching URLs:", error);
         return res.status(500).json({
-            success:false,
-            message:"Server error fetching Urls",
-            details:(error as Error).message
+            success: false,
+            message: "Server error fetching Urls",
+            details: (error as Error).message
         })
     }
 }

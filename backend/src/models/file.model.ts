@@ -6,10 +6,10 @@ export interface IFile extends Document{
     diskName:string
     fileType:"pdf" | "docx" | "txt" | string
     fileSize:string
-    qdrantCollection:string
     url:string
-    publicId:string
-    status:string
+    publicId:string,
+    status:string,
+
 }
 
 const fileSchema:Schema<IFile> = new Schema({
@@ -33,9 +33,6 @@ const fileSchema:Schema<IFile> = new Schema({
     fileType:{
         type:String,
         required:true
-    },
-    qdrantCollection:{
-        type:String,    
     },
     url:{
         type:String,

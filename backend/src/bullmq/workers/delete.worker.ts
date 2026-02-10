@@ -54,11 +54,44 @@ const worker = new Worker('delete-file-queue',async (job:Job)=>{
             console.log("No public ID ----------Skipping")
         }
         
-        const qdrantCollectionDeleted = await client.deleteCollection(qdrantCollection)
-        if(!qdrantCollectionDeleted){
-            throw new Error("Error deleted qdrant collection")
+        try {
+            const qdrantCollectionDeleted = await client.delete(qdrantCollection,{
+                wait:true,
+                    filter:{
+                        must:[
+                            {
+                                key:"payloadValue",
+                                match:{
+                                    value:id.toString()
+                                }
+                            }
+                        ]
+                    }
+            })
+    
+            if(!qdrantCollectionDeleted){
+                throw new Error("Error deleted qdrant collection")
+            }
+            console.log('Qdrant collection deleted');
+
+            const numberOfPoints = await client.count(qdrantCollection,{
+                exact:true
+            })
+
+            if(numberOfPoints.count === 0){
+                console.log(`deleting qdrantCOllection because it's empty`);
+                const emptyQdrantCollection = await client.deleteCollection(qdrantCollection)                
+                if(!emptyQdrantCollection){
+                    throw new Error("Something went wrong while deleting empty qdrant collection")
+                }
+                console.log("empty qdrantCollection deleted");                
+
+            }
+    
+        } catch (error) {
+            throw new Error("something went wrong while deleting qdrant collection")
         }
-        console.log('Qdrant collection deleted');
+
         
         const messagesDeleted = await messageModel.deleteMany({id,userId});
         if(!messagesDeleted){
@@ -67,13 +100,13 @@ const worker = new Worker('delete-file-queue',async (job:Job)=>{
         console.log('User messages deleted');
         
         if(sourceType==="file"){
-            const mongoDBFile = await fileModel.deleteOne({_id:id,userId})
+            const mongoDBFile = await fileModel.findByIdAndDelete({_id:id})
             if(!mongoDBFile){
                 throw new Error("Error deleting MongoDB file")
             }
             console.log('MonogDB file deleted');
         }else{
-            const mongoDBFile = await urlModel.deleteOne({_id:id,userId})
+            const mongoDBFile = await urlModel.findByIdAndDelete({_id:id})
             if(!mongoDBFile){
                 throw new Error("Error deleting MongoDB file")
             }

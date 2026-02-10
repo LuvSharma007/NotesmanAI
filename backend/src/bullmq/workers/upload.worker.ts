@@ -32,7 +32,7 @@ const connection = new Redis({
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
-    apiKey:process.env.QDRANT_API_KEY,
+    apiKey: process.env.QDRANT_API_KEY,
 });
 
 await DB()
@@ -43,10 +43,9 @@ const convertApi = required('convertapi')(process.env.CONVERT_API_TOKEN);
 const worker = new Worker('file-processing-queue', async (job: Job) => {
     console.log('starting worker');
     let tempFilePath;
-    let fileId;
+    const { fileUrl, name, qdrantCollection, fileId, filePath, userId, fileSize } = job.data;
 
     try {
-        const { fileUrl, name, qdrantCollection, filePath, userId, fileSize } = job.data;
 
 
         console.log(`Processing Job ${job.id} for file:${name}`);
@@ -55,7 +54,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
 
         console.log("File URL", fileUrl);
 
-        tempFilePath = path.join(os.tmpdir(),"public", "temp", name);
+        tempFilePath = path.join(os.tmpdir(), "public", "temp", name);
         console.log(`File downloaded to temporary location: ${tempFilePath}`);
         const extension = path.extname(filePath).toLowerCase().replace('.', '');
         console.log("Extension", extension);
@@ -135,7 +134,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 console.error("Error converting file", error)
             } finally {
                 // removing the file from disk after being processed
-                if(["pdf","doc","docx"].includes(extension.toLowerCase())){
+                if (["pdf", "doc", "docx"].includes(extension.toLowerCase())) {
                     fs.unlinkSync(filePath);
                     console.log("Temp file deleted:", filePath);
                 }
@@ -185,18 +184,42 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 // creating qdrant Collection
 
                 // create qdrant collection with user + userId + fileName
-                console.log("Collection Name", qdrantCollection);
-                const collectionCreated = await client.createCollection(qdrantCollection, {
-                    vectors: {
-                        size: 1000,
-                        distance: "Dot"
-                    }
-                })
 
-                if (!collectionCreated) {
-                    throw new Error("Error creating collection")
+
+                try {
+                    console.log("Collection Name", qdrantCollection);
+                    const qdrantCollectionAlreadyExists = await client.collectionExists(qdrantCollection);
+                    console.log("qdrantCollectionAlredyExists:", qdrantCollectionAlreadyExists);
+
+                    if (!qdrantCollectionAlreadyExists.exists) {
+                        const collectionCreated = await client.createCollection(qdrantCollection, {
+                            vectors: {
+                                size: 1000,
+                                distance: "Dot"
+                            },
+                        })
+                        console.log("qdrantCollection created successfully", collectionCreated)
+
+
+                        if (!collectionCreated) {
+                            throw new Error("Error creating collection")
+                        }
+                        // creating index for payload
+
+                        await client.createPayloadIndex(qdrantCollection, {
+                        field_name: "payloadValue",
+                        field_schema: "keyword",
+                        wait: true
+                    });
+
+                        console.log("Indexing created Qdrant collection", collectionCreated);
+                        console.log("Qdrant collection created", collectionCreated);
+                    }
+                    
+                } catch (error) {
+                    throw new Error("Error creating qdrantCollection")
                 }
-                console.log("Qdrant collection created",collectionCreated);
+
 
                 // 1. )  line by line approach
                 // const stream = fs.createReadStream(textFilePath)
@@ -260,11 +283,12 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                     if (chunks.length > 1) {
                         buffer = chunks.pop() ?? "";
                     }
+                    console.log("Collection Name", qdrantCollection);
                     for await (const chunk of chunks) {
                         console.log("chunk:", chunk);
-                    bulkJobs.push({
+                        bulkJobs.push({
                             name: "batchesForText",
-                            data: { data: chunk, userId, name, qdrantCollection },
+                            data: { data: chunk, fileId, name, qdrantCollection },
                             opts: { removeOnComplete: true, removeOnFail: true }
                         });
 
@@ -281,8 +305,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 // leftover chunks in case
                 if (buffer.length > 0) {
                     await batchQueue.add("batchesForText", {
-                        data: buffer, userId, name, qdrantCollection
-                    },{removeOnComplete:true,removeOnFail:true})
+                        data: buffer, fileId, name, qdrantCollection
+                    }, { removeOnComplete: true, removeOnFail: true })
                 }
 
 
@@ -293,13 +317,13 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 console.log("Error processing streams:", error);
                 fs.unlinkSync(textFilePath);
                 console.log("Temp file deleted:", textFilePath);
-            }finally{
+            } finally {
                 // removing the converted file from disk after being processed
                 fs.unlinkSync(textFilePath);
                 console.log("Temp file deleted:", textFilePath);
             }
         }
-        
+
         await processStreamBatches();
 
     } catch (error) {

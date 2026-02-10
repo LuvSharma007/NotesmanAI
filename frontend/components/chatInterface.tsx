@@ -51,7 +51,7 @@ export function ChatInterface({
     setMessages((prev) => [...prev, aiMessage]);
 
     try {
-      const res = await fetch(`http://localhost:4000/api/v1/userchats/c`, {
+      const res = await fetch(`http://localhost:4000/api/v1/userchats/c/${id}`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -108,7 +108,7 @@ export function ChatInterface({
           method:"GET",
           credentials:"include",
         })
-        console.log("Response:",res);
+        // console.log("Response:",res);
 
         const data = await res.json();
         // console.log("Data:",data);

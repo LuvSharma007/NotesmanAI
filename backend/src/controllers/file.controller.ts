@@ -5,14 +5,74 @@ import { fileProcessingQueue } from "../bullmq/queues/upload.queue.js";
 import mongoose from "mongoose";
 import { deleteFileQueue } from "../bullmq/queues/delete.queue.js";
 import urlModel from "../models/url.model.js";
-
+import { auth } from "../lib/auth.js";
+import { fromNodeHeaders } from "better-auth/node";
+import customUserModel from "../models/customUser.model.js";
 
 export const uploadFile = async (req: Request, res: Response) => {
+    // check userId
+    // validate sources in userModel
+    // validate file
+    // upload on cloudinary
+    // create qdrant collection
+    // save the file in fileModel
+    // push the data into queue
     try {
         console.log("Controller runned");
+        
+        const userId = (req as any).user.id
+        console.log(userId);        
+        if(!userId){
+            return res.status(404).json({
+                success:false,
+                message:"Unauthorised Access"
+            })
+        }
+
+        // validate sources 
+        // find the user exists in customUserModel
+        // if exists then (matlab qdrant collection hoga)
+        // if not exists then create it
+        try {
+            const customUserExists = await customUserModel.findOne({userId})
+            console.log("customUserExists:",customUserExists);
+            
+            if(customUserExists){
+                if(customUserExists.sourceLimit >=3){
+                    return res.status(400).json({
+                        success:false,
+                        message:"Limit exceeds,max upload is 3"
+                    })
+                }else{
+                    // update the sourceLimit
+                    customUserExists.sourceLimit += 1;
+                    await customUserExists.save();
+                }
+                console.log("Successfully updated customUser");
+            }else{
+                // create qdrantCollection 
+                const qdrantCollection = `user_${userId}`
+                console.log("qdrantCollection:",qdrantCollection);
+                
+                await customUserModel.create({
+                    userId,
+                    sourceLimit:1,
+                    qdrantCollection
+                })
+            }    
+            console.log("Successfully created customUser");
+                    
+        } catch (error) {
+            return res.status(500).json({
+                success:false,
+                message:"Something went wrong"
+            })
+        }
+        
+
+        // validate file
 
         const file = req.file;
-
 
         if (!file) {
             return res.status(400).json({
@@ -50,10 +110,6 @@ export const uploadFile = async (req: Request, res: Response) => {
         }
         console.log("Uploaded to cloudinary:", uploadedFile);
 
-        const userId = (req as any).user.id
-        const qdrantCollection = `user_${userId}_${file.originalname}}`
-
-
         const fileSaved = await fileModel.create({
             userId,
             name: file.originalname,
@@ -62,9 +118,8 @@ export const uploadFile = async (req: Request, res: Response) => {
             fileSize: file.size,
             url: (uploadedFile as any).secure_url,
             publicId: (uploadedFile as any).public_id,
-            qdrantCollection
+            // qdrantCollection
         })
-
 
         if (!fileSaved) {
             return res.status(400).json({
@@ -88,7 +143,7 @@ export const uploadFile = async (req: Request, res: Response) => {
             fileType: fileSaved.fileType,
             publicId: fileSaved.publicId,
             userId,
-            qdrantCollection,
+            qdrantCollection:`user_${userId}`,
             filePath,
             fileSize
         }, { removeOnComplete: true, removeOnFail: true })
@@ -191,7 +246,7 @@ export const deleteFile = async (req: Request, res: Response) => {
                 id: deleteAccordingToSource.id,
                 userId: deleteAccordingToSource.userId,
                 publicId: deleteAccordingToSource.publicId,
-                qdrantCollection: deleteAccordingToSource.qdrantCollection,
+                qdrantCollection: `user_${userId}`,
                 sourceType,
             }, { removeOnComplete: true, removeOnFail: true })
 
@@ -208,7 +263,7 @@ export const deleteFile = async (req: Request, res: Response) => {
             const deleteJobForUrl = await deleteFileQueue.add('delete-file-queue', {
                 id: deleteAccordingToSource.id,
                 userId: deleteAccordingToSource.userId,
-                qdrantCollection: deleteAccordingToSource.qdrantCollection,
+                qdrantCollection: `user_${userId}`,
                 sourceType,
             }, { removeOnComplete: true, removeOnFail: true })
             console.log(`Job added to the queue ${deleteJobForUrl}`);

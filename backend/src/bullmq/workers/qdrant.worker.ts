@@ -11,7 +11,7 @@ import { batchQueue } from "../queues/batches.queue.js";
 const connection = new Redis({
     host: "localhost",
     port: 6379,
-    maxRetriesPerRequest: null
+    maxRetriesPerRequest: null,
 });
 
 const client = new QdrantClient({
@@ -21,15 +21,20 @@ const client = new QdrantClient({
 
 
 const worker = new Worker("batch-queue", async job => {
-    const {qdrantCollection,userId,fileName,url} = job.data;
+    const {qdrantCollection,fileId,name,urlId} = job.data;
     // await worker.pause(true)
     // await batchQueue.obliterate({ force: true })
     try {
         console.log("Starting batch queue");
-        console.log("User Url",url);
+        console.log("User Name",name);
+        console.log("fileId",fileId);
+        console.log("urlId",fileId);
+        console.log("QdrantCollection",qdrantCollection);
         
         
-        if (job.name === "batchesForText" || job.name==="BatchesForUrl") {
+        
+        
+        if (job.name === "batchesForText" || job.name==="batchesForUrl") {
             console.log("Job data:---", job.data.data);
             const embeddings = new OpenAIEmbeddings({
                 apiKey: process.env.OPENAI_API_KEY,
@@ -44,8 +49,8 @@ const worker = new Worker("batch-queue", async job => {
             let inputData = Array.isArray(job.data.data) ? job.data.data : [job.data.data]
             let payload = {
                     text:job.data.data,
-                    source:fileName || url,
-                    userId
+                    source:name,
+                    payloadValue:String(fileId || urlId)
             }
 
             const vectors = await embeddings.embedDocuments(inputData);
@@ -53,8 +58,8 @@ const worker = new Worker("batch-queue", async job => {
 
             await client.upsert(qdrantCollection, {
                 batch:{
-                    ids:[crypto.randomUUID()],
-                    payloads:[payload],
+                    ids:vectors.map(()=> crypto.randomUUID()),
+                    payloads: vectors.map(()=> payload),
                     vectors:vectors
                 }
             })
@@ -68,7 +73,8 @@ const worker = new Worker("batch-queue", async job => {
     }
 }, {
     connection,
-    concurrency:20
+    concurrency:20,
+    skipVersionCheck:true
 })
 
 worker.on('completed', (job) => {

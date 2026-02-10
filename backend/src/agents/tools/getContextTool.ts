@@ -9,6 +9,12 @@ export const getContext = tool(
     // console.log("User's Query:",query);
     
     console.log("getContext Tool Called");
+
+    const id = config.context.id;
+    if (!id) {
+      throw new Error("file or url id is missing");
+    }
+    console.log("id",id);
     
     const qdrantCollection = config.context.qdrantCollectionName;
     if (!qdrantCollection) {
@@ -38,7 +44,16 @@ export const getContext = tool(
     try {
       searchResult = await client.search(qdrantCollection, {
         vector: queryEmbedding,
+        filter:{
+          must:[
+            {
+              key:"payloadValue",
+              match:{value:id}
+            }
+          ]
+        },
         limit: 5,
+        with_payload:true
       });
       console.log("Search Result:",searchResult);
     } catch (error) {

@@ -1,7 +1,7 @@
 import express from 'express'
 import { isAuthenticated } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
-import { deleteFile, getAllFiles, uploadFile } from '../controllers/file.controller.js';
+import { deleteFile,getAllFiles, uploadFile } from '../controllers/file.controller.js';
 
 
 const router = express.Router();
