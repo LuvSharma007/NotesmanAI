@@ -3,7 +3,6 @@
 import React, { useRef, useState, useEffect } from "react"
 import { CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { ArrowRight, FileText, Link2, Upload, X } from "lucide-react"
 import { toast } from "sonner"
 import { Spinner } from "./ui/shadcn-io/spinner"
@@ -54,7 +53,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
     if (!file) return
     const uploadFile = async () => {
       if (sources.length >= 3) {
-        toast.error("Remove an existing file to upload a new one.")
+        toast.error("Limit reached , max upload is 3")
         return
       }
 
@@ -62,7 +61,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         setLoading(true)
         const formData = new FormData()
         formData.append("file", file)
-        console.log("Before request");
 
         // Example: Adjust this API endpoint to your backend route
         const res = await fetch(`http://localhost:4000/api/v1/users/upload`, {
@@ -70,13 +68,12 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
           body: formData,
           credentials: "include"
         })
-        console.log("After request", res);
-
-        if (!res.ok) throw new Error("Upload failed")
-
         const data = await res.json();
 
-        if (!data.success) throw new Error("Upload failed");
+        if (!res.ok){
+          toast.error(data.message || "An error occured")
+          return;
+        }
 
         const newSource: Source = {
           _id: data.file.id,
@@ -85,7 +82,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         }
 
         setSources((prev) => [...prev, newSource])
-        console.log("sources:", sources);
 
         toast.success("File uploaded successfully")
       } catch (err) {
@@ -100,46 +96,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
 
     uploadFile()
   }, [file]) // runs automatically when file changes
-
-  // useEffect(() => {
-  //   const getAllFiles = async () => {
-  //     try {
-  //       const res = await fetch(`http://localhost:4000/api/v1/users/get-files`, {
-  //         method: "GET",
-  //         credentials: "include",
-  //       });
-
-  //       if (!res.ok) {
-  //         throw new Error("Error fetching All files");
-  //       }
-
-  //       const data = await res.json();
-
-  //       if (data.success && Array.isArray(data.files)) {
-  //         const mappedFiles: Source[] = (data.files as FileResponse[]).map((f) => ({
-  //           _id: f._id,
-  //           name: f.fileName,
-  //           type: f.fileType.includes("pdf")
-  //             ? "pdf"
-  //             : f.fileType.includes("word")
-  //               ? "docx"
-  //               : "txt",
-  //           uploadDate: f.createdAt,
-  //           size: `${(f.fileSize / 1024).toFixed(1)} KB`,
-  //           status: f.status || "processing",
-  //           sourceType:"file"
-  //         }));
-
-  //         setSources(mappedFiles);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching files:", error);
-  //       toast.error("Failed to load files");
-  //     }
-  //   };
-
-  //   getAllFiles();
-  // }, []);
 
   const handleDeleteFile = async (id: string, sourceType: "file" | "url") => {
     try {
@@ -206,35 +162,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
     }
   }
 
-  // useEffect(()=>{
-  //   const getAllUrls = async ()=>{
-  //     try {
-  //       const res = await fetch(`http://localhost:4000/api/v1/url/getAllUrls`,{
-  //         method:"GET",
-  //         credentials:"include"
-  //       });
-  //       if(!res.ok || res.status !== 200){
-  //           throw new Error("Error fetching all Urls")
-  //       }
-  //       const data = await res.json()
-
-  //       if(data.success && Array.isArray(data.urls)){
-  //         const mappedUrls:Source[] = data.urls.map((url: UrlResponse)=>({
-  //             _id:url.id,
-  //             name:url.name,
-  //             sourceType:"url"
-  //         }));
-  //         setSources(mappedUrls);
-  //       }
-
-  //     } catch (error) {
-  //       console.error("Error fetching Urls:",error)
-  //       toast.error("Failed to load Urls")
-  //     }
-  //   }
-  //   getAllUrls();
-  // },[]);
-
   useEffect(() => {
     const loadSources = async () => {
       try {
@@ -283,7 +210,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
             )}
             <p className="text-xs text-foreground text-center">
               {sources.length >= 3
-                ? "Remove existing file to upload new one"
+                ? "You have reached your limit"
                 : "Drop file or click to upload"}
             </p>
             <p className="text-xs text-muted-foreground">PDF, DOCX, TXT</p>
@@ -316,7 +243,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
           className="hidden"
           ref={fileInputRef}
           onChange={handleFileSelect}
-          disabled={sources.length>=3}
+          // disabled={sources.length>=3}
         />
 
       </div>
@@ -335,9 +262,9 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
                 key={`${source._id}`}
                 className="p-2 rounded-lg border hover:bg-muted/30 transition cursor-pointer"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between w-full">
                   <div
-                    className="flex items-start space-x-2 flex-1"
+                    className="flex items-start space-x-2 flex-1 min-w-0"
                     onClick={() => onSourceSelect(source)}
                   >
                     {source.sourceType === "file" ? (

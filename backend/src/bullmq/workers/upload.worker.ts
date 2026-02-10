@@ -43,7 +43,7 @@ const convertApi = required('convertapi')(process.env.CONVERT_API_TOKEN);
 const worker = new Worker('file-processing-queue', async (job: Job) => {
     console.log('starting worker');
     let tempFilePath;
-    const { fileUrl, name, qdrantCollection, fileId, filePath, userId, fileSize } = job.data;
+    const { fileUrl, name, qdrantCollection, fileId, filePath, userId, fileSize, publicId } = job.data;
 
     try {
 
@@ -131,6 +131,11 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                     }
                 }
             } catch (error) {
+                // delete the uploaded cloudinary file
+                await cloudinary.uploader.destroy(publicId, { resource_type: 'raw', invalidate: true })
+                await fileModel.findByIdAndDelete({_id:fileId})
+                console.log('Cloudinary file deleted');
+                console.log('MongoDB file schema deleted');
                 console.error("Error converting file", error)
             } finally {
                 // removing the file from disk after being processed
@@ -207,16 +212,18 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                         // creating index for payload
 
                         await client.createPayloadIndex(qdrantCollection, {
-                        field_name: "payloadValue",
-                        field_schema: "keyword",
-                        wait: true
-                    });
+                            field_name: "payloadValue",
+                            field_schema: "keyword",
+                            wait: true
+                        });
 
                         console.log("Indexing created Qdrant collection", collectionCreated);
                         console.log("Qdrant collection created", collectionCreated);
                     }
-                    
+
                 } catch (error) {
+                    await client.deleteCollection(qdrantCollection);
+                    console.log("qdrantCOllection deleted");                    
                     throw new Error("Error creating qdrantCollection")
                 }
 

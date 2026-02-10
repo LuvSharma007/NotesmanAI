@@ -41,7 +41,8 @@ export const uploadFile = async (req: Request, res: Response) => {
                 if(customUserExists.sourceLimit >=3){
                     return res.status(400).json({
                         success:false,
-                        message:"Limit exceeds,max upload is 3"
+                        message:"Your free tier limit has reached, you should upgrade to pro plan",
+                        statusText:"Bad Request"
                     })
                 }else{
                     // update the sourceLimit
@@ -145,7 +146,7 @@ export const uploadFile = async (req: Request, res: Response) => {
             userId,
             qdrantCollection:`user_${userId}`,
             filePath,
-            fileSize
+            fileSize,
         }, { removeOnComplete: true, removeOnFail: true })
 
         console.log(`Job added to the queue ${job}`);
@@ -159,6 +160,7 @@ export const uploadFile = async (req: Request, res: Response) => {
         return res.status(200).json({
             success: true,
             message: "File uploaded successfully",
+            statusText:"OK",
             file: {
                 id: fileSaved._id.toString(),
                 name: fileSaved.name,

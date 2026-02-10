@@ -10,6 +10,7 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import path from "path";
 import fs from "fs"
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import urlModel from "../../models/url.model.js";
 
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
@@ -161,6 +162,8 @@ const worker = new Worker("url-queue", async (job: Job) => {
                 console.log("Temp file deleted:", filePath);
                 client.deleteCollection(qdrantCollection)
                 console.log("removed Qdrant collection");
+                await urlModel.findByIdAndDelete({_id:urlId})
+                console.log("MongoDB url schema deleted");
                 throw new Error("Error writing Data:");
             }
         }

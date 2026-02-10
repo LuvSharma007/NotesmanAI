@@ -1,0 +1,149 @@
+﻿C.C.S. University, Meerut.
+Bachelors of Computer Application
+Semester wise
+
+SEMESTER -V
+
+Course Code Course Name
+
+BCA-50I Introduction to DBMS
+
+BCA-502 Java Programming and Dynamic Webpage Design
+
+BCA-503 Computer Network
+
+BCA-504 Numerical Methods
+
+BCA-508 Minor Project
+
+BCA-507 Viva-Voice on Summer Training
+
+BCA-505 Computer Laboratory and Practical Work of DBMS
+Computer Laboratory and Practical Work of
+BCA-506 Java Programming & Dynamic Webpage
+DesignCourse Code
+BCA-501
+C.C.s. University, Meerut.
+Bachelors of Computer Application
+Semester - wise
+Course Name
+Introduction to DBMS
+
+UNIT-I
+Introduction: Characteristics of database approach, data models, DBMS architecture and data
+independence.
+
+UNIT-I
+E-R Modeling: Entity types, Entity set, attribute and key, relationships, relation types, roles and
+structural constraints, weak entities, enhanced E-R and object modeling, Sub classes; Super
+classes, inheritance, specialization and generalization.
+
+UNIT-III
+File Organization: Indexed sequential access files; implementation using B & B++ trees,
+hashing. hashing functions, collision resolution, extendible hashing, dynamic hashing approach
+implementation and performance.
+
+UNIT-IV
+Relational Data Model: Relational model concepts, relational constraints, relational alzebra
+SQL: SQL queries, programming using SQL.
+
+UNIT-V
+EER and ER to relational mapping: Data base design using EER to relational language.
+
+UNIT-VI
+Data Normalization: Functional Dependencies, Normal form up to 3 normal form.
+Concurrency Control: Transaction processing, locking techniques and associated, database
+recovery, security and authorization. Recovery Techniques, Database SecurityCourse Code
+BCA- 502
+C.C.s. University, Meerut.
+Bachelors of Computer Application
+Semester wise
+Course Name
+Java Programming and Dynamic Webpage Design
+
+UNIT-I
+Java Programming: Data types, control structured, arrays, strings, and vector, classes
+(inheritance, package, exception handling) multithreaded programming.
+
+UNIT-I
+Java applets, AWT controls (Button, Labels, Combo box, list and other Listeners, menu bar)
+layout manager, string handling (only main functions)
+
+UNIT-III
+Networking (datagram socket and TCPP based server socket) event handling,
+JDBC:
+Introduction, Drivers, Establishing Connection, Connection Pooling.
+
+UNIT-IV
+HTML: use of commenting, headers, text styling, images, formatting text with <FONT>, special
+characters, horizontal rules, line breaks, table, forms, image maps, <META> tags,
+<FRAMESET> tags, file formats including image formats.
+
+UNIT-V
+Java Servlets: Introduction, HTTP Servlet Basics, The Servlet Lifecycle, Retrieving
+Information, Sending HTML Information, Session Tracking, Database Connectivity
+
+UNIT-VI
+Java Server Pages: Introducing Java Server Pages, JSP Overview, Setting Up the JSP
+Environment, Generating Dynamic Content, Using Custom Tag Libraries and the JSP Standard
+Tag Library, Processing Input and OutputCourse Code
+BCA-503
+C.C.S. University, Meerut.
+Bachelors of Computter Application
+Semester wise
+Course Name
+Computer Network
+
+UNIT-I
+Basic Concepts: Components of data communication, distributed processing, standards and
+organizations. Line configuration, topology, Transmission mode, and categories of networks.
+OSI and TCP/IP Models: Layers and their functions, comparison of models.
+Digital Transmission: Interfaces and Modems: DTE-DCE Interface, Modems, Cable modems.
+
+UNIT-II
+Transmission Media: Guided and unguided, Attenuation, distortion, noise, throughput,
+propagation speed and time, wavelength, Shannon capacity, comparison of media
+
+UNIT-II
+Telephony: Multiplexing, error detection and correction: Many to one, One to many, WDM,
+TDM, FDM, Circuit switching, packet switching and message switching.
+Data link control protocols: Line discipline, flow control, error control, synchronous and
+asynchronous protocols, character and bit oriented protocols, Link access procedures.
+Point to point controls: Transmission states, PPP layers, LCP, Authentication, NCP. ISDN:
+Services, Historical outline, subscriber's access, ISDN Layers and broadcast ISDN. UNIT-IV
+Devices: Repeaters, bridges, gateways, routers, The Network Layer; Design issues, Routing
+algorithms, Congestion control Algorithms, Quality of service, Internetworking, Network-Layer
+in the internet.
+
+UNIT
+Transport and upper layers in OSI Model: Transport layer functions, connection
+management, functions of session layers, presentation layer and application layer.C.C.S. University, Meerut.
+Bachelors of Computer Application
+Semester - wise
+
+Course Code
+BCA-504
+Course Name
+Numerical Methods
+
+UNIT-I
+Roots of Equations: Bisections Method, False Position Method, Newton's Raphson Method,
+Rate of convergence of Newton's method.
+
+UNIT-II
+Interpolation and Extrapolation : Finite Differences, The operator E, Newton's Forward and
+Backward Differences, Newton's dividend differences formulae, Lagrange's Interpolation
+formula for unequal Intervals, Gauss's Interpolation formula, Starling formula, Bessel's formula,
+Laplace-Everett formula.
+
+UNIT-III
+Numerical Differentiation Numerical Integration : Introduction, direct methods, maxima and
+minima of a tabulated function, General Quadratic formula, Trapezoidal rule, Simpson's One
+third rule, Simpson's three- eight rule.
+
+UNIT-IV
+Solution of Linear Equation: Gauss's Elimination method and Gauss's Siedel iterative method.
+
+UNIT-V
+Solution of Differential Equations: Euler's method, Picard's method, Fourth-order Ranga
+Kutta method.

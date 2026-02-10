@@ -117,9 +117,9 @@ const Navbar = () => {
                 ) : session?.user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Avatar className="cursor-pointer">
+                      <Avatar className="cursor-pointer border-white">
                         <AvatarImage
-                          src={session.user?.image ?? "https://i.pinimg.com/1200x/7b/ec/3f/7bec3f90706e02d22aec14f25e578e63.jpg"}
+                          src={session.user?.image ?? null}
                         />
                       </Avatar>
                     </DropdownMenuTrigger>
