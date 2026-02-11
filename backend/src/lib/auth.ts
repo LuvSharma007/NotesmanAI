@@ -41,7 +41,12 @@ export const auth = betterAuth({
             prompt: "select_account",
             clientId: process.env.GOOGLE_CLIENT_ID as string, 
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
+            redirectURI: "http://localhost:4000/api/auth/callback/google"
         }, 
+    },
+    session:{
+        expiresIn:60 * 60 * 24 * 60, // 2 month
+        updateAge:60 * 60 * 24 // 1 day before session is expires
     },
     trustedOrigins: ["http://localhost:3000", "http://localhost:4000"],
 });

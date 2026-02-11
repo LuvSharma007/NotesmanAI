@@ -53,17 +53,18 @@ export function LoginForm({
   }
 
 
-  // const handleGoogleLogin = async()=>{
-  //   try {
-  //     await authClient.signIn.social({
-  //       provider:'google',
-  //       callbackURL:"/c"
-  //     })
-  //   } catch (error) {
-  //     console.log("Error login with google",error);
-  //     toast.error("Something went wrong")
-  //   }
-  // }
+  const handleGoogleLogin = async()=>{
+    try {
+      await authClient.signIn.social({
+        provider:'google',
+        callbackURL:"http://localhost:3000/c"
+      })
+      
+    } catch (error) {
+      console.log("Error login with google",error);
+      toast.error("Something went wrong")
+    }
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -78,7 +79,7 @@ export function LoginForm({
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
                 <Button variant="outline" className="w-full"
-                // onClick={handleGoogleLogin}
+                onClick={handleGoogleLogin}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path
