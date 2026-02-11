@@ -1,9 +1,9 @@
 import axios from "axios";
 import { Request, Response } from "express";
-import crypto from 'crypto';
+
 import urlModel from "../models/url.model.js"
 import { urlQueue } from "../bullmq/queues/url.queue.js";
-import path from "path";
+
 import customUserModel from "../models/customUser.model.js";
 
 

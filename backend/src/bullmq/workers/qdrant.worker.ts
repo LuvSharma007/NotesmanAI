@@ -31,9 +31,6 @@ const worker = new Worker("batch-queue", async job => {
         console.log("urlId",fileId);
         console.log("QdrantCollection",qdrantCollection);
         
-        
-        
-        
         if (job.name === "batchesForText" || job.name==="batchesForUrl") {
             console.log("Job data:---", job.data.data);
             const embeddings = new OpenAIEmbeddings({

@@ -1,10 +1,7 @@
 import * as mongoose from 'mongoose'
-import { MongoDBSaver } from "@langchain/langgraph-checkpoint-mongodb";
-import {MongoClient} from 'mongodb'
-import { MemorySaver } from "@langchain/langgraph";
-import type { BaseCheckpointSaver } from "@langchain/langgraph-checkpoint";
 
-let checkpointer: BaseCheckpointSaver = new MemorySaver();
+import {MongoClient} from 'mongodb'
+
 
 
 const DB = async ()=>{
@@ -21,14 +18,6 @@ const DB = async ()=>{
     const mongoClient = new MongoClient(mongoUri);
     await mongoClient.connect();
     console.log(`MongoDb client connected with Better Auth`);
-
-    // checkpointer with connected client
-    checkpointer = new MongoDBSaver({
-      client:mongoClient,
-      dbName:process.env.MONGODB_NAME,
-      checkpointCollectionName:"checkpoints",
-      checkpointWritesCollectionName:"checkpoints_writes"
-    })
     
     try {
         const conn = await mongoose.connect(`${mongoUri}/${mongodbName}`,{
@@ -37,7 +26,7 @@ const DB = async ()=>{
         console.log(`Database connected:${conn.connection.host}`);
 
         console.log(`MongoDb client connected with Better Auth`);
-        return {mongoose,mongoClient,checkpointer}
+        return {mongoose,mongoClient}
         
     } catch (error:any) {
         console.error(`Database not Connected:${error.message}`);
@@ -45,4 +34,4 @@ const DB = async ()=>{
     }
 }
 
-export { DB , MongoClient, checkpointer};
+export { DB , MongoClient,};

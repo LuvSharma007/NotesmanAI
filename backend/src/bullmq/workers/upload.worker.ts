@@ -10,8 +10,7 @@ cloudinary.config({
 
 
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-// import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
-import { Job, tryCatch, Worker } from 'bullmq'
+import { Job, Worker } from 'bullmq'
 import { v2 as cloudinary } from "cloudinary"
 import axios from 'axios';
 import path from 'path';
@@ -43,7 +42,7 @@ const convertApi = required('convertapi')(process.env.CONVERT_API_TOKEN);
 const worker = new Worker('file-processing-queue', async (job: Job) => {
     console.log('starting worker');
     let tempFilePath;
-    const { fileUrl, name, qdrantCollection, fileId, filePath, userId, fileSize, publicId } = job.data;
+    const { fileUrl, name, qdrantCollection, fileId, filePath, publicId } = job.data;
 
     try {
 
@@ -145,7 +144,6 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 }
             }
         }
-
         await convertDocument();
 
         // calculating the perfect batch size according to the fileSize
@@ -227,59 +225,10 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                     throw new Error("Error creating qdrantCollection")
                 }
 
-
-                // 1. )  line by line approach
-                // const stream = fs.createReadStream(textFilePath)
-                // const rl = readline.createInterface({
-                //     input: stream,
-                //     crlfDelay: Infinity
-                // })
-
-
-                // let batch: string[] = [];
-
-                // console.log("Ready to push into queue");
-
-                // for await (const line of rl) {
-                //     const text = line.trim();
-                //     if (!text) {
-                //         continue;
-                //     }
-                //     let chunks = await splitter.splitText(text)
-
-                //     for (const chunk of chunks){
-                //         batch.push(chunk);
-
-                //         if(batch.length === batchSizeInBytes){
-                //             await batchQueue.add("batchesForText",{
-                //                 data:batch,
-                //                 userId,
-                //                 fileName,
-                //                 qdrantCollection
-                //             });
-                //             console.log("Batch created-----:",batch);
-
-
-                //             batch = [];
-                //         }
-                //     }
-                // }
-                // if(batch.length >0){
-                //     console.log("pushing remaining batch",batch.length);
-
-                //     await batchQueue.add("batchesForText",{
-                //         data:batch,
-                //         userId,
-                //         fileName,
-                //         qdrantCollection
-                //     });
-                // }
-                // console.log("batches completed");
-
-                // 2.) approuch through highwatermark with batches
+                // 1.) approuch through highwatermark with batches
                 const stream = fs.createReadStream(textFilePath, {
                     encoding: 'utf-8',
-                    highWaterMark: 1024 * 16
+                    highWaterMark: 1024 * 24
                 })
                 let buffer: string | undefined = "";
                 let bulkJobs: any[] = [];

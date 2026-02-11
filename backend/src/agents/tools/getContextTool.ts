@@ -1,78 +1,67 @@
-import { tool } from "langchain";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import z from "zod";
 import { client } from "../../lib/qdrantClient.js";
+import { tool} from "@openai/agents";
+import { z } from "zod"
+import OpenAI from "openai"
 import { OpenAIEmbeddings } from "@langchain/openai";
+const openai = new OpenAI()
 
-export const getContext = tool(
-  async ({ query }, config) => {
-    // console.log("User's Query:",query);
-    
+export const getContext = tool({
+  name: "get_context",
+  description: "Returns the Available context for a user query.",
+  parameters: z.object({ query: z.string() }),
+  async execute({ query}, toolContext:any) {
+    const {id,userId} = toolContext.context
     console.log("getContext Tool Called");
-
-    const id = config.context.id;
+    console.log("User's Query:", query);
+    console.log("id:", id)
+    console.log("userId:",userId);
     if (!id) {
       throw new Error("file or url id is missing");
     }
-    console.log("id",id);
-    
-    const qdrantCollection = config.context.qdrantCollectionName;
-    if (!qdrantCollection) {
+
+    if (!userId) {
       throw new Error("Qdrant collection is missing");
     }
-    console.log("Qdrant collection",qdrantCollection);
     
-    // const embeddings = new GoogleGenerativeAIEmbeddings({
-    //   apiKey: process.env.GEMINI_API_KEY,
-    //   model: "gemini-embedding-001",
-    // });
-
-    const embeddings = new OpenAIEmbeddings({
-        apiKey:process.env.OPENAI_API_KEY,
-        model:"text-embedding-3-large",
-        dimensions:1000
+    const embeddingsSetup = new OpenAIEmbeddings({
+      apiKey: process.env.OPENAI_API_KEY,
+      model: "text-embedding-3-large",
+      batchSize: 100,  // reduce load
+      dimensions: 1000
     })
-    
     console.log("Embeddings Setup Done");
     
-    const queryEmbedding = await embeddings.embedQuery(query);
-    console.log("Vector Embeddings of user's query:",queryEmbedding);
-    // const queryEmbedding = embeddingResponse[0];
-    // console.log("Embeddings Response:",queryEmbedding);
+    const embeddings = await embeddingsSetup.embedQuery(query)
+    
+    console.log("Vector Embeddings of user's query:", embeddings);
+    const qdrantCollection = `user_${userId}`
 
-    let searchResult:any[]=[];
+    let searchResult: any[] = [];
     try {
       searchResult = await client.search(qdrantCollection, {
-        vector: queryEmbedding,
-        filter:{
-          must:[
+        vector: embeddings,
+        filter: {
+          must: [
             {
-              key:"payloadValue",
-              match:{value:id}
+              key: "payloadValue",
+              match: { value: id }
             }
           ]
         },
         limit: 5,
-        with_payload:true
+        with_payload: true
       });
-      console.log("Search Result:",searchResult);
+      console.log("Search Result:", searchResult);
     } catch (error) {
-      console.log("Error connecting to qdrant client",error);
+      console.log("Error connecting to qdrant client", error);
     }
-    
+
     const contexts = searchResult.map(r => r.payload?.text)
-  .filter((text): text is string => typeof text === 'string' && text.trim() !== "")
-  .join("\n\n");
-    console.log("context:",contexts);
-    
+      .filter((text): text is string => typeof text === 'string' && text.trim() !== "")
+      .join("\n\n");
+    console.log("context:", contexts);
+
     return contexts || "No relevant context found.";
 
-  },
-  {
-    name: "get-context",
-    description: "Returns the Available context for a user query.",
-    schema: z.object({
-      query: z.string(),
-    }),
   }
-);
+})
