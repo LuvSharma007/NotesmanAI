@@ -1,8 +1,8 @@
 import { client } from "../../lib/qdrantClient.js";
 import { tool} from "@openai/agents";
 import { z } from "zod"
-import OpenAI from "openai"
 import { OpenAIEmbeddings } from "@langchain/openai";
+import OpenAI from "openai"
 const openai = new OpenAI()
 
 export const getContext = tool({

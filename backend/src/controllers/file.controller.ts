@@ -186,17 +186,20 @@ export const getAllFiles = async (req: Request, res: Response) => {
         const allFiles = await fileModel
             .find({ userId, status: { $nin: ["deleting", "deleted"] } })
             .sort({ createdAt: -1 });
+        console.log("allFiles:",allFiles);
+        
 
         if (!allFiles || allFiles.length === 0) {
             return res.status(200).json({
-                success: false,
+                success: true,
                 files: [],
                 message: "No files uploaded"
             })
         }
         return res.status(200).json({
             success: true,
-            files: allFiles
+            files: allFiles,
+            message:"Successfully reterived all Files"
         })
     } catch (error) {
         console.error("Error fetching files:", error);

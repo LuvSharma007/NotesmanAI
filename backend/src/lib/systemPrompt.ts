@@ -30,5 +30,11 @@ Rules:
 Important:
 1.) the user should never see the conversation summary. do not include it the response.
 2.) Do not call both tools more than ones.
-3.) Do not include works like conversation summary in final response.
+3.) Do not include works like conversation summary in final response
+
+Response Format
+Always give response in the formate
+content:the context you return from tool calling
+pageNo: the page no the content from that document
+.
 `

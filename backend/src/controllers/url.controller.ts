@@ -135,7 +135,7 @@ export const getAllUrls = async (req: Request, res: Response) => {
 
         if (!allUrls || allUrls.length === 0) {
             return res.status(200).json({
-                success: false,
+                success: true,
                 urls: [],
                 message: "No Urls Found"
             })

@@ -9,7 +9,7 @@ const mongodbName = process.env.MONGODB_NAME
 const googleClientId = process.env.GOOGLE_CLIENT_ID
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
 
-if(!mongoUri || !mongodbName || !googleClientId || !googleClientSecret){
+if (!mongoUri || !mongodbName || !googleClientId || !googleClientSecret) {
     throw new Error('Missing MongoDB Environment variables')
 }
 
@@ -17,12 +17,12 @@ const mongodb = new MongoClient(mongoUri).db('NotesmanAI')
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL:process.env.BETTER_AUTH_URL,
-    
+    baseURL: process.env.BETTER_AUTH_URL,
+
     emailAndPassword: {
         enabled: true,
         sendResetPassword: async ({ user, url, token }) => {
-                        
+
             await resend.emails.send({
                 from: "onboarding@resend.dev",
                 to: user.email,
@@ -30,23 +30,39 @@ export const auth = betterAuth({
                 text: `Click the link to reset your password: ${url}`
             })
         },
-        requireEmailVerification:false
+        requireEmailVerification: false
     },
 
-    plugins:[
+    plugins: [
         username()
     ],
     socialProviders: {
-        google: { 
+        google: {
             prompt: "select_account",
-            clientId: process.env.GOOGLE_CLIENT_ID as string, 
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
             redirectURI: "http://localhost:4000/api/auth/callback/google"
-        }, 
+        },
     },
-    session:{
-        expiresIn:60 * 60 * 24 * 60, // 2 month
-        updateAge:60 * 60 * 24 // 1 day before session is expires
+    session: {
+        expiresIn: 60 * 60 * 24 * 60, // 2 month
+        updateAge: 60 * 60 * 24 // 1 day before session is expires
+    },
+    advanced: {
+        ipAddress:{
+            ipAddressHeaders:["x-forwarded-for"]
+        }
+    },
+    rateLimit:{
+        window:60, // time window in seconds
+        max: 10, // ,ax requests in the window
+        customRules:{
+            "/sign-in/email":{
+                window:10,
+                max:3
+            },
+            "/get-session":false
+        }
     },
     trustedOrigins: ["http://localhost:3000", "http://localhost:4000"],
 });

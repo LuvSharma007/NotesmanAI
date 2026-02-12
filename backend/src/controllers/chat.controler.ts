@@ -6,7 +6,7 @@ import { messageQueue } from "../bullmq/queues/message.queue.js";
 import { getConversation } from "../agents/tools/getConversation.js";
 import urlModel from "../models/url.model.js";
 import { Agent, run } from "@openai/agents";
-import {SYSTEM_PROMPT} from "../lib/systemPrompt.js"
+import { SYSTEM_PROMPT } from "../lib/systemPrompt.js"
 
 export const chat = async (req: Request, res: Response) => {
   try {
@@ -45,19 +45,20 @@ export const chat = async (req: Request, res: Response) => {
       name: "NotesmanAI",
       instructions: SYSTEM_PROMPT,
       model: "gpt-4.1-nano",
-      tools: [getContext]
+      tools: [getContext, getConversation]
     })
 
     const result = await run(
       notesmanAgent,
       query, {
       stream: true,
-      context: { id, userId }
+      context: { id, userId },
     }
     )
+
     const stream = result.toTextStream();
-    for await (const chunk of stream){
-        res.write(chunk)
+    for await (const chunk of stream) {
+      res.write(chunk)
     }
 
     res.end();
