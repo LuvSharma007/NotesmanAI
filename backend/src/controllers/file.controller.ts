@@ -5,8 +5,6 @@ import { fileProcessingQueue } from "../bullmq/queues/upload.queue.js";
 import mongoose from "mongoose";
 import { deleteFileQueue } from "../bullmq/queues/delete.queue.js";
 import urlModel from "../models/url.model.js";
-import { auth } from "../lib/auth.js";
-import { fromNodeHeaders } from "better-auth/node";
 import customUserModel from "../models/customUser.model.js";
 
 export const uploadFile = async (req: Request, res: Response) => {
@@ -81,8 +79,8 @@ export const uploadFile = async (req: Request, res: Response) => {
                 error: "No file Provided"
             })
         }
-        if (file.size > 15728640) {
-            res.status(400).json({
+        if (file.size > 10485760) {
+            return res.status(400).json({
                 success: false,
                 message: "File should be lower than 15mb"
             })
@@ -103,7 +101,6 @@ export const uploadFile = async (req: Request, res: Response) => {
         }
 
         console.log("-----------------------", filePath);
-
         const uploadedFile = await uploadOnCloudinary(filePath)
 
         if (!uploadedFile) {
@@ -170,7 +167,7 @@ export const uploadFile = async (req: Request, res: Response) => {
             },
         })
     } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("Error uploading file:", error);        
         res.status(500).json({
             success: false,
             error: "Upload failed",

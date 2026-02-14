@@ -16,12 +16,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import axios from 'axios'
+import { authClient } from "@/lib/auth-client"
 
-
-const Navbar = () => {
-
-
+const Navbar = ({sessionOfUser}:any) => {
+  
   const [menuState, setMenuState] = React.useState(false)
 
   const menuItems = [
@@ -30,39 +28,21 @@ const Navbar = () => {
     { name: 'Pricing', href: '/#pricing' },
     { name: 'ContactUs', href: '/contactUs' },
   ]
-  const [session, setSession] = useState<any>(null);
-  const [isPending, setIsPending] = useState(true);
   const router = useRouter()
 
-
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const { data } = await axios.get(`http://localhost:4000/api/auth/get-session`, {
-          withCredentials: true
-        });
-        setSession(data);
-      } catch (err) {
-        setSession(null);
-      } finally {
-        setIsPending(false);
-      }
-    };
-    getUser()
-  }, [])
+const { data: session } = authClient.useSession()  
 
   const handleLogout = async () => {
     try {
       if (session) {
         await signOut();
-        setSession(null)
         router.push("/login")
         toast.success("Logout successfully")
       } else {
-        console.log("No user found to logout , please login again");
+        toast.error("No user found to logout")
       }
     } catch (error) {
-      console.log("Error logout user and clearing local user", error);
+      toast.error("Something went wrong")
     }
   }
 
@@ -109,17 +89,15 @@ const Navbar = () => {
 
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:border-l lg:pl-6">
 
-                {isPending ? (
-                  <Button size="sm" disabled className="flex w-[80px] justify-center items-center gap-2">
-                    <Spinner />
-                  </Button>
-                ) : session?.user ? (
+                {session? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Avatar className="cursor-pointer border-white">
-                        <AvatarImage src={session.user?.image || undefined} />
+                        <AvatarImage src={session?.user?.image || undefined} 
+                        referrerPolicy="no-referrer"
+                        />
                         <AvatarFallback className="bg-green-900 text-white">
-                          {session.user?.name?.charAt(0).toUpperCase() || "U"}
+                          {session?.user?.name.charAt(0).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                     </DropdownMenuTrigger>

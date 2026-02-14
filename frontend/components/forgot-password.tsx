@@ -34,20 +34,22 @@ export default function ForgotPasswordPage() {
         setLoading(true)
 
         try {
-            const {data ,error}= await authClient.forgetPassword({
+            const {data ,error}= await authClient.requestPasswordReset({
                 email:parsed.data.email,
                 redirectTo:'http://localhost:3000/reset-password'    
             })
             console.log("Email Response:",data);
             
 
-            if(error){
-                toast.error(error.message)
+            if(!error){
+                toast.success("if this email exists in our system, we send you an email")
             }else{
-                toast.success('Email Send Successfully for Reset Password')
+                toast.success('Something went wrong')
             }
+
+
         } catch (error:any) {
-            console.log("Error sending Reset Email for forgot password");
+            console.log("Error sending Reset Email for forgot password",error);
             toast.error(error.message)
         }finally{
             setLoading(false);

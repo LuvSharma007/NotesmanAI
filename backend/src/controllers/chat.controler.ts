@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import fileModel from "../models/file.model.js";
 import { getContext } from "../agents/tools/getContextTool.js";
-import { z } from 'zod'
 import { messageQueue } from "../bullmq/queues/message.queue.js";
 import { getConversation } from "../agents/tools/getConversation.js";
 import urlModel from "../models/url.model.js";
@@ -45,7 +44,10 @@ export const chat = async (req: Request, res: Response) => {
       name: "NotesmanAI",
       instructions: SYSTEM_PROMPT,
       model: "gpt-4.1-nano",
-      tools: [getContext, getConversation]
+      tools: [
+        getConversation,
+        getContext
+      ]
     })
 
     const result = await run(
@@ -56,11 +58,13 @@ export const chat = async (req: Request, res: Response) => {
     }
     )
 
+    let aiMessage = "";
     const stream = result.toTextStream();
     for await (const chunk of stream) {
+      aiMessage +=  chunk;
       res.write(chunk)
-    }
 
+    }
     res.end();
 
     // Starting worker
@@ -72,7 +76,7 @@ export const chat = async (req: Request, res: Response) => {
       name: source.name,
       sourceType,
       userMessage: query,
-      aiMessage: stream
+      aiMessage
     }, { removeOnComplete: true, removeOnFail: true })
 
     console.log(`Job added to the queue ${job}`);

@@ -10,12 +10,6 @@ const subClient = pubClient.duplicate();
 await pubClient.connect()
 await subClient.connect()
 
-const port = process.env.PORT
-const monogDBUri = process.env.MONGODB_URI
-const mongodbName = process.env.MONGODB_NAME
-console.log(`------------Port No:${port}`);
-console.log(`------------MongoDB URI:${monogDBUri}`);
-console.log(`------------MongoDB Name:${mongodbName}`);
 
 DB().then(()=>{
     app.listen(PORT,()=>{

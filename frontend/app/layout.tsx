@@ -4,6 +4,10 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import Navbar from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
+
+const secret = process.env.JWT_SECRET;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,11 +25,22 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // const cookieStore = await cookies()
+  // const sessionToken = cookieStore.get("better-auth.session_data");
+  // let decoder = null
+  // if(sessionToken?.value && secret){
+  //   try {
+  //     decoder = jwt.verify(sessionToken.value, secret);
+  //   } catch (err) {
+  //     console.error("JWT verification failed", err);
+  //   }
+  // }
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body

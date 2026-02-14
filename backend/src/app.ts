@@ -5,9 +5,6 @@ import cors from 'cors';
 
 const app = express();
 
-console.log(`MonogDBUri:${process.env.MONGODB_URI}`);
-console.log(`MonogDBName:${process.env.MONGODB_NAME}`);
-
 app.use(
     cors({
         origin:'http://localhost:3000',

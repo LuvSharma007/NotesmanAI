@@ -10,6 +10,9 @@ export const getConversation = tool({
     async execute(_,toolContext:any){
         console.log("getConvertsation tool called");
         const {id,userId} = toolContext.context
+        console.log("id",id);
+        console.log("userID",userId);
+        
         if(!id){
             throw new Error("id not found")
         }
@@ -20,7 +23,7 @@ export const getConversation = tool({
         const job = await conversationQueue.add("get-conversation",{
             userId,
             id
-        })
+        }, { removeOnComplete: true, removeOnFail: true })
 
         const messages = await job.waitUntilFinished(conversationQueueEvents);
         console.log("messages from redis",messages);

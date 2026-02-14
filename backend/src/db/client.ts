@@ -2,25 +2,23 @@ import * as mongoose from 'mongoose'
 
 import {MongoClient} from 'mongodb'
 
-
-
 const DB = async ()=>{
-    const mongoUri = process.env.MONGODB_URI
-    const mongodbName = process.env.MONGODB_NAME
-    console.log(`MonogDBUri:${process.env.MONGODB_URI}`);
-    console.log(`MonogDBName:${process.env.MONGODB_NAME}`);
+    const mongodbConnectionString = process.env.MONGODB_CONNECTION_STRING    
+    const mongoDBName = process.env.MONGODB_NAME
+    console.log(mongoDBName);
     
-    if(!mongoUri || !mongodbName){
+    if(!mongodbConnectionString){
         throw new Error('Missing MongoDB Environment variables')
     }
 
     // mongoDB client instance
-    const mongoClient = new MongoClient(mongoUri);
+    const mongoClient = new MongoClient(mongodbConnectionString);
     await mongoClient.connect();
     console.log(`MongoDb client connected with Better Auth`);
     
     try {
-        const conn = await mongoose.connect(`${mongoUri}/${mongodbName}`,{
+        const conn = await mongoose.connect(`${mongodbConnectionString}`,{
+            dbName:process.env.MONGODB_NAME,
             autoIndex:true
         })
         console.log(`Database connected:${conn.connection.host}`);

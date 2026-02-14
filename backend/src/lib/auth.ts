@@ -4,16 +4,16 @@ import { username } from "better-auth/plugins";
 import { MongoClient } from 'mongodb'
 import { resend } from "./resend.js";
 
-const mongoUri = process.env.MONGODB_URI
-const mongodbName = process.env.MONGODB_NAME
+const mongoDBConnectionString = process.env.MONGODB_CONNECTION_STRING
+const mongoDbName = process.env.MONGODB_NAME
 const googleClientId = process.env.GOOGLE_CLIENT_ID
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
 
-if (!mongoUri || !mongodbName || !googleClientId || !googleClientSecret) {
+if (!mongoDBConnectionString || !googleClientId || !googleClientSecret) {
     throw new Error('Missing MongoDB Environment variables')
 }
 
-const mongodb = new MongoClient(mongoUri).db('NotesmanAI')
+const mongodb = new MongoClient(mongoDBConnectionString).db(mongoDbName)
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
@@ -21,14 +21,19 @@ export const auth = betterAuth({
 
     emailAndPassword: {
         enabled: true,
-        sendResetPassword: async ({ user, url, token }) => {
+        sendResetPassword: async ({ user, url, token },Request) => {
 
-            await resend.emails.send({
-                from: "onboarding@resend.dev",
+            const {data,error} = await resend.emails.send({
+                from: "bakihanma9910@gmail.com",   // change it to you domain name
                 to: user.email,
                 subject: "Reset Your Password",
                 text: `Click the link to reset your password: ${url}`
             })
+            if(error){
+                console.log("Resend Error:",error);
+            }
+            console.log("data:",data);           
+            
         },
         requireEmailVerification: false
     },
@@ -45,6 +50,25 @@ export const auth = betterAuth({
         },
     },
     session: {
+        create:{
+            after:async(session:any)=>{
+                // deleting the all previous sessions of the user
+                const previousSession = mongodb.collection("session").find({
+                    userId:session.userId,
+                    _id:{$ne:session._id}
+                })
+                console.log("previous session deleted",previousSession);
+                
+            }
+        },
+        cookieCache:{
+            enabled:true,
+            maxAge:60 * 60 * 24 * 60, // 2 month
+            strategy:"jwt",
+            refreshCache:{
+                updateAge:60*60*24*7 // refresh when 7 days left 
+            }
+        },
         expiresIn: 60 * 60 * 24 * 60, // 2 month
         updateAge: 60 * 60 * 24 // 1 day before session is expires
     },

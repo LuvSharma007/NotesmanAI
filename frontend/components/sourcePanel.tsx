@@ -71,7 +71,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         const data = await res.json();
 
         if (!res.ok){
-          toast.error(data.message || "An error occured")
+          toast.error(data.message || "An error occured,please try again")
           return;
         }
 
@@ -115,7 +115,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
       toast.success("File deleted");
     } catch (error) {
       toast.error("Error deleting file")
-      console.log("error uploading file:", error);
+      console.log("error deleting file:", error);
     } finally {
       setDeleting((prev) => prev.filter((id) => id !== id))
     }
@@ -137,12 +137,14 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
       })
       // console.log("Response:", res);
 
-
+      const data = await res.json()
+      
       if (!res.ok) {
-        throw new Error("Error Scrape URL")
+        toast.error(data.message || "Something went wrong")
+        setUrl("");
+        return;
       }
 
-      const data = await res.json()
       if (!data) throw new Error("Url processing Failed")
 
       const urlSource: Source = {
@@ -155,9 +157,10 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
       setUrl("");
       // console.log("Sources:", sources);
 
-      toast.success("URL processing successfull")
+      toast.success(data.message || "URL Processing")
     } catch (error) {
-      toast.error("Error Sending URl")
+      setUrl("");
+      toast.error("Opps ,Something went wrong")
       console.log("error sendings URL:", error);
     }
   }
@@ -169,9 +172,26 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
           fetch("http://localhost:4000/api/v1/users/get-files", { credentials: "include" }),
           fetch("http://localhost:4000/api/v1/url/getAllUrls", { credentials: "include" })
         ])
+               
+
+        if(!allFiles.ok){
+          const errorData = await allFiles.json();
+          toast.error(errorData.message || "Something went Wrong")
+          return;
+        }
+
+        if(!allUrls.ok){
+          const errorData = await allUrls.json();
+          toast.error(errorData.message || "Something went Wrong")
+          return;
+        }
 
         const filesData = await allFiles.json()
         const urlsData = await allUrls.json()
+        if(filesData.success && filesData.files.length === 0 
+          && urlsData.success && urlsData.urls.length === 0){
+          return;
+        }
 
         const files: Source[] = filesData.files.map((f: FileResponse) => ({
           _id: f._id,
@@ -187,7 +207,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         setSources([...files, ...urls])
         // console.log("Sources:", sources);
 
-      } catch (error) {
+      } catch (error:any) {
         toast.error("Failed to load sources")
       }
     }

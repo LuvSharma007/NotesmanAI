@@ -28,14 +28,25 @@ export const scrapeUrl = async (req: Request, res: Response) => {
         console.log("User Id:", userId);
 
         // validate URL 
-        const response = await axios.get(url);
-        if (response.statusText !== "OK" && response.status !== 200) {
-            return res.status(404).json({
+        // A HEAD request is more efficient because it asks the server for the response headers only, without downloading the entire body content. A successful response (status code in the 2xx range) confirms the URL exists. 
+
+        try {
+            const response = await axios.head(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+                },
+                timeout:5000
+            });
+            if (response.status >= 200 && response.status < 300) {
+                console.log("response checked");
+            }
+        } catch (error) {
+            console.log(error);
+            return res.status(400).json({
                 success: false,
                 message: "Invalid URL"
             })
         }
-        console.log("response checked");
 
         // send to frontend
         const parsedUrl = new URL(url)
@@ -54,7 +65,8 @@ export const scrapeUrl = async (req: Request, res: Response) => {
                 if (customUserExists.sourceLimit >= 3) {
                     return res.status(400).json({
                         success: false,
-                        message: "Limit exceeds,max upload is 3"
+                        message: "Your free tier limit has reached, you should upgrade to pro plan",
+                        statusText: "Bad Request"
                     })
                 } else {
                     // update the sourceLimit
@@ -99,10 +111,10 @@ export const scrapeUrl = async (req: Request, res: Response) => {
         // push the data into the queue
 
         const job = await urlQueue.add("url-queue", {
-            urlId:dataSaved._id,
+            urlId: dataSaved._id,
             url,
             userId,
-            qdrantCollection:`user_${userId}`,
+            qdrantCollection: `user_${userId}`,
             name: fileName
         }, { removeOnComplete: true, removeOnFail: true })
 
