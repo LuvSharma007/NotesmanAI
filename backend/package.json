@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec node --env-file=.env --import tsx src/index.ts",
+    "prebuild":"rm -rf dist",
     "build": "tsc",
     "start": "node --env-file=.env dist/index.js"
   },
