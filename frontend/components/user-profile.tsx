@@ -1,0 +1,30 @@
+"use client"
+
+import React from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { authClient } from '@/lib/auth-client'
+
+export const UserProfile = () => {
+
+  const { data: session } = authClient.useSession()
+
+  return (
+    <div className='flex flex-col border-2 h-screen m-10 rounded-2xl'>
+      <div className='flex justify-center items-center mt-5 '>
+        <Avatar className="cursor-pointer border-white w-16 h-16">
+          <AvatarImage src={session?.user?.image || undefined}
+            referrerPolicy="no-referrer"
+          />
+          <AvatarFallback className="bg-green-900 text-white">
+            {session?.user?.name.charAt(0).toUpperCase() || "U"}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+      <div className='text-white flex flex-col justify-center items-center mt-5'>
+        {/* <label className='text-2xl'>Username:{session?.user?.username}</label> */}
+        <label className='text-2xl'>Name:{session?.user?.name}</label>
+        <label className='text-2xl'>Email:{session?.user?.email}</label>
+      </div>
+    </div>
+  )
+}
