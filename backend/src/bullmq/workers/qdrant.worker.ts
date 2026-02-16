@@ -3,15 +3,22 @@ dotenv.config();
 
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Worker } from "bullmq";
-import { Redis } from "ioredis";
-// import { client } from "../../lib/qdrantClient.js";
+// import { Redis } from "ioredis";
 import { QdrantClient } from "@qdrant/js-client-rest";
 
-const connection = new Redis({
-    host: "localhost",
-    port: 6379,
-    maxRetriesPerRequest: null,
-});
+import { ConnectionOptions } from "bullmq";
+
+const connection:ConnectionOptions={
+    host:process.env.REDIS_HOST || "localhost",
+    port:6379,
+    maxRetriesPerRequest:null
+}
+
+// const connection = new Redis({
+//     host: process.env.REDIS_HOST || "localhost",
+//     port: 6379,
+//     maxRetriesPerRequest: null,
+// });
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,

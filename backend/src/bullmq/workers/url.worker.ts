@@ -1,14 +1,7 @@
 import dotenv from "dotenv"
 dotenv.config()
-<<<<<<< HEAD
-import { Job, Worker } from "bullmq";
-import { DB } from "../../db/client.js";
-=======
 import { DB } from "../../db/client.js";
 import { Job, Worker } from "bullmq";
->>>>>>> 6e47a1a (fixed some issues)
-
-import { Redis } from "ioredis";
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { batchQueue } from "../queues/batches.queue.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
@@ -19,11 +12,19 @@ import urlModel from "../../models/url.model.js";
 
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
-const connection = new Redis({
-    host: "localhost", // or "redis" if using docker-compose
-    port: 6379,
-    maxRetriesPerRequest: null
-});
+// const connection = new Redis({
+//     host: process.env.REDIS_HOST || "localhost",
+//     port: 6379,
+//     maxRetriesPerRequest: null
+// });
+
+import { ConnectionOptions } from "bullmq";
+
+const connection:ConnectionOptions={
+    host:process.env.REDIS_HOST || "localhost",
+    port:6379,
+    maxRetriesPerRequest:null
+}
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,

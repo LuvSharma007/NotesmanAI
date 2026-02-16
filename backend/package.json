@@ -8,7 +8,13 @@
     "dev": "nodemon --watch src --ext ts --exec node --env-file=.env --import tsx src/index.ts",
     "prebuild": "rm -rf dist",
     "build": "tsc",
-    "start": "node --env-file=.env dist/index.js"
+    "start:api": "node dist/index.js",
+    "worker:upload":"npx tsx src/bullmq/workers/upload.worker.ts",
+    "worker:qdrant":"npx tsx src/bullmq/workers/qdrant.worker.ts",
+    "worker:delete":"npx tsx src/bullmq/workers/delete.worker.ts",
+    "worker:getMessage":"npx tsx src/bullmq/workers/getMessage.worker.ts",
+    "worker:saveMessage":"npx tsx src/bullmq/workers/saveMessage.worker.ts",
+    "worker:url":"npx tsx src/bullmq/workers/url.worker.ts"
   },
   "keywords": [],
   "author": "",
@@ -36,33 +42,6 @@
     "resend": "^6.1.2",
     "socket.io": "^4.8.1",
     "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^24.6.2",
-    "@types/streamifier": "^0.1.2",
-    "nodemon": "^3.1.10",
-    "@openai/agents": "^0.4.10",
-    "@qdrant/js-client-rest": "^1.16.2",
-    "axios": "^1.13.5",
-    "better-auth": "^1.4.18",
-    "bullmq": "^5.69.3",
-    "cloudinary": "^2.9.0",
-    "convertapi": "^1.15.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "ioredis": "^5.9.3",
-    "mongodb": "^7.1.0",
-    "mongoose": "^9.2.1",
-    "multer": "^2.0.2",
-    "resend": "^6.9.2",
-    "zod": "^4.3.6"
-  },
-  "overrides": {
-    "ioredis": "^5.9.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

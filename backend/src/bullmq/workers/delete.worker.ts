@@ -1,14 +1,23 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import {Redis} from "ioredis";
 import { DB } from "../../db/client.js";
+// import {Redis} from "ioredis";
 
-const connection = new Redis({
-    host: "localhost", // or "redis" if using docker-compose
-    port: 6379,
-    maxRetriesPerRequest: null
-}); 
+// const connection = new Redis({
+//     host: process.env.REDIS_HOST || "localhost",
+//     port: 6379,
+//     maxRetriesPerRequest: null
+// }); 
+
+
+import { ConnectionOptions } from "bullmq";
+
+const connection:ConnectionOptions={
+    host:process.env.REDIS_HOST || "localhost",
+    port:6379,
+    maxRetriesPerRequest:null
+}
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,

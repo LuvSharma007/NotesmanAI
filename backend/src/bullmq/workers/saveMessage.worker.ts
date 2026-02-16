@@ -1,16 +1,27 @@
 import dotenv from "dotenv";
 dotenv.config();
-
 import { Job , Worker } from "bullmq";
 import messageModel from "../../models/messages.model.js";
 import { DB } from "../../db/client.js";
-import {Redis} from "ioredis";
 
-const connection = new Redis({
-    host:"localhost",
+import {Redis,RedisOptions} from "ioredis";
+
+// const connection = new Redis({
+//     host: process.env.REDIS_HOST || "localhost",
+//     port:6379,
+//     maxRetriesPerRequest:null
+// })
+
+import { ConnectionOptions } from "bullmq";
+
+const ConnectionConfig:RedisOptions={
+    host:process.env.REDIS_HOST || "localhost",
     port:6379,
     maxRetriesPerRequest:null
-})
+}
+
+const redisClient = new Redis(ConnectionConfig)
+
 
 await DB();
 
@@ -61,10 +72,10 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
         createdAt:new Date()
     })
 
-    const RedisMessageSaved = await connection.rpush(`chat:${userId}:${id}`,userMsg,aiMsg);
-    await connection.expire(`chat:${userId}:${id}`,1800) // expire the messages after half an hour
+    const RedisMessageSaved = await redisClient.rpush(`chat:${userId}:${id}`,userMsg,aiMsg);
+    await redisClient.expire(`chat:${userId}:${id}`,1800) // expire the messages after half an hour
 
-    await connection.ltrim(`chat:${userId}:${id}`,-20,-1);  // Negative indexes: Negative numbers can be used to specify offsets from the end of the list, where -1 is the last element, -2 is the penultimate
+    await redisClient.ltrim(`chat:${userId}:${id}`,-20,-1);  // Negative indexes: Negative numbers can be used to specify offsets from the end of the list, where -1 is the last element, -2 is the penultimate
     console.log("Message Saved in redis:",RedisMessageSaved);
     
 
@@ -73,7 +84,7 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
         throw new Error("Error , worker is not working")
     }
 },
-{connection})
+{connection:ConnectionConfig})
 
 worker.on('completed', (job) => {
   console.log(`Job ${job.id} completed successfully.`);

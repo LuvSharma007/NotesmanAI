@@ -1,0 +1,115 @@
+services:
+  redis-stack: 
+    image: redis/redis-stack-server:latest
+    container_name: redis-stack
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    networks:
+      - notesmanAI-network
+
+  api:
+    build: ./backend
+    command: node dist/index.js
+    container_name: apis
+    env_file: ./backend/.env
+    depends_on:
+    - redis-stack
+    ports:
+    - "4000:4000"
+    networks:
+    - notesmanAI-network
+    restart: unless-stopped
+    environment:
+    - REDIS_HOST=redis-stack
+
+  upload-worker:
+    build: ./backend
+    command: npx tsx src/bullmq/workers/upload.worker.ts
+    container_name: upload-worker
+    env_file: ./backend/.env
+    depends_on:
+    - redis-stack
+    networks:
+    - notesmanAI-network
+    restart: unless-stopped
+    environment:
+    - REDIS_HOST=redis-stack
+
+  qdrant-worker:
+    build: ./backend
+    command: npx tsx src/bullmq/workers/qdrant.worker.ts
+    container_name: qdrant-worker
+    env_file: ./backend/.env
+    depends_on:
+    - redis-stack
+    networks:
+    - notesmanAI-network
+    restart: unless-stopped
+    environment:
+    - REDIS_HOST=redis-stack
+
+  delete-worker:
+    build: ./backend
+    command: npx tsx src/bullmq/workers/delete.worker.ts
+    container_name: delete-worker
+    env_file: ./backend/.env
+    depends_on:
+    - redis-stack
+    networks:
+    - notesmanAI-network
+    restart: unless-stopped
+    environment:
+    - REDIS_HOST=redis-stack
+
+  save-message-worker:
+    build: ./backend
+    command: npx tsx src/bullmq/workers/saveMessage.worker.ts
+    container_name: save-message-worker
+    env_file: ./backend/.env
+    depends_on:
+    - redis-stack
+    networks:
+    - notesmanAI-network
+    restart: unless-stopped
+    environment:
+    - REDIS_HOST=redis-stack
+
+  get-message-worker:
+    build: ./backend
+    command: npx tsx src/bullmq/workers/getMessage.worker.ts
+    container_name: get-message-worker
+    env_file: ./backend/.env
+    depends_on:
+    - redis-stack
+    networks:
+    - notesmanAI-network
+    restart: unless-stopped
+    environment:
+    - REDIS_HOST=redis-stack
+
+  url-worker:
+    build: ./backend
+    command: npx tsx src/bullmq/workers/url.worker.ts
+    container_name: url-worker
+    env_file: ./backend/.env
+    depends_on:
+    - redis-stack
+    networks:
+    - notesmanAI-network
+    restart: unless-stopped
+    environment:
+    - REDIS_HOST=redis-stack
+
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+    - "3000:3000"
+    networks:
+    - notesmanAI-network
+
+networks:
+  notesmanAI-network:
+    driver: bridge
