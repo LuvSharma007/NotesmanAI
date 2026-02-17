@@ -1,18 +1,14 @@
-import { Redis, RedisOptions } from "ioredis";
+import { Redis} from "ioredis";
 import { Queue, QueueEvents } from "bullmq";
 
-export const connectionConfig: RedisOptions = {
-    host: process.env.REDIS_HOST || "localhost",
-    port: 6379,
-    maxRetriesPerRequest: null
-};
+import { redisConfig } from "../../lib/redisClient.js";
 
-export const client = new Redis(connectionConfig);
+export const client = new Redis(redisConfig);
 
 export const conversationQueue = new Queue('conversation-queue', {
-  connection: connectionConfig 
+  connection: redisConfig 
 });
 
 export const conversationQueueEvents = new QueueEvents("conversation-queue", {
-  connection: connectionConfig
+  connection: redisConfig
 });

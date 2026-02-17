@@ -13,7 +13,6 @@ app.use(
     })
 )
 
-
 app.all('/api/auth/*splat',toNodeHandler(auth));
 
 app.get("/api/me", async (req, res) => {
@@ -33,8 +32,6 @@ app.use("/api/v1/users",userRouter)
 app.use("/api/v1/userchats",chatRouter)
 app.use("/api/v1/userMessages",messageRouter)
 app.use("/api/v1/url",urlRouter)
-
-
 
 export default app;
 

@@ -1,49 +1,30 @@
-import dotenv from "dotenv";
-dotenv.config();
-
-
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_SECRET_KEY
 })
 
-
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { Job, Worker } from 'bullmq'
+import { Worker } from 'bullmq'
 import { v2 as cloudinary } from "cloudinary"
 import axios from 'axios';
 import path from 'path';
 import os from 'os'
 import fs from 'fs'
 import fileModel from '../../models/file.model.js';
-import { DB } from "../../db/client.js";
 import { createRequire } from "module";
 import { batchQueue } from "../queues/batches.queue.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
 
-// import { Redis } from "ioredis";
-// const connection = new Redis({
-//     host: process.env.REDIS_HOST || "localhost",
-//     port: 6379,
-//     maxRetriesPerRequest: null
-// });
+import type { Job } from "bullmq";
 
-
-import { ConnectionOptions } from "bullmq";
-
-const connection:ConnectionOptions={
-    host:process.env.REDIS_HOST || "localhost",
-    port:6379,
-    maxRetriesPerRequest:null
-}
+import { redisConfig } from "../../lib/redisClient.js"; 
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey: process.env.QDRANT_API_KEY,
 });
 
-await DB()
 
 const required = createRequire(import.meta.url)
 const convertApi = required('convertapi')(process.env.CONVERT_API_TOKEN);
@@ -298,7 +279,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
     }
 },
     {
-        connection,
+        connection:redisConfig,
     }
 )
 

@@ -1,7 +1,4 @@
-import dotenv from "dotenv"
-dotenv.config()
-import { DB } from "../../db/client.js";
-import { Job, Worker } from "bullmq";
+import { Worker } from "bullmq";
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { batchQueue } from "../queues/batches.queue.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
@@ -9,29 +6,17 @@ import path from "path";
 import fs from "fs"
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import urlModel from "../../models/url.model.js";
-
+import type { Job } from "bullmq";
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
-// const connection = new Redis({
-//     host: process.env.REDIS_HOST || "localhost",
-//     port: 6379,
-//     maxRetriesPerRequest: null
-// });
+import { redisConfig } from "../../lib/redisClient.js"; 
 
-import { ConnectionOptions } from "bullmq";
-
-const connection:ConnectionOptions={
-    host:process.env.REDIS_HOST || "localhost",
-    port:6379,
-    maxRetriesPerRequest:null
-}
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey: process.env.QDRANT_API_KEY,
 });
 
-await DB();
 
 const worker = new Worker("url-queue", async (job: Job) => {
     console.log("started worker");
@@ -181,7 +166,7 @@ const worker = new Worker("url-queue", async (job: Job) => {
         fs.unlinkSync(filePath);
         console.log("Temp file deleted:", filePath);
     }
-}, { connection })
+}, { connection:redisConfig })
 
 worker.on('completed', (job) => {
     console.log(`Job ${job.id} completed successfully.`);

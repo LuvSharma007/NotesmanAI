@@ -1,16 +1,10 @@
-import {Redis,RedisOptions} from "ioredis";
+import { Redis } from "ioredis";
+import type { RedisOptions } from "ioredis";
 
-
-// export const client = new Redis({
-//     host: process.env.REDIS_HOST || "localhost",
-//     port:6379,
-//     maxRetriesPerRequest:null
-// })
-
-const ConnectionOptions:RedisOptions={
-    host:process.env.REDIS_HOST || "localhost",
-    port:6379,
-    maxRetriesPerRequest:null
+export const redisConfig: RedisOptions = {
+    host: process.env.REDIS_HOST || "redis-stack",
+    port: Number(process.env.REDIS_PORT) || 6379,
+    maxRetriesPerRequest: null
 }
 
-export const client = new Redis(ConnectionOptions)
+export const redisClient = new Redis(redisConfig)

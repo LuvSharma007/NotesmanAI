@@ -1,24 +1,9 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { Worker } from "bullmq";
-// import { Redis } from "ioredis";
+import type { Job } from "bullmq";
+import {Worker} from "bullmq";
 import { QdrantClient } from "@qdrant/js-client-rest";
 
-import { ConnectionOptions } from "bullmq";
-
-const connection:ConnectionOptions={
-    host:process.env.REDIS_HOST || "localhost",
-    port:6379,
-    maxRetriesPerRequest:null
-}
-
-// const connection = new Redis({
-//     host: process.env.REDIS_HOST || "localhost",
-//     port: 6379,
-//     maxRetriesPerRequest: null,
-// });
+import { redisConfig } from "../../lib/redisClient.js"; 
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
@@ -26,7 +11,7 @@ const client = new QdrantClient({
 });
 
 
-const worker = new Worker("batch-queue", async job => {
+const worker = new Worker("batch-queue", async( job:Job) => {
     const {qdrantCollection,fileId,name,urlId} = job.data;
     try {
         console.log("Starting batch queue");
@@ -73,7 +58,7 @@ const worker = new Worker("batch-queue", async job => {
         
     }
 }, {
-    connection,
+    connection:redisConfig,
     concurrency:20,
     skipVersionCheck:true
 })

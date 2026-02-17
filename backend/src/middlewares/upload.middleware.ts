@@ -1,13 +1,10 @@
 import multer from "multer"
 import fs from 'fs'
-console.log("Choosing destination");
 
 const uploadDir = "./public/temp";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-  console.log("Created upload directory:", uploadDir);
 }
-
 
 const storage = multer.diskStorage({
     

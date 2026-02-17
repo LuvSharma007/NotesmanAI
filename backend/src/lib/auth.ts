@@ -1,4 +1,4 @@
-import { betterAuth, jwt } from "better-auth";
+import { betterAuth} from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { username } from "better-auth/plugins";
 import { MongoClient } from 'mongodb'
@@ -8,6 +8,7 @@ const mongoDBConnectionString = process.env.MONGODB_CONNECTION_STRING
 const mongoDbName = process.env.MONGODB_NAME
 const googleClientId = process.env.GOOGLE_CLIENT_ID
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
+
 
 if (!mongoDBConnectionString || !googleClientId || !googleClientSecret) {
     throw new Error('Missing MongoDB Environment variables')

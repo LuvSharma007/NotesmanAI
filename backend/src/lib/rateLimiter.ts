@@ -1,7 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import { Redis } from "ioredis"
-
-const redis = new Redis()
+import { redisClient } from "../lib/redisClient.js"
 
 export const rateLimiter = async(req:Request,res:Response,next:NextFunction)=>{
 
@@ -9,10 +7,10 @@ export const rateLimiter = async(req:Request,res:Response,next:NextFunction)=>{
     const limit = 30; // request
     const window = 60
 
-    const currentRequestCounter = await redis.incr(key)
+    const currentRequestCounter = await redisClient.incr(key)
 
     if(currentRequestCounter === 1){
-        await redis.expire(key,window);
+        await redisClient.expire(key,window);
     }
 
     if(currentRequestCounter>limit){

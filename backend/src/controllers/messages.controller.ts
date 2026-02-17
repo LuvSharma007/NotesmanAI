@@ -1,6 +1,6 @@
 import { Request , Response } from "express";
 import messageModel from "../models/messages.model.js";
-import { client } from "../lib/redisClient.js";
+import { redisClient } from "../lib/redisClient.js";
 
 
 export const getMessage = async(req:Request,res:Response)=>{
@@ -14,7 +14,7 @@ export const getMessage = async(req:Request,res:Response)=>{
             return res.status(400).json({success:false,message:"filedId or userId is required"})
         }
 
-        const cacheMessages = client.lrange(`chat:${userId}:${id}`,0,4)
+        const cacheMessages = redisClient.lrange(`chat:${userId}:${id}`,0,4)
         console.log("Messages from redis",cacheMessages);       
 
         const userMessages = await messageModel.find({userId,id}).sort({createdAt:1});  // returns the messages in asc order(oldest to newest)

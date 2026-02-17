@@ -8,7 +8,7 @@ const DB = async ()=>{
     
     if(!mongodbConnectionString){
         throw new Error('Missing MongoDB Environment variables')
-    }
+}
 
     // mongoDB client instance
     const mongoClient = new MongoClient(mongodbConnectionString);

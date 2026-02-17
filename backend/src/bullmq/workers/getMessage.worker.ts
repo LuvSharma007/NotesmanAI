@@ -1,21 +1,9 @@
-import { Job , Worker } from "bullmq";
-import {Redis,RedisOptions} from "ioredis";
+import type { Job } from "bullmq";
+import {Worker} from "bullmq";
 
-// const connection = new Redis({
-//     host: process.env.REDIS_HOST || "localhost",
-//     port:6379,
-//     maxRetriesPerRequest:null
-// })
+import { redisConfig } from "../../lib/redisClient.js"; 
+import { redisClient } from "../../lib/redisClient.js";
 
-import { ConnectionOptions } from "bullmq";
-
-const ConnectionOptions:RedisOptions={
-    host:process.env.REDIS_HOST || "localhost",
-    port:6379,
-    maxRetriesPerRequest:null
-}
-
-const redisClient = new Redis(ConnectionOptions)
 
 const worker = new Worker('conversation-queue',async(job:Job)=>{
     console.log("Get messages worker runned");
@@ -41,7 +29,7 @@ const worker = new Worker('conversation-queue',async(job:Job)=>{
         throw new Error("Error , worker is not working")
     }    
 },
-{connection:ConnectionOptions})
+{connection:redisConfig})
 
 worker.on('completed',(job)=>{
     console.log(`Job ${job.id} completed successfully`);

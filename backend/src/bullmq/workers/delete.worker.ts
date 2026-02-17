@@ -1,31 +1,16 @@
-import dotenv from "dotenv";
-dotenv.config();
+import type { Job } from "bullmq";
 
-import { DB } from "../../db/client.js";
-// import {Redis} from "ioredis";
+import { redisConfig } from "../../lib/redisClient.js"; 
 
-// const connection = new Redis({
-//     host: process.env.REDIS_HOST || "localhost",
-//     port: 6379,
-//     maxRetriesPerRequest: null
-// }); 
-
-
-import { ConnectionOptions } from "bullmq";
-
-const connection:ConnectionOptions={
-    host:process.env.REDIS_HOST || "localhost",
-    port:6379,
-    maxRetriesPerRequest:null
-}
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey:process.env.QDRANT_API_KEY,
     timeout: 60000
 });
+import {Worker} from "bullmq";
 
-import { Job , Worker} from "bullmq";
+
 import {v2 as cloudinary} from "cloudinary"
 import fileModel from "../../models/file.model.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
@@ -38,7 +23,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET_KEY
 })
 
-await DB();
 
 const worker = new Worker('delete-file-queue',async (job:Job)=>{
     console.log("started Worker");
@@ -126,7 +110,7 @@ const worker = new Worker('delete-file-queue',async (job:Job)=>{
         console.error("Worker job failed:", error);
         throw new Error("Error , worker is not working , LOL")        
     }    
-},{connection})
+},{connection:redisConfig})
 
 worker.on('completed', (job) => {
   console.log(`Job ${job.id} completed successfully.`);

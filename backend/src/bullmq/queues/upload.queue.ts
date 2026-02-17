@@ -1,4 +1,11 @@
 import {Queue} from "bullmq"
 
-export const fileProcessingQueue = new Queue('file-processing-queue')
+const connection = {
+  host: process.env.REDIS_HOST || "redis-stack",
+  port: 6379
+};
+
+export const fileProcessingQueue = new Queue('file-processing-queue',{
+    connection
+})
 

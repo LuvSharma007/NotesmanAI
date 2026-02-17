@@ -1,29 +1,10 @@
-import dotenv from "dotenv";
-dotenv.config();
-import { Job , Worker } from "bullmq";
+import { Worker } from "bullmq";
 import messageModel from "../../models/messages.model.js";
-import { DB } from "../../db/client.js";
 
-import {Redis,RedisOptions} from "ioredis";
+import type { Job} from "bullmq";
 
-// const connection = new Redis({
-//     host: process.env.REDIS_HOST || "localhost",
-//     port:6379,
-//     maxRetriesPerRequest:null
-// })
-
-import { ConnectionOptions } from "bullmq";
-
-const ConnectionConfig:RedisOptions={
-    host:process.env.REDIS_HOST || "localhost",
-    port:6379,
-    maxRetriesPerRequest:null
-}
-
-const redisClient = new Redis(ConnectionConfig)
-
-
-await DB();
+import { redisConfig } from "../../lib/redisClient.js"; 
+import { redisClient } from "../../lib/redisClient.js";
 
 const worker = new Worker('save-message-queue',async (job:Job)=>{
     console.log("Starting worker");
@@ -84,7 +65,7 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
         throw new Error("Error , worker is not working")
     }
 },
-{connection:ConnectionConfig})
+{connection:redisConfig})
 
 worker.on('completed', (job) => {
   console.log(`Job ${job.id} completed successfully.`);
