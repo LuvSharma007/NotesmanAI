@@ -4,6 +4,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET_KEY
 })
 
+await DB()
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Worker } from 'bullmq'
 import { v2 as cloudinary } from "cloudinary"
@@ -19,6 +20,7 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import type { Job } from "bullmq";
 
 import { redisConfig } from "../../lib/redisClient.js"; 
+import { DB } from "../../db/client.js";
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,

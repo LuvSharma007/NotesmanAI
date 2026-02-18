@@ -5,7 +5,9 @@ import type { Job} from "bullmq";
 
 import { redisConfig } from "../../lib/redisClient.js"; 
 import { redisClient } from "../../lib/redisClient.js";
+import { DB } from "../../db/client.js";
 
+await DB()
 const worker = new Worker('save-message-queue',async (job:Job)=>{
     console.log("Starting worker");
 

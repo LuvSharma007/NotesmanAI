@@ -3,8 +3,9 @@ import {Worker} from "bullmq";
 
 import { redisConfig } from "../../lib/redisClient.js"; 
 import { redisClient } from "../../lib/redisClient.js";
+import { DB } from "../../db/client.js";
 
-
+await DB()
 const worker = new Worker('conversation-queue',async(job:Job)=>{
     console.log("Get messages worker runned");
 

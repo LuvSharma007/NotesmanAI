@@ -10,12 +10,13 @@ const client = new QdrantClient({
 });
 import {Worker} from "bullmq";
 
-
+await DB()
 import {v2 as cloudinary} from "cloudinary"
 import fileModel from "../../models/file.model.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import messageModel from "../../models/messages.model.js";
 import urlModel from "../../models/url.model.js";
+import { DB } from "../../db/client.js";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

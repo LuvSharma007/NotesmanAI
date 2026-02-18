@@ -1,19 +1,20 @@
 services:
   redis-stack: 
-    image: redis/redis-stack-server:latest
+    image: redis/redis-stack:latest
     container_name: redis-stack
     ports:
       - "6379:6379"
+      - "8001:8001"
     networks:
       - notesmanAI-network
 
   api:
     build: ./backend
     command: node dist/index.js
-    container_name: apis
+    container_name: api
     env_file: ./backend/.env
     depends_on:
-    - frontend
+    - redis-stack
     ports:
     - "4000:4000"
     networks:
@@ -24,12 +25,11 @@ services:
 
   upload-worker:
     build: ./backend
-    command: node dist/bullmq/workers/upload.worker.js
+    command: npm run worker:upload
     container_name: upload-worker
     env_file: ./backend/.env
     depends_on:
     - api
-    - frontend
     - redis-stack
     networks:
     - notesmanAI-network
@@ -39,12 +39,11 @@ services:
 
   qdrant-worker:
     build: ./backend
-    command: node dist/bullmq/workers/upload.worker.js
+    command: npm run worker:qdrant
     container_name: qdrant-worker
     env_file: ./backend/.env
     depends_on:
     - api
-    - frontend
     - redis-stack
     networks:
     - notesmanAI-network
@@ -54,12 +53,11 @@ services:
 
   delete-worker:
     build: ./backend
-    command: node dist/bullmq/workers/upload.worker.js
+    command: npm run worker:delete
     container_name: delete-worker
     env_file: ./backend/.env
     depends_on:
     - api
-    - frontend
     - redis-stack
     networks:
     - notesmanAI-network
@@ -69,12 +67,11 @@ services:
 
   save-message-worker:
     build: ./backend
-    command: node dist/bullmq/workers/upload.worker.js
+    command: npm run worker:saveMessage
     container_name: save-message-worker
     env_file: ./backend/.env
     depends_on:
     - api
-    - frontend
     - redis-stack
     networks:
     - notesmanAI-network
@@ -84,12 +81,11 @@ services:
 
   get-message-worker:
     build: ./backend
-    command: node dist/bullmq/workers/upload.worker.js
+    command: npm run worker:getMessage
     container_name: get-message-worker
     env_file: ./backend/.env
     depends_on:
     - api
-    - frontend
     - redis-stack
     networks:
     - notesmanAI-network
@@ -99,12 +95,11 @@ services:
 
   url-worker:
     build: ./backend
-    command: node dist/bullmq/workers/upload.worker.js
+    command: npm run worker:url
     container_name: url-worker
     env_file: ./backend/.env
     depends_on:
     - api
-    - frontend
     - redis-stack
     networks:
     - notesmanAI-network

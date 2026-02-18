@@ -4,13 +4,14 @@ import {Worker} from "bullmq";
 import { QdrantClient } from "@qdrant/js-client-rest";
 
 import { redisConfig } from "../../lib/redisClient.js"; 
+import { DB } from "../../db/client.js";
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey:process.env.QDRANT_API_KEY,
 });
 
-
+await DB()
 const worker = new Worker("batch-queue", async( job:Job) => {
     const {qdrantCollection,fileId,name,urlId} = job.data;
     try {

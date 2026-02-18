@@ -75,7 +75,7 @@ export const auth = betterAuth({
     advanced: {
         ipAddress:{
             ipAddressHeaders:["x-forwarded-for"]
-        }
+        },
     },
     rateLimit:{
         window:60, // time window in seconds
@@ -88,5 +88,5 @@ export const auth = betterAuth({
             "/get-session":false
         }
     },
-    trustedOrigins: ["http://localhost:3000", "http://localhost:4000"],
+    trustedOrigins: ["http://localhost:3000", "http://localhost:4000" , "http://frontend:3000","http://api:4000" ],
 });

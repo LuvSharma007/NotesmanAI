@@ -37,7 +37,10 @@ export const chat = async (req: Request, res: Response) => {
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Transfer-Encoding", "chunked");
-    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.setHeader("Connection", "keep-alive");
+
     res.flushHeaders?.();
 
     const notesmanAgent = new Agent({
@@ -59,12 +62,18 @@ export const chat = async (req: Request, res: Response) => {
     )
 
     let aiMessage = "";
+
+    // const stream = result.toTextStream({
+      //   compatibleWithNodeStreams:true,
+      // })
+
     const stream = result.toTextStream();
-    for await (const chunk of stream) {
+    for await (const chunk of stream) {     
       aiMessage +=  chunk;
       res.write(chunk)
 
     }
+
     res.end();
 
     // Starting worker

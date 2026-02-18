@@ -10,8 +10,9 @@ import type { Job } from "bullmq";
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
 import { redisConfig } from "../../lib/redisClient.js"; 
+import { DB } from "../../db/client.js";
 
-
+await DB()
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey: process.env.QDRANT_API_KEY,
