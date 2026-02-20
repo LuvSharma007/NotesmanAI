@@ -5,9 +5,10 @@ export const authClient = createAuthClient({
     plugins: [ 
         usernameClient(),
     ], 
-    baseURL:'http://localhost:4000',
+    baseURL:'http://76.13.242.203:4000',
     trustedOrigins: [
 		'http://localhost:4000',
+        'http://76.13.242.203:4000',
 		'http://api:4000',
 	],
 })
