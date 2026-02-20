@@ -1,5 +1,13 @@
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   redis-stack: 
+    <<: *default-logging
     image: redis/redis-stack-server:latest
     container_name: redis-stack
     ports:
@@ -9,6 +17,7 @@ services:
       - notesmanAI-network
 
   api:
+    <<: *default-logging
     build: ./backend
     command: node dist/index.js
     container_name: api
@@ -24,6 +33,7 @@ services:
     - REDIS_HOST=redis-stack
 
   upload-worker:
+    <<: *default-logging
     build: ./backend
     command: npm run worker:upload
     container_name: upload-worker
@@ -38,6 +48,7 @@ services:
     - REDIS_HOST=redis-stack
 
   qdrant-worker:
+    <<: *default-logging
     build: ./backend
     command: npm run worker:qdrant
     container_name: qdrant-worker
@@ -52,6 +63,7 @@ services:
     - REDIS_HOST=redis-stack
 
   delete-worker:
+    <<: *default-logging
     build: ./backend
     command: npm run worker:delete
     container_name: delete-worker
@@ -66,6 +78,7 @@ services:
     - REDIS_HOST=redis-stack
 
   save-message-worker:
+    <<: *default-logging
     build: ./backend
     command: npm run worker:saveMessage
     container_name: save-message-worker
@@ -80,6 +93,7 @@ services:
     - REDIS_HOST=redis-stack
 
   get-message-worker:
+    <<: *default-logging
     build: ./backend
     command: npm run worker:getMessage
     container_name: get-message-worker
@@ -94,6 +108,7 @@ services:
     - REDIS_HOST=redis-stack
 
   url-worker:
+    <<: *default-logging
     build: ./backend
     command: npm run worker:url
     container_name: url-worker
@@ -109,6 +124,7 @@ services:
 
 
   frontend:
+    <<: *default-logging
     build: ./frontend
     container_name: frontend
     ports:
