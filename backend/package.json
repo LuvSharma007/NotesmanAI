@@ -9,12 +9,12 @@
     "prebuild": "rm -rf dist",
     "build": "tsc",
     "start:api": "node dist/index.js",
-    "worker:upload":"npx tsx src/bullmq/workers/upload.worker.ts",
-    "worker:qdrant":"npx tsx src/bullmq/workers/qdrant.worker.ts",
-    "worker:delete":"npx tsx src/bullmq/workers/delete.worker.ts",
-    "worker:getMessage":"npx tsx src/bullmq/workers/getMessage.worker.ts",
-    "worker:saveMessage":"npx tsx src/bullmq/workers/saveMessage.worker.ts",
-    "worker:url":"npx tsx src/bullmq/workers/url.worker.ts"
+    "worker:upload": "npx tsx src/bullmq/workers/upload.worker.ts",
+    "worker:qdrant": "npx tsx src/bullmq/workers/qdrant.worker.ts",
+    "worker:delete": "npx tsx src/bullmq/workers/delete.worker.ts",
+    "worker:getMessage": "npx tsx src/bullmq/workers/getMessage.worker.ts",
+    "worker:saveMessage": "npx tsx src/bullmq/workers/saveMessage.worker.ts",
+    "worker:url": "npx tsx src/bullmq/workers/url.worker.ts"
   },
   "keywords": [],
   "author": "",
@@ -41,6 +41,7 @@
     "redis": "^5.8.3",
     "resend": "^6.1.2",
     "socket.io": "^4.8.1",
+    "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

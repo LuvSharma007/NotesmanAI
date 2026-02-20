@@ -2,6 +2,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import type { Job } from "bullmq";
 import {Worker} from "bullmq";
 import { QdrantClient } from "@qdrant/js-client-rest";
+import { v4 as uuidv4 } from 'uuid';
 
 import { redisConfig } from "../../lib/redisClient.js"; 
 import { DB } from "../../db/client.js";
@@ -45,7 +46,7 @@ const worker = new Worker("batch-queue", async( job:Job) => {
 
             await client.upsert(qdrantCollection, {
                 batch:{
-                    ids:vectors.map(()=> crypto.randomUUID()),
+                    ids:vectors.map(()=> uuidv4()),
                     payloads: vectors.map(()=> payload),
                     vectors:vectors
                 }

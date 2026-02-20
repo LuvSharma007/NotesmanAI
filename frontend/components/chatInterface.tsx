@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, User, MessageSquare, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from 'uuid';
 
 interface Message {
   id: string;
@@ -36,7 +37,7 @@ export function ChatInterface({
     }
 
     const userMessage: Message = {
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       content: trimmedInput,
       sender: "user",
     };
@@ -44,7 +45,7 @@ export function ChatInterface({
     setInput("");
 
     const aiMessage: Message = {
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       content: "",
       sender: "ai",
     };
