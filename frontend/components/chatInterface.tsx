@@ -145,7 +145,7 @@ export function ChatInterface({
               </span>
             ) : (
               <span className="text-sm text-muted-foreground">
-                Please select a source to start chat
+                Please select a source file or Url to start chat
               </span>
             )}
           </CardTitle>
