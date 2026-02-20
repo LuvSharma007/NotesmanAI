@@ -1,0 +1,26 @@
+name: Automate Nodejs Application to my Server Machine
+
+on:
+  push:
+    braches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy Via SSH
+        uses: appleboy/ssh-actions@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/baki/NotesmanAI
+            git pull
+            docker compose up --build
+
