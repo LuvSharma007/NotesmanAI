@@ -5,10 +5,10 @@ export const authClient = createAuthClient({
     plugins: [ 
         usernameClient(),
     ], 
-    baseURL:'http://76.13.242.203:4000',
+    baseURL:'http://notesman.in',
     trustedOrigins: [
-		'http://localhost:4000',
-        'http://76.13.242.203:4000',
+		// 'http://localhost:4000',
+        // 'http://76.13.242.203:4000',
 		'http://api:4000',
         "http://notesman.in"],
 })
