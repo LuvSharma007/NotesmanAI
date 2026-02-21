@@ -94,5 +94,7 @@ export const auth = betterAuth({
         "http://frontend:3000",
         "http://api:4000",
         "http://76.13.242.203:3000",
-        "http://76.13.242.203:4000"],
+        "http://76.13.242.203:4000",
+        "http://notesman.in"
+    ],
 });
