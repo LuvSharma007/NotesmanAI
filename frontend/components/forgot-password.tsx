@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         try {
             const {data ,error}= await authClient.requestPasswordReset({
                 email:parsed.data.email,
-                redirectTo:'http://localhost:3000/reset-password'    
+                redirectTo:'http://frontned/reset-password'    
             })
             console.log("Email Response:",data);
             
