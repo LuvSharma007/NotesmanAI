@@ -26,4 +26,5 @@ jobs:
             cd /home/baki/NotesmanAI
             git pull
             docker compose up --build -d
+            docker compose exec -T nginx nginx -s reload
 
