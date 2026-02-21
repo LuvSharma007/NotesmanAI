@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
       >
         <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
           <div>
-            <Link href="/" aria-label="go home">
+            <Link href="/" aria-label="go home" prefetch={false}>
               <Logo />
             </Link>
             <h1 className="mb-1 mt-4 text-xl font-semibold">Reset Password</h1>

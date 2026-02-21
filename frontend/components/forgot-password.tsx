@@ -59,12 +59,12 @@ export default function ForgotPasswordPage() {
         <section className="flex min-h-screen bg-zinc-50 px-4 py-16 md:py-32 dark:bg-transparent">
             <form
                 onSubmit={handleSendRestLink}
-                action=""
                 className="bg-muted m-auto h-fit w-full max-w-sm overflow-hidden rounded-[calc(var(--radius)+.125rem)] border shadow-md shadow-zinc-950/5 dark:[--color-muted:var(--color-zinc-900)]">
                 <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
                     <div>
                         <Link
                             href="/"
+                            prefetch={false}
                             aria-label="go home">
                             <Logo/>
                         </Link>
@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
                             asChild
                             variant="link"
                             className="px-2">
-                            <Link href="/login">Log in</Link>
+                            <Link href="/login" prefetch={false}>Log in</Link>
                         </Button>
                     </p>
                 </div>
