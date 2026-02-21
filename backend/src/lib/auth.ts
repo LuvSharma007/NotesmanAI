@@ -66,7 +66,7 @@ export const auth = betterAuth({
             maxAge:60 * 60 * 24 * 60, // 2 month
             strategy:"jwt",
             refreshCache:{
-                updateAge:60 * 60 * 24 * 7,
+                updateAge: 60 * 60 * 24,
             },
         },
         expiresIn: 60 * 60 * 24 * 60, // 2 month
