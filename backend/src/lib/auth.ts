@@ -25,7 +25,7 @@ export const auth = betterAuth({
         sendResetPassword: async ({ user, url, token },Request) => {
 
             const {data,error} = await resend.emails.send({
-                from: "mail.notesmain.in",   // change it to you domain name
+                from: "mail.notesmain.in",   // change it to you subdomain name
                 to: user.email,
                 subject: "Reset Your Password",
                 text: `Click the link to reset your password: ${url}`
