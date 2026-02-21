@@ -26,6 +26,7 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
       <body>
         <h1>Hello ${userName}</h1>
         <p>Click the button below to reset your password:</p>
+        <p>Link will expire within one hour for security reasons</p>
         <a href="${resetUrl}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none;">
           Reset Password
         </a>
@@ -40,10 +41,11 @@ export const auth = betterAuth({
 
     emailAndPassword: {
         enabled: true,
+        resetPasswordTokenExpiresIn: 3600,
         sendResetPassword: async ({ user, url, token },Request) => {
 
             const emailHtml = createResetEmailTemplate(url,user.name)
-            
+
             const {data,error} = await resend.emails.send({
                 from: "Notesman@mail.notesman.in",   // any_name@subDomain
                 to: user.email,
@@ -52,8 +54,7 @@ export const auth = betterAuth({
             })
             if(error){
                 console.log("Resend Error:",error);
-            }
-            console.log("data:",data);           
+            }       
             
         },
         requireEmailVerification: false

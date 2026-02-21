@@ -22,8 +22,6 @@ const formSchema = z
     path: ["confirmPassword"],
   })
 
-type FormValues = z.infer<typeof formSchema>
-
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -52,7 +50,7 @@ export default function ResetPasswordPage() {
       const { error } = await authClient.resetPassword({
         token,
         newPassword: parsed.data.password,
-      })
+      })      
 
       if (error) {
         toast.error(error.message)

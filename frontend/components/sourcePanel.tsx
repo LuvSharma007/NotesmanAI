@@ -115,7 +115,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
       toast.success("File deleted");
     } catch (error) {
       toast.error("Error deleting file")
-      console.log("error deleting file:", error);
     } finally {
       setDeleting((prev) => prev.filter((id) => id !== id))
     }
@@ -135,7 +134,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         },
         body: JSON.stringify({ url }),
       })
-      // console.log("Response:", res);
 
       const data = await res.json()
       
@@ -155,13 +153,11 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
 
       setSources((prev) => [...prev, urlSource])
       setUrl("");
-      // console.log("Sources:", sources);
 
       toast.success(data.message || "URL Processing")
     } catch (error) {
       setUrl("");
       toast.error("Opps ,Something went wrong")
-      console.log("error sendings URL:", error);
     }
   }
 
@@ -204,7 +200,6 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
           sourceType: "url"
         }))
         setSources([...files, ...urls])
-        // console.log("Sources:", sources);
 
       } catch (error:any) {
         toast.error("Failed to load sources")

@@ -38,15 +38,12 @@ export function LoginForm({
       if (data) {
         // router.push("/c")
         window.location.href = "/c"; 
-        console.log("User Login successfully", data);
         toast.success("Login successfully")
       } else {
-        console.log("Error Login user", error);
         toast.error(error?.message || "Login failed")
       }
     } catch (error) {
       setLoading(false)
-      console.log("Error Login user", error);
       toast.error("Something went wrong")
     } finally {
       setLoading(false)
@@ -62,7 +59,6 @@ export function LoginForm({
       })
       
     } catch (error) {
-      console.log("Error login with google",error);
       toast.error("Something went wrong")
     }
   }

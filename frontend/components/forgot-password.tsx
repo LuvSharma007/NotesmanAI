@@ -37,9 +37,7 @@ export default function ForgotPasswordPage() {
             const {data ,error}= await authClient.requestPasswordReset({
                 email:parsed.data.email,
                 redirectTo:'http://notesman.in/reset-password'    
-            })
-            console.log("Email Response:",data);
-            
+            })            
 
             if(!error){
                 toast.success("if this email exists in our system, we send you an email")
@@ -49,7 +47,6 @@ export default function ForgotPasswordPage() {
 
 
         } catch (error:any) {
-            console.log("Error sending Reset Email for forgot password",error);
             toast.error(error.message)
         }finally{
             setLoading(false);

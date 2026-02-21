@@ -43,7 +43,6 @@ export function SignUpForm({
 
       if (!response?.available) {
       toast.error("Username is already taken");
-      console.log("User name is already taken");
       setLoading(false);
       return;
       }
@@ -56,15 +55,12 @@ export function SignUpForm({
       })
       if(data){
         router.push("/login")
-        console.log("User signup successfully",data);
         toast.success("Signup successfully")
       }else{
-        console.log("Error signup user",error);
         toast.error(error?.message || "Signup failed")        
       }
     } catch (error) {
       setLoading(false)
-      console.log("Error signup user",error);
       toast.error("Something went wrong")        
     }finally{
       setLoading(false)

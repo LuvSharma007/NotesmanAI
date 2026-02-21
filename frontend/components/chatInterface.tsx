@@ -109,10 +109,8 @@ export function ChatInterface({
           method:"GET",
           credentials:"include",
         })
-        // console.log("Response:",res);
 
         const data = await res.json();
-        // console.log("Data:",data);
 
         if(data.success){
           const formatted = data.messages.map((msg:any)=>({
@@ -124,7 +122,6 @@ export function ChatInterface({
         }
 
       } catch (error) {
-        console.log("Error fetching messages",error);
         toast.error("Error Fetching messages");
       }
     }
