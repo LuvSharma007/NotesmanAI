@@ -12,13 +12,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
       - name: Deploy Via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 20m
+          # protocol: tcp4
           script: |
             cd /home/baki/NotesmanAI
             git pull
