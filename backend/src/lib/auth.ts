@@ -16,6 +16,24 @@ if (!mongoDBConnectionString || !googleClientId || !googleClientSecret) {
 
 const mongodb = new MongoClient(mongoDBConnectionString).db(mongoDbName)
 
+const createResetEmailTemplate = (resetUrl: string, userName: string) => {
+	return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Reset Your Password</title>
+      </head>
+      <body>
+        <h1>Hello ${userName}</h1>
+        <p>Click the button below to reset your password:</p>
+        <a href="${resetUrl}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none;">
+          Reset Password
+        </a>
+      </body>
+    </html>
+  `;
+};
+
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
     baseURL: process.env.BETTER_AUTH_URL,
@@ -24,11 +42,13 @@ export const auth = betterAuth({
         enabled: true,
         sendResetPassword: async ({ user, url, token },Request) => {
 
+            const emailHtml = createResetEmailTemplate(url,user.name)
+            
             const {data,error} = await resend.emails.send({
                 from: "Notesman@mail.notesman.in",   // any_name@subDomain
                 to: user.email,
                 subject: "Reset Your Password",
-                text: `Click the link to reset your password: ${url}`
+                html:emailHtml
             })
             if(error){
                 console.log("Resend Error:",error);
