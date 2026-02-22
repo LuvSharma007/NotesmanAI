@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         try {
             const {data ,error}= await authClient.requestPasswordReset({
                 email:parsed.data.email,
-                redirectTo:'http://notesman.in/reset-password'    
+                redirectTo:'https://notesman.in/reset-password'    
             })            
 
             if(!error){
