@@ -97,6 +97,11 @@ export const auth = betterAuth({
         ipAddress:{
             ipAddressHeaders:["x-forwarded-for"]
         },
+        defaultCookieAttributes:{
+            sameSite:'Lax',
+            secure:true,
+            httpOnly:true
+        }
     },
     rateLimit:{
         window:60, // time window in seconds
