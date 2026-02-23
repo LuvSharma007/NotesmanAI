@@ -10,7 +10,6 @@ import { Worker } from 'bullmq'
 import { v2 as cloudinary } from "cloudinary"
 import axios from 'axios';
 import path from 'path';
-import os from 'os'
 import fs from 'fs'
 import fileModel from '../../models/file.model.js';
 import { createRequire } from "module";
@@ -33,7 +32,6 @@ const convertApi = required('convertapi')(process.env.CONVERT_API_TOKEN);
 
 const worker = new Worker('file-processing-queue', async (job: Job) => {
     console.log('starting worker');
-    let tempFilePath;
     const { fileUrl, name, qdrantCollection, fileId, filePath, publicId } = job.data;
 
     try {
@@ -42,11 +40,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         console.log(`Processing Job ${job.id} for file:${name}`);
         console.log("Downloading URL");
 
-
         console.log("File URL", fileUrl);
-
-        tempFilePath = path.join(os.tmpdir(), "public", "temp", name);
-        console.log(`File downloaded to temporary location: ${tempFilePath}`); ///tmp/public/temp/BCA SEM-6 SYLLABUS .pdf
         const extension = path.extname(filePath).toLowerCase().replace('.', '');
         console.log("Extension", extension);
         console.log(filePath);  //public/temp/BCA SEM-6 SYLLABUS .pdf
@@ -63,7 +57,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 let result;
                 let downloadUrl: string;
                 const parsedPath = path.parse(filePath);
-                const textFilePath = path.resolve(parsedPath.dir,parsedPath.name + ".txt")
+                const textFilePath = path.join(parsedPath.dir, parsedPath.name + ".txt").trim();
                 fs.mkdirSync(path.dirname(textFilePath), { recursive: true });
                 console.log("textFilepath",textFilePath);
                 
@@ -134,8 +128,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
             } finally {
                 // removing the file from disk after being processed
                 if (["pdf", "doc", "docx"].includes(extension.toLowerCase())) {
-                        const absolutePdfPath = path.resolve(process.cwd(), filePath);
-                    fs.unlinkSync(absolutePdfPath);
+                    fs.unlinkSync(filePath);
                     console.log("Temp file deleted:", filePath);
                 }
             }
