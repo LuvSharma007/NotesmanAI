@@ -46,10 +46,10 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         console.log("File URL", fileUrl);
 
         tempFilePath = path.join(os.tmpdir(), "public", "temp", name);
-        console.log(`File downloaded to temporary location: ${tempFilePath}`);
+        console.log(`File downloaded to temporary location: ${tempFilePath}`); ///tmp/public/temp/BCA SEM-6 SYLLABUS .pdf
         const extension = path.extname(filePath).toLowerCase().replace('.', '');
         console.log("Extension", extension);
-        console.log(filePath);
+        console.log(filePath);  //public/temp/BCA SEM-6 SYLLABUS .pdf
 
 
         // convert the file and save in public/convertedFile
@@ -63,7 +63,11 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 let result;
                 let downloadUrl: string;
                 const parsedPath = path.parse(filePath);
-                const textFilePath = path.join(parsedPath.dir, parsedPath.name + ".txt");
+                const cleanName = parsedPath.name.trim();
+                const textFilePath = path.resolve(parsedPath.dir,cleanName + ".txt")
+                fs.mkdirSync(path.dirname(textFilePath), { recursive: true });
+                console.log("textFilepath",textFilePath);
+                
 
                 if (extension === 'txt') {
                     downloadUrl = fileUrl;
