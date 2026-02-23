@@ -56,6 +56,8 @@ services:
     restart: unless-stopped
     environment:
     - REDIS_HOST=redis-stack
+    volumes:
+    - temp_files:/app/public/temp
 
   upload-worker:
     <<: *default-logging
@@ -71,6 +73,8 @@ services:
     restart: always
     environment:
     - REDIS_HOST=redis-stack
+    volumes:
+    - temp_files:/app/public/temp
 
   qdrant-worker:
     <<: *default-logging
@@ -146,6 +150,8 @@ services:
     restart: always
     environment:
     - REDIS_HOST=redis-stack
+    volumes:
+    - temp_files:/app/public/temp
 
 
   frontend:
@@ -158,6 +164,9 @@ services:
     - notesmanAI-network
     depends_on:
     - redis-stack
+
+volumes:
+  temp_files:
 
 networks:
   notesmanAI-network:
