@@ -36,8 +36,8 @@ export function LoginForm({
         password
       })
       if (data) {
-        router.push("/c")
-        // window.location.href = "/c"; 
+        // router.push("/c")
+        window.location.href = "/c"; 
         toast.success("Login successfully")
       } else {
         toast.error(error?.message || "Login failed")
