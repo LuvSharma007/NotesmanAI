@@ -94,6 +94,7 @@ export const auth = betterAuth({
         updateAge: 60 * 60 * 24 // 1 day before session is expires
     },
     advanced: {
+        cookiePrefix:"notesman",
         ipAddress:{
             ipAddressHeaders:["x-forwarded-for"]
         },
