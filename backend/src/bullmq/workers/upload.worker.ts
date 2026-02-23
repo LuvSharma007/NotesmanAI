@@ -134,7 +134,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
             } finally {
                 // removing the file from disk after being processed
                 if (["pdf", "doc", "docx"].includes(extension.toLowerCase())) {
-                    fs.unlinkSync(filePath);
+                        const absolutePdfPath = path.resolve(process.cwd(), filePath);
+                    fs.unlinkSync(absolutePdfPath);
                     console.log("Temp file deleted:", filePath);
                 }
             }
