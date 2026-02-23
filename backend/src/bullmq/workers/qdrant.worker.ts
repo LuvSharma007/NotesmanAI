@@ -1,34 +1,35 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import type { Job } from "bullmq";
-import {Worker} from "bullmq";
+import { Worker } from "bullmq";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { v4 as uuidv4 } from 'uuid';
 
-import { redisConfig } from "../../lib/redisClient.js"; 
+import { redisConfig } from "../../lib/redisClient.js";
 import { DB } from "../../db/client.js";
+import fileModel from "../../models/file.model.js";
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
-    apiKey:process.env.QDRANT_API_KEY,
+    apiKey: process.env.QDRANT_API_KEY,
 });
 
 await DB()
-const worker = new Worker("batch-queue", async( job:Job) => {
-    const {qdrantCollection,fileId,name,urlId} = job.data;
+const worker = new Worker("batch-queue", async (job: Job) => {
+    const { qdrantCollection, fileId, name, urlId } = job.data;
     try {
         console.log("Starting batch queue");
-        console.log("User Name",name);
-        console.log("fileId",fileId);
-        console.log("urlId",fileId);
-        console.log("QdrantCollection",qdrantCollection);
-        
-        if (job.name === "batchesForText" || job.name==="batchesForUrl") {
+        console.log("User Name", name);
+        console.log("fileId", fileId);
+        console.log("urlId", fileId);
+        console.log("QdrantCollection", qdrantCollection);
+
+        if (job.name === "batchesForText" || job.name === "batchesForUrl") {
             console.log("Job data:---", job.data.data);
             const embeddings = new OpenAIEmbeddings({
                 apiKey: process.env.OPENAI_API_KEY,
                 model: "text-embedding-3-large",
                 batchSize: 100,  // reduce load
-                dimensions:1000
+                dimensions: 1000
             })
 
             // generating embeddings for all batches at once
@@ -36,33 +37,41 @@ const worker = new Worker("batch-queue", async( job:Job) => {
 
             let inputData = Array.isArray(job.data.data) ? job.data.data : [job.data.data]
             let payload = {
-                    text:job.data.data,
-                    source:name,
-                    payloadValue:String(fileId || urlId)
+                text: job.data.data,
+                source: name,
+                payloadValue: String(fileId || urlId)
             }
 
             const vectors = await embeddings.embedDocuments(inputData);
             console.log("vectors", vectors);
 
             await client.upsert(qdrantCollection, {
-                batch:{
-                    ids:vectors.map(()=> uuidv4()),
-                    payloads: vectors.map(()=> payload),
-                    vectors:vectors
+                batch: {
+                    ids: vectors.map(() => uuidv4()),
+                    payloads: vectors.map(() => payload),
+                    vectors: vectors
                 }
             })
-            console.log(`--------Successfully upserted points----------`);
+            if (fileId) {
+                await fileModel.findByIdAndUpdate(fileId, { status: "completed" })
+            } else {
+                await fileModel.findByIdAndUpdate(urlId, { status: "completed" })
+            }
         }
     } catch (error) {
         console.log("Worker failed:", error);
         console.log("removing Qdrant collection");
+        if (fileId) {
+            await fileModel.findByIdAndUpdate(fileId, { status: "failed" })
+        } else {
+            await fileModel.findByIdAndUpdate(urlId, { status: "failed" })
+        }
         client.deleteCollection(qdrantCollection)
-        
     }
 }, {
-    connection:redisConfig,
-    concurrency:20,
-    skipVersionCheck:true
+    connection: redisConfig,
+    concurrency: 20,
+    skipVersionCheck: true
 })
 
 worker.on('completed', (job) => {

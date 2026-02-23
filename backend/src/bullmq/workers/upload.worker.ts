@@ -162,6 +162,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         // console.log("batchSize in Bytes:",batchSizeInBytes);
 
         // processing the file stream in bacthes
+        await fileModel.findByIdAndUpdate(fileId,{status:"chunking"})
 
         async function processStreamBatches(
             // batchSizeInBytes:number
@@ -273,7 +274,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         }
 
         await processStreamBatches();
-
+        await fileModel.findByIdAndUpdate(fileId,{status:"processing"})
     } catch (error) {
         await fileModel.findByIdAndUpdate(fileId, { status: "failed" })
         console.error("Worker job failed:", error);

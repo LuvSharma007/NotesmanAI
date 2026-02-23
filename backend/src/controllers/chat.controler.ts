@@ -60,16 +60,10 @@ export const chat = async (req: Request, res: Response) => {
       context: { id, userId },
     }
     )
-
     let aiMessage = "";
-
-    // const stream = result.toTextStream({
-      //   compatibleWithNodeStreams:true,
-      // })
-
     const stream = result.toTextStream();
-    for await (const chunk of stream) {     
-      aiMessage +=  chunk;
+    for await (const chunk of stream) {
+      aiMessage += chunk;
       res.write(chunk)
 
     }

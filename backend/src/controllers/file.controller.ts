@@ -278,3 +278,43 @@ export const deleteFile = async (req: Request, res: Response) => {
             res.status(500).json({ success: false, message: "File Deletion Error" })
         }
     }
+
+
+export const getFileStatus = async(req:Request,res:Response)=>{
+    const fileId = req.params.id as string;
+    
+    if(!mongoose.Types.ObjectId.isValid(fileId)){
+        return res.status(400).json({message:"File ID is Missing or Invalid"});
+    }
+
+    console.log("FileID:",fileId);
+
+    res.setHeader('Content-Type','text/event-stream');
+    res.setHeader('Cache-Control','no-cache');
+    res.setHeader("Connection",'keep-alive');
+
+    console.log(`SSE connection opened for file: ${fileId}`);
+
+    const pipeline = [
+        {$match:{'documentKey._id': new mongoose.Types.ObjectId(fileId)}}
+    ]
+
+    const changeStream = fileModel.watch(pipeline,{fullDocument:"updateLookup"})
+
+    changeStream.on("change",(change)=>{
+        if(change.operationtype === "update" || change.operationtype === "replace" ){
+            const updateStatus = change.fullDocument?.status;
+            res.write(`data: ${JSON.stringify({status:updateStatus})}`)
+            if(updateStatus === "completed" || updateStatus === "failed"){
+                changeStream.close();
+                res.end();
+            }
+        }
+    })
+
+    req.on("close",()=>{
+        console.log("Client closed connection");
+        changeStream.close();
+    })   
+
+}

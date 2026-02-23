@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, User, MessageSquare, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
+import { Spinner } from "./ui/shadcn-io/spinner";
 
 interface Message {
   id: string;
@@ -19,15 +20,18 @@ export function ChatInterface({
   id,
   messages: initialMessages = [],
   sourceType,
-  name
+  name,
+  status
 }: {
   id?: string;
   name?: string,
   sourceType:"file"|"url"
   messages?: Message[];
+  status:string
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
+  const isProcessing = ["pending","processing","chunking"]
 
   const handleChat = async () => {
     const trimmedInput = input.trim();
@@ -142,14 +146,20 @@ export function ChatInterface({
               </span>
             ) : (
               <span className="text-sm text-muted-foreground">
-                Please select a source file or Url------------ to start chat
+                Please select a source file or Url to start chat
               </span>
             )}
           </CardTitle>
         </CardHeader>
 
         <div className="flex-1 flex flex-col min-h-0">
-          {/* Messages */}
+          {isProcessing && (
+            <div>
+              <Spinner className="h-10 w-10 mb-4 text-primary"/>
+              <h3 className="text-lg fron-semibold capitalize">{status}....</h3>
+            </div>
+          )}
+
           <ScrollArea className="flex-1 p-6 min-h-0 pb-2">
             <div className="space-y-4 mb-4">
               {messages.map((message) => (
