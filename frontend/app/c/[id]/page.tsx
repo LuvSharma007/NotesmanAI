@@ -22,7 +22,7 @@ export default function Page() {
       setFileStatus(data.status);
 
       if(["pending","processing","chunking"].includes(data.status)){
-        const eventSource = new EventSource(`/api/users/status/${id}`,{
+        const eventSource = new EventSource(`/api/v1/users/status/${id}`,{
             withCredentials:true
           })
       console.log("eventSource:",eventSource);
