@@ -17,12 +17,16 @@ export default function Page() {
     const checkStatus = async ()=>{
       const res = await fetch(`/api/v1/users/file-status/${id}`);
       const data = await res.json();
+      console.log("Data:",data);
+      
       setFileStatus(data.status);
 
       if(["pending","processing","chunking"].includes(data.status)){
         const eventSource = new EventSource(`/api/users/status/${id}`,{
             withCredentials:true
           })
+      console.log("eventSource:",eventSource);
+
         eventSource.onmessage = (event) =>{
           const sseData = JSON.parse(event.data)
           setFileStatus(sseData.status);
