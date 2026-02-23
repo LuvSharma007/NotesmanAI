@@ -1,7 +1,9 @@
 import multer from "multer"
 import fs from 'fs'
+import path from "path";
 
-const uploadDir = "./public/temp";
+const uploadDir = path.resolve(process.cwd(),"public/temp")  // /app/public/temp
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -13,7 +15,8 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, file.originalname)
+    const cleanName = file.originalname.trim();
+    cb(null, cleanName)
   }
 })
 

@@ -63,8 +63,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 let result;
                 let downloadUrl: string;
                 const parsedPath = path.parse(filePath);
-                const cleanName = parsedPath.name.trim();
-                const textFilePath = path.resolve(parsedPath.dir,cleanName + ".txt")
+                const textFilePath = path.resolve(parsedPath.dir,parsedPath.name + ".txt")
                 fs.mkdirSync(path.dirname(textFilePath), { recursive: true });
                 console.log("textFilepath",textFilePath);
                 
