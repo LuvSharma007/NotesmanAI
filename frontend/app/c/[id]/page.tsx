@@ -23,12 +23,14 @@ export default function Page() {
       const res = await fetch(`/api/v1/users/file-status/${id}`,{
         signal:controller.signal
       });
+      console.log("response:",res);
+      
       const data = await res.json();
       console.log("Data:",data);
       
       setFileStatus(data.status);
 
-      if(["pending","processing","chunking"].includes(data.status)){
+      if(["pending","processing","chunking","completed","failed"].includes(data.status)){
         eventSource = new EventSource(`/api/v1/users/status/${id}`,{
             withCredentials:true
           })
