@@ -23,10 +23,9 @@ export default function Page() {
       const res = await fetch(`/api/v1/users/file-status/${id}`,{
         signal:controller.signal
       });
-      console.log("response:",res);
       
       const data = await res.json();
-      console.log("Data:",data);
+      if(data.status === 'completed') return;
       
       setFileStatus(data.status);
 
@@ -34,12 +33,10 @@ export default function Page() {
         eventSource = new EventSource(`/api/v1/users/status/${id}`,{
             withCredentials:true
           })
-      console.log("eventSource:",eventSource);
 
         eventSource.onmessage = (event) =>{
           const sseData = JSON.parse(event.data)
           setFileStatus(sseData.status);
-          console.log(sseData.status);
 
           if(sseData.status === "completed" || sseData.status === "failed"){
             eventSource?.close();
@@ -50,7 +47,7 @@ export default function Page() {
     checkStatus();
 
     return ()=>{ 
-      console.log("Closing SSE");          
+      toast.success(`You can now chat with ${name}`)
       controller.abort();
       eventSource?.close()
     }

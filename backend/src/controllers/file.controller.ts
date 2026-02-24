@@ -290,7 +290,14 @@ export const initialFileStatus = async (req:Request,res:Response)=>{
 
         console.log("FileID:", fileId);
         const file = await fileModel.findById(fileId)
+        if(file?.status === "completed"){
+            return res.status(200).json({
+                success:200,
+                message:"File processed successfully",
+                status:file?.status
 
+            })
+        }
         return res.status(200).json({
             status:file?.status
         })

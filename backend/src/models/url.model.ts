@@ -3,7 +3,7 @@ import mongoose, { Model, Schema } from "mongoose"
 export interface IUrl extends Document{
     userId:mongoose.Types.ObjectId,
     url:string,
-    
+    status:string,
     name:string
 }
 
@@ -20,6 +20,11 @@ const urlSchema:Schema<IUrl> = new Schema({
     name:{
         type:String,
         required:true
+    },
+    status:{
+        type:String,
+        enum:['pending','chunking', 'processing' ,'completed','failed',],
+        default:'pending'
     }
 },
 {timestamps:{createdAt:true,updated:false}}
