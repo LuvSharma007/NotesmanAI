@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { redisConfig } from "../../lib/redisClient.js";
 import { DB } from "../../db/client.js";
 import fileModel from "../../models/file.model.js";
+import urlModel from "../../models/url.model.js";
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
@@ -56,7 +57,7 @@ const worker = new Worker("batch-queue", async (job: Job) => {
         if (fileId) {
             await fileModel.findByIdAndUpdate(fileId, { status: "completed" })
         } else {
-            await fileModel.findByIdAndUpdate(urlId, { status: "completed" })
+            await urlModel.findByIdAndUpdate(urlId, { status: "completed" })
         }
         console.log("updated status completed");
     } catch (error) {
@@ -65,7 +66,7 @@ const worker = new Worker("batch-queue", async (job: Job) => {
         if (fileId) {
             await fileModel.findByIdAndUpdate(fileId, { status: "failed" })
         } else {
-            await fileModel.findByIdAndUpdate(urlId, { status: "failed" })
+            await urlModel.findByIdAndUpdate(urlId, { status: "failed" })
         }
         client.deleteCollection(qdrantCollection)
     }

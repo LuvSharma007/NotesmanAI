@@ -64,6 +64,9 @@ const worker = new Worker("url-queue", async (job: Job) => {
                     console.log(`Error writing data to ${filePath}`);
                 })
 
+                await urlModel.findByIdAndUpdate(urlId,{status:"chunking"})
+                console.log("update status chunking");
+                
                 // creating a qdrant collection 
                 try {
                     console.log("Collection Name", qdrantCollection);
@@ -148,6 +151,8 @@ const worker = new Worker("url-queue", async (job: Job) => {
                 console.log("Stream processing completed");
                 console.log("data pushed to queue");
 
+                await urlModel.findByIdAndUpdate(urlId,{status:"processing"})
+                console.log("status updated Processing");
             } catch (error) {
                 console.log("Error writing data", error);
                 fs.unlinkSync(filePath);
