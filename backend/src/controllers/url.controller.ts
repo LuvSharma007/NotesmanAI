@@ -5,6 +5,7 @@ import urlModel from "../models/url.model.js"
 import { urlQueue } from "../bullmq/queues/url.queue.js";
 
 import customUserModel from "../models/customUser.model.js";
+import mongoose from "mongoose";
 
 
 export const scrapeUrl = async (req: Request, res: Response) => {
@@ -164,5 +165,81 @@ export const getAllUrls = async (req: Request, res: Response) => {
             message: "Server error fetching Urls",
             details: (error as Error).message
         })
+    }
+}
+
+export const initialUrlStatus = async (req:Request,res:Response)=>{
+    try {
+        const urlId = req.params.id as string;
+        if (!mongoose.Types.ObjectId.isValid(urlId)) {
+            return res.status(400).json({
+                message: "URL ID is Missing or Invalid"
+            });
+        }
+        console.log("urlId:",urlId);
+        const url = await urlModel.findById(urlId)
+        if(url?.status === "completed"){
+            return res.status(200).json({
+                success:200,
+                message:"URL processed successfully",
+                status:url?.status
+            })
+        }
+        return res.status(200).json({
+            status:url?.status
+        })
+        
+    } catch (error) {
+        return res.status(400).json({
+            success:false
+        })
+    }
+}
+
+export const getUrlStatus = async(req:Request,res:Response)=>{
+    try {
+        const urlId = req.params.id as string;
+
+        if (!mongoose.Types.ObjectId.isValid(urlId)) {
+            return res.status(400).json({
+                message: "File ID is Missing or Invalid"
+            });
+        }
+        console.log("UrlId:",urlId);  
+        
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader("Connection", 'keep-alive');
+        res.flushHeaders();
+
+        console.log(`SSE connection opened for URL: ${urlId}`);
+
+        const pipeline = [
+            { $match: { 'documentKey._id': new mongoose.Types.ObjectId(urlId) } }
+        ]
+
+        const changeStream = urlModel.watch(pipeline, { fullDocument: "updateLookup" })
+
+        changeStream.on("change", (change) => {
+            if (change.operationType === "update" || change.operationType === "replace") {
+                const updateStatus = change.fullDocument?.status;
+                res.write(`data: ${JSON.stringify({ status: updateStatus })}\n\n`)
+                if (updateStatus === "completed" || updateStatus === "failed") {
+                    changeStream.close();
+                    res.end();
+                }
+            }
+        })
+
+        req.on("close", () => {
+            console.log("Client closed connection");
+            changeStream.close();
+        })
+
+
+    } catch (error) {
+        if(!res.headersSent) {
+            res.status(500).end();
+        }
     }
 }

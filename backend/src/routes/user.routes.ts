@@ -10,9 +10,9 @@ const router = express.Router();
 router.post("/upload", rateLimiter, isAuthenticated , upload.single("file"),uploadFile)
 router.get("/get-files",rateLimiter,isAuthenticated,getAllFiles)
 router.delete("/delete-file/:id",isAuthenticated,deleteFile)
-router.get("/file-status/:id",isAuthenticated,initialFileStatus)
+router.get("/file-initial-status/:id",isAuthenticated,initialFileStatus)
 // SSE
-router.get("/status/:id",isAuthenticated,getFileStatus)
+router.get("/file-SSE/:id",isAuthenticated,getFileStatus)
 
 
 export default router;

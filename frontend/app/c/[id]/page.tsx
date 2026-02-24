@@ -19,8 +19,9 @@ export default function Page() {
     const controller = new AbortController();
     let eventSource: EventSource | null = null
 
-    const checkStatus = async ()=>{
-      const res = await fetch(`/api/v1/users/file-status/${id}`,{
+    if(sourceType === "file"){
+      const checkFileStatus = async ()=>{
+      const res = await fetch(`/api/v1/users/file-initial-status/${id}`,{
         signal:controller.signal
       });
       
@@ -33,7 +34,7 @@ export default function Page() {
       setFileStatus(data.status);
 
       if(["pending","processing","chunking","completed","failed"].includes(data.status)){
-        eventSource = new EventSource(`/api/v1/users/status/${id}`,{
+        eventSource = new EventSource(`/api/v1/users/file-SSE/${id}`,{
             withCredentials:true
           })
 
@@ -48,8 +49,39 @@ export default function Page() {
         }
       }
     }
-    checkStatus();
+    checkFileStatus();
+    }else{
+      const checkUrlStatus = async ()=>{
+      const res = await fetch(`/api/v1/url/url-initial-status/${id}`,{
+        signal:controller.signal
+      });
+      
+      const data = await res.json();
+      if(data.status === 'completed'){
+        setFileStatus(data.status);
+        return;
+      }
+      
+      setFileStatus(data.status);
 
+      if(["pending","processing","chunking","completed","failed"].includes(data.status)){
+        eventSource = new EventSource(`/api/v1/url/url-SSE/${id}`,{
+            withCredentials:true
+          })
+
+        eventSource.onmessage = (event) =>{
+          const sseData = JSON.parse(event.data)
+          setFileStatus(sseData.status);
+
+          if(sseData.status === "completed" || sseData.status === "failed"){
+            toast.success(`You can now chat with ${name}`)
+            eventSource?.close();
+          }
+        }
+      }
+    }
+    checkUrlStatus();
+    }
     return ()=>{ 
       controller.abort();
       eventSource?.close()

@@ -295,7 +295,6 @@ export const initialFileStatus = async (req:Request,res:Response)=>{
                 success:200,
                 message:"File processed successfully",
                 status:file?.status
-
             })
         }
         return res.status(200).json({
