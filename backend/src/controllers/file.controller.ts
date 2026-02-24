@@ -295,6 +295,7 @@ export const getFileStatus = async (req: Request, res: Response) => {
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader("Connection", 'keep-alive');
+        res.flushHeaders();
 
         console.log(`SSE connection opened for file: ${fileId}`);
 
@@ -305,7 +306,7 @@ export const getFileStatus = async (req: Request, res: Response) => {
         const changeStream = fileModel.watch(pipeline, { fullDocument: "updateLookup" })
 
         changeStream.on("change", (change) => {
-            if (change.operationtype === "update" || change.operationtype === "replace") {
+            if (change.operationType === "update" || change.operationType === "replace") {
                 const updateStatus = change.fullDocument?.status;
                 res.write(`data: ${JSON.stringify({ status: updateStatus })}\n\n`)
                 if (updateStatus === "completed" || updateStatus === "failed") {
@@ -321,10 +322,9 @@ export const getFileStatus = async (req: Request, res: Response) => {
         })
 
     } catch (error) {
-        return res.status(500).json({
-            message:"Something went wrong",
-            success:false
-        })
+        if(!res.headersSent) {
+            res.status(500).end();
+        }
     }
 
 }
