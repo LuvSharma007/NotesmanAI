@@ -3,6 +3,7 @@
 import { ChatInterface } from "@/components/chatInterface"
 import { useParams, useSearchParams  } from "next/navigation"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 export default function Page() {
   const {id} = useParams<{id:string}>()
@@ -12,7 +13,8 @@ export default function Page() {
   const [fileStatus,setFileStatus] = useState("pending")
 
   useEffect(()=>{
-    if(!id) return;
+    try {
+      if(!id) return;
 
     const controller = new AbortController();
     let eventSource: EventSource | null = null
@@ -50,6 +52,11 @@ export default function Page() {
       controller.abort();
       eventSource?.close()
     }
+    } catch (error) {
+      console.log("something went wrong",error);
+      toast.error("something went wrong")
+    }
+    
   },[id])
 
 
