@@ -46,6 +46,8 @@ const worker = new Worker("url-queue", async (job: Job) => {
 
             fs.mkdirSync(dirPath, { recursive: true });
             try {
+                await urlModel.findByIdAndUpdate(urlId,{status:"chunking"})
+                console.log("update status chunking");
 
                 // write data into file
                 const writer = fs.createWriteStream(filePath, { flags: 'a' });
@@ -64,8 +66,6 @@ const worker = new Worker("url-queue", async (job: Job) => {
                     console.log(`Error writing data to ${filePath}`);
                 })
 
-                await urlModel.findByIdAndUpdate(urlId,{status:"chunking"})
-                console.log("update status chunking");
                 
                 // creating a qdrant collection 
                 try {
