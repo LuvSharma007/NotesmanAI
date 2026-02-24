@@ -11,6 +11,9 @@ router.post("/upload", rateLimiter, isAuthenticated , upload.single("file"),uplo
 router.get("/get-files",rateLimiter,isAuthenticated,getAllFiles)
 router.delete("/delete-file/:id",isAuthenticated,deleteFile)
 router.get("/file-status/:id",isAuthenticated,getFileStatus)
+// SSE
+router.get("/status/:id",isAuthenticated,getFileStatus)
+
 
 export default router;
  

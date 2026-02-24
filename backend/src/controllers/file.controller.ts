@@ -279,6 +279,29 @@ export const deleteFile = async (req: Request, res: Response) => {
     }
 }
 
+export const initialFileStatus = async (req:Request,res:Response)=>{
+    try {
+        const fileId = req.params.id as string;
+        if (!mongoose.Types.ObjectId.isValid(fileId)) {
+            return res.status(400).json({
+                message: "File ID is Missing or Invalid"
+            });
+        }
+
+        console.log("FileID:", fileId);
+        const file = await fileModel.findById(fileId)
+
+        return res.status(200).json({
+            status:file?.status
+        })
+        
+    } catch (error) {
+        return res.status(400).json({
+            success:false
+        })
+    }
+}
+
 
 export const getFileStatus = async (req: Request, res: Response) => {
     try {

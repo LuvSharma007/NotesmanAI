@@ -14,7 +14,7 @@ export default function Page() {
 
   useEffect(()=>{
     try {
-      if(!id) return;
+    if(!id) return;
 
     const controller = new AbortController();
     let eventSource: EventSource | null = null
