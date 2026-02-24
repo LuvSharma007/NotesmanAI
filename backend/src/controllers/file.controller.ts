@@ -17,13 +17,13 @@ export const uploadFile = async (req: Request, res: Response) => {
     // push the data into queue
     try {
         console.log("Controller runned");
-        
+
         const userId = (req as any).user.id
-        console.log(userId);        
-        if(!userId){
+        console.log(userId);
+        if (!userId) {
             return res.status(404).json({
-                success:false,
-                message:"Unauthorised Access"
+                success: false,
+                message: "Unauthorised Access"
             })
         }
 
@@ -32,42 +32,42 @@ export const uploadFile = async (req: Request, res: Response) => {
         // if exists then (matlab qdrant collection hoga)
         // if not exists then create it
         try {
-            const customUserExists = await customUserModel.findOne({userId})
-            console.log("customUserExists:",customUserExists);
-            
-            if(customUserExists){
-                if(customUserExists.sourceLimit >=3){
+            const customUserExists = await customUserModel.findOne({ userId })
+            console.log("customUserExists:", customUserExists);
+
+            if (customUserExists) {
+                if (customUserExists.sourceLimit >= 3) {
                     return res.status(400).json({
-                        success:false,
-                        message:"Your free tier limit has reached, you should upgrade to pro plan",
-                        statusText:"Bad Request"
+                        success: false,
+                        message: "Your free tier limit has reached, you should upgrade to pro plan",
+                        statusText: "Bad Request"
                     })
-                }else{
+                } else {
                     // update the sourceLimit
                     customUserExists.sourceLimit += 1;
                     await customUserExists.save();
                 }
                 console.log("Successfully updated customUser");
-            }else{
+            } else {
                 // create qdrantCollection 
                 const qdrantCollection = `user_${userId}`
-                console.log("qdrantCollection:",qdrantCollection);
-                
+                console.log("qdrantCollection:", qdrantCollection);
+
                 await customUserModel.create({
                     userId,
-                    sourceLimit:1,
+                    sourceLimit: 1,
                     qdrantCollection
                 })
-            }    
+            }
             console.log("Successfully created customUser");
-                    
+
         } catch (error) {
             return res.status(500).json({
-                success:false,
-                message:"Something went wrong"
+                success: false,
+                message: "Something went wrong"
             })
         }
-        
+
 
         // validate file
 
@@ -141,7 +141,7 @@ export const uploadFile = async (req: Request, res: Response) => {
             fileType: fileSaved.fileType,
             publicId: fileSaved.publicId,
             userId,
-            qdrantCollection:`user_${userId}`,
+            qdrantCollection: `user_${userId}`,
             filePath,
             fileSize,
         }, { removeOnComplete: true, removeOnFail: true })
@@ -157,7 +157,7 @@ export const uploadFile = async (req: Request, res: Response) => {
         return res.status(200).json({
             success: true,
             message: "File uploaded successfully",
-            statusText:"OK",
+            statusText: "OK",
             file: {
                 id: fileSaved._id.toString(),
                 name: fileSaved.name,
@@ -167,7 +167,7 @@ export const uploadFile = async (req: Request, res: Response) => {
             },
         })
     } catch (error) {
-        console.error("Error uploading file:", error);        
+        console.error("Error uploading file:", error);
         res.status(500).json({
             success: false,
             error: "Upload failed",
@@ -183,8 +183,8 @@ export const getAllFiles = async (req: Request, res: Response) => {
         const allFiles = await fileModel
             .find({ userId, status: { $nin: ["deleting", "deleted"] } })
             .sort({ createdAt: -1 });
-        console.log("allFiles:",allFiles);
-        
+        console.log("allFiles:", allFiles);
+
 
         if (!allFiles || allFiles.length === 0) {
             return res.status(200).json({
@@ -196,7 +196,7 @@ export const getAllFiles = async (req: Request, res: Response) => {
         return res.status(200).json({
             success: true,
             files: allFiles,
-            message:"Successfully reterived all Files"
+            message: "Successfully reterived all Files"
         })
     } catch (error) {
         console.error("Error fetching files:", error);
@@ -232,7 +232,7 @@ export const deleteFile = async (req: Request, res: Response) => {
         }
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-                return res.status(400).json({ success: false, message: "Invalid file ID" });
+            return res.status(400).json({ success: false, message: "Invalid file ID" });
         }
 
         let deleteAccordingToSource;
@@ -270,51 +270,61 @@ export const deleteFile = async (req: Request, res: Response) => {
             }, { removeOnComplete: true, removeOnFail: true })
             console.log(`Job added to the queue ${deleteJobForUrl}`);
         }
-            
+
         return res.status(200).json({ success: true, message: "File deleted" })
 
-        } catch (error) {
-            console.error("Error deleting file:", error);
-            res.status(500).json({ success: false, message: "File Deletion Error" })
+    } catch (error) {
+        console.error("Error deleting file:", error);
+        res.status(500).json({ success: false, message: "File Deletion Error" })
+    }
+}
+
+
+export const getFileStatus = async (req: Request, res: Response) => {
+    try {
+        const fileId = req.params.id as string;
+
+        if (!mongoose.Types.ObjectId.isValid(fileId)) {
+            return res.status(400).json({
+                message: "File ID is Missing or Invalid"
+            });
         }
-    }
 
+        console.log("FileID:", fileId);
 
-export const getFileStatus = async(req:Request,res:Response)=>{
-    const fileId = req.params.id as string;
-    
-    if(!mongoose.Types.ObjectId.isValid(fileId)){
-        return res.status(400).json({message:"File ID is Missing or Invalid"});
-    }
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader("Connection", 'keep-alive');
 
-    console.log("FileID:",fileId);
+        console.log(`SSE connection opened for file: ${fileId}`);
 
-    res.setHeader('Content-Type','text/event-stream');
-    res.setHeader('Cache-Control','no-cache');
-    res.setHeader("Connection",'keep-alive');
+        const pipeline = [
+            { $match: { 'documentKey._id': new mongoose.Types.ObjectId(fileId) } }
+        ]
 
-    console.log(`SSE connection opened for file: ${fileId}`);
+        const changeStream = fileModel.watch(pipeline, { fullDocument: "updateLookup" })
 
-    const pipeline = [
-        {$match:{'documentKey._id': new mongoose.Types.ObjectId(fileId)}}
-    ]
-
-    const changeStream = fileModel.watch(pipeline,{fullDocument:"updateLookup"})
-
-    changeStream.on("change",(change)=>{
-        if(change.operationtype === "update" || change.operationtype === "replace" ){
-            const updateStatus = change.fullDocument?.status;
-            res.write(`data: ${JSON.stringify({status:updateStatus})}`)
-            if(updateStatus === "completed" || updateStatus === "failed"){
-                changeStream.close();
-                res.end();
+        changeStream.on("change", (change) => {
+            if (change.operationtype === "update" || change.operationtype === "replace") {
+                const updateStatus = change.fullDocument?.status;
+                res.write(`data: ${JSON.stringify({ status: updateStatus })}\n\n`)
+                if (updateStatus === "completed" || updateStatus === "failed") {
+                    changeStream.close();
+                    res.end();
+                }
             }
-        }
-    })
+        })
 
-    req.on("close",()=>{
-        console.log("Client closed connection");
-        changeStream.close();
-    })   
+        req.on("close", () => {
+            console.log("Client closed connection");
+            changeStream.close();
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            message:"Something went wrong",
+            success:false
+        })
+    }
 
 }

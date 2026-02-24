@@ -12,17 +12,22 @@ export default function Page() {
   const [fileStatus,setFileStatus] = useState("pending")
 
   useEffect(()=>{
-    if(!id || fileStatus === "completed") return;
+    if(!id) return;
+
+    const controller = new AbortController();
+    let eventSource: EventSource | null = null
 
     const checkStatus = async ()=>{
-      const res = await fetch(`/api/v1/users/file-status/${id}`);
+      const res = await fetch(`/api/v1/users/file-status/${id}`,{
+        signal:controller.signal
+      });
       const data = await res.json();
       console.log("Data:",data);
       
       setFileStatus(data.status);
 
       if(["pending","processing","chunking"].includes(data.status)){
-        const eventSource = new EventSource(`/api/v1/users/status/${id}`,{
+        eventSource = new EventSource(`/api/v1/users/status/${id}`,{
             withCredentials:true
           })
       console.log("eventSource:",eventSource);
@@ -33,15 +38,18 @@ export default function Page() {
           console.log(sseData.status);
 
           if(sseData.status === "completed" || sseData.status === "failed"){
-            console.log(sseData.status);
-            setFileStatus(sseData.status)
-            eventSource.close();
+            eventSource?.close();
           }
         }
-        return ()=> eventSource.close()
       }
     }
     checkStatus();
+
+    return ()=>{ 
+      console.log("Closing SSE");          
+      controller.abort();
+      eventSource?.close()
+    }
   },[id])
 
 
