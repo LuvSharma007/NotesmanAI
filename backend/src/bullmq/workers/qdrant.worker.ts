@@ -52,13 +52,13 @@ const worker = new Worker("batch-queue", async (job: Job) => {
                     vectors: vectors
                 }
             })
-            if (fileId) {
-                await fileModel.findByIdAndUpdate(fileId, { status: "completed" })
-            } else {
-                await fileModel.findByIdAndUpdate(urlId, { status: "completed" })
-            }
-            console.log("updated status completed");
         }
+        if (fileId) {
+            await fileModel.findByIdAndUpdate(fileId, { status: "completed" })
+        } else {
+            await fileModel.findByIdAndUpdate(urlId, { status: "completed" })
+        }
+        console.log("updated status completed");
     } catch (error) {
         console.log("Worker failed:", error);
         console.log("removing Qdrant collection");
