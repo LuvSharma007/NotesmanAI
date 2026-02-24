@@ -153,15 +153,17 @@ export function ChatInterface({
           </CardTitle>
         </CardHeader>
 
-        <div className="flex-1 flex flex-col min-h-0">
-          {isCurrentProcessing && (
+      <div className="flex-1 flex flex-col min-h-0">
+          <ScrollArea className="flex-1 p-6 min-h-0 pb-2">
+            {isCurrentProcessing && (
             <div>
-              <Spinner className="h-10 w-10 mb-4 text-primary"/>
-              <h3 className="text-lg fron-semibold capitalize">{status}....</h3>
+              <p className="text-sm leading-relaxed">
+              <Spinner className="h-5 w-5"/>
+                {status}....
+              </p>
             </div>
           )}
 
-          <ScrollArea className="flex-1 p-6 min-h-0 pb-2">
             <div className="space-y-4 mb-4">
               {messages.map((message) => (
                 <div
