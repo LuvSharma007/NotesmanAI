@@ -25,7 +25,10 @@ export default function Page() {
       });
       
       const data = await res.json();
-      if(data.status === 'completed') return;
+      if(data.status === 'completed'){
+        setFileStatus(data.status);
+        return;
+      }
       
       setFileStatus(data.status);
 
@@ -39,6 +42,7 @@ export default function Page() {
           setFileStatus(sseData.status);
 
           if(sseData.status === "completed" || sseData.status === "failed"){
+            toast.success(`You can now chat with ${name}`)
             eventSource?.close();
           }
         }
@@ -47,7 +51,6 @@ export default function Page() {
     checkStatus();
 
     return ()=>{ 
-      toast.success(`You can now chat with ${name}`)
       controller.abort();
       eventSource?.close()
     }
