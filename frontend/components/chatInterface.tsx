@@ -32,6 +32,7 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const isProcessing = ["pending","processing","chunking"]
+  const isCurrentProcessing = isProcessing.includes(status)
 
   const handleChat = async () => {
     const trimmedInput = input.trim();
@@ -153,7 +154,7 @@ export function ChatInterface({
         </CardHeader>
 
         <div className="flex-1 flex flex-col min-h-0">
-          {isProcessing && (
+          {isCurrentProcessing && (
             <div>
               <Spinner className="h-10 w-10 mb-4 text-primary"/>
               <h3 className="text-lg fron-semibold capitalize">{status}....</h3>
