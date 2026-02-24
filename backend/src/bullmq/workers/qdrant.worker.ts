@@ -57,6 +57,7 @@ const worker = new Worker("batch-queue", async (job: Job) => {
             } else {
                 await fileModel.findByIdAndUpdate(urlId, { status: "completed" })
             }
+            console.log("updated status completed");
         }
     } catch (error) {
         console.log("Worker failed:", error);
