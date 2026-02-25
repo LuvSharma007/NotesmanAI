@@ -32,14 +32,17 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const isProcessing = ["pending","processing","chunking"]
+  const [isLoading , setIsLoading] = useState(false)
   const isCurrentProcessing = isProcessing.includes(status)
+  const isDisable = isCurrentProcessing || isLoading || !id;
 
   const handleChat = async () => {
     const trimmedInput = input.trim();
     if (!trimmedInput || !id) {
-      console.error("Input or FileId is missing");
       return;
     }
+
+    setIsLoading(true)
 
     const userMessage: Message = {
       id: uuidv4(),
@@ -101,6 +104,8 @@ export function ChatInterface({
           msg.id === aiMessage.id ? { ...msg, content: "Error: Failed to fetch response." } : msg
         )
       );
+    }finally{
+      setIsLoading(false);
     }
   };
 
@@ -207,6 +212,7 @@ export function ChatInterface({
                 placeholder="Ask questions"
                 className="flex-1 h-10"
                 value={input}
+                disabled={isDisable}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -214,7 +220,7 @@ export function ChatInterface({
                   }
                 }}
               />
-              <Button size="sm" className="mt-0.5" onClick={handleChat}>
+              <Button size="sm" className="mt-0.5" onClick={handleChat} disabled={isDisable}>
                 <ArrowRight className="size-4" />
               </Button>
             </div>
