@@ -1,18 +1,19 @@
 import { client } from "../../lib/qdrantClient.js";
-import { tool} from "@openai/agents";
+import { tool } from "@openai/agents";
 import { z } from "zod"
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { openai } from "../../lib/openAIClient.js";
 
 export const getContext = tool({
   name: "get_context",
   description: "Returns the Available context for a user query.",
   parameters: z.object({ query: z.string() }),
-  async execute({ query}, toolContext:any) {
-    const {id,userId} = toolContext.context
+  async execute({ query }, toolContext: any) {
+    const { id, userId } = toolContext.context
     console.log("getContext Tool Called");
     console.log("User's Query:", query);
     console.log("id:", id)
-    console.log("userId:",userId);
+    console.log("userId:", userId);
     if (!id) {
       throw new Error("file or url id is missing");
     }
@@ -20,6 +21,29 @@ export const getContext = tool({
     if (!userId) {
       throw new Error("Qdrant collection is missing");
     }
+
+    // refine user's query
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages:[
+        {
+          role:"system",
+          content:"You are a Professional Editor. that fix all Typos in an User's query. make the query consise and clear"
+        },
+        {
+          role:"user",
+          content:query
+        }
+      ],
+      temperature:0.2
+    })
+
+    const refreshUserQuery = response.choices[0].message.content
+    if(!refreshUserQuery){
+      throw new Error("Something went wrong while redefining User's query")
+    }
+    console.log("refresh User Query created:",refreshUserQuery);
     
     const embeddingsSetup = new OpenAIEmbeddings({
       apiKey: process.env.OPENAI_API_KEY,
@@ -28,10 +52,12 @@ export const getContext = tool({
       dimensions: 1000
     })
     console.log("Embeddings Setup Done");
-    
-    const embeddings = await embeddingsSetup.embedQuery(query)
-    
-    console.log("Vector Embeddings of user's query:", embeddings);
+
+    const embeddings = await embeddingsSetup.embedQuery(refreshUserQuery)
+    if (embeddings.length > 0) {
+      console.log("Vector Embeddings of user's query");
+    }
+
     const qdrantCollection = `user_${userId}`
 
     let searchResult: any[] = [];

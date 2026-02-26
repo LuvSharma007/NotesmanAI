@@ -18,7 +18,7 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 
 import type { Job } from "bullmq";
 
-import { redisConfig } from "../../lib/redisClient.js"; 
+import { redisConfig } from "../../lib/redisClient.js";
 import { DB } from "../../db/client.js";
 
 const client = new QdrantClient({
@@ -59,8 +59,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 const parsedPath = path.parse(filePath);
                 const textFilePath = path.join(parsedPath.dir, parsedPath.name + ".txt").trim();
                 fs.mkdirSync(path.dirname(textFilePath), { recursive: true });
-                console.log("textFilepath",textFilePath);
-                
+                console.log("textFilepath", textFilePath);
+
 
                 if (extension === 'txt') {
                     downloadUrl = fileUrl;
@@ -121,7 +121,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
             } catch (error) {
                 // delete the uploaded cloudinary file
                 await cloudinary.uploader.destroy(publicId, { resource_type: 'raw', invalidate: true })
-                await fileModel.findByIdAndDelete({_id:fileId})
+                await fileModel.findByIdAndDelete({ _id: fileId })
                 console.log('Cloudinary file deleted');
                 console.log('MongoDB file schema deleted');
                 console.error("Error converting file", error)
@@ -159,9 +159,9 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         // console.log("batchSize in Bytes:",batchSizeInBytes);
 
         // processing the file stream in bacthes
-        await fileModel.findByIdAndUpdate(fileId,{status:"chunking"})
+        await fileModel.findByIdAndUpdate(fileId, { status: "chunking" })
         console.log("updated status chunking");
-        
+
 
         async function processStreamBatches(
             // batchSizeInBytes:number
@@ -213,7 +213,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
 
                 } catch (error) {
                     await client.deleteCollection(qdrantCollection);
-                    console.log("qdrantCOllection deleted");                    
+                    console.log("qdrantCOllection deleted");
                     throw new Error("Error creating qdrantCollection")
                 }
 
@@ -233,7 +233,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                     }
                     console.log("Collection Name", qdrantCollection);
                     for await (const chunk of chunks) {
-                        console.log("chunk:", chunk);
+                        console.log("----------------------------chunk:", chunk);
                         bulkJobs.push({
                             name: "batchesForText",
                             data: { data: chunk, fileId, name, qdrantCollection },
@@ -273,7 +273,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         }
 
         await processStreamBatches();
-        await fileModel.findByIdAndUpdate(fileId,{status:"processing"})
+        await fileModel.findByIdAndUpdate(fileId, { status: "processing" })
         console.log("updated status processing");
     } catch (error) {
         await fileModel.findByIdAndUpdate(fileId, { status: "failed" })
@@ -282,7 +282,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
     }
 },
     {
-        connection:redisConfig,
+        connection: redisConfig,
     }
 )
 
