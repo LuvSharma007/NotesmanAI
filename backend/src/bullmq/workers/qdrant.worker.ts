@@ -16,7 +16,7 @@ const client = new QdrantClient({
 
 await DB()
 const worker = new Worker("batch-queue", async (job: Job) => {
-    const { qdrantCollection, fileId, name, urlId } = job.data;
+    const { qdrantCollection, fileId, name, urlId , summaryOfChunk , keywords } = job.data;
     try {
         console.log("Starting batch queue");
         console.log("User Name", name);
@@ -40,7 +40,9 @@ const worker = new Worker("batch-queue", async (job: Job) => {
             let payload = {
                 text: job.data.data,
                 source: name,
-                payloadValue: String(fileId || urlId)
+                payloadValue: String(fileId || urlId),
+                summary : job.data.summaryOfChunk,
+                keywords : job.data.keywords
             }
 
             const vectors = await embeddings.embedDocuments(inputData);

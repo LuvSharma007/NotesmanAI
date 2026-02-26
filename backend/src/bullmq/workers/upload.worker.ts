@@ -265,13 +265,13 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                                 }
                             ]
                         })
-
-                        const keywords = response2.choices[0].message.content
+                        const parseResponse = JSON.parse(response2.choices[0].message.content!)
+                        const keywords = parseResponse.keywords
                         console.log("Keywords:",keywords);
 
                         bulkJobs.push({
                             name: "batchesForText",
-                            data: { data: chunk, fileId, name, qdrantCollection ,},
+                            data: { data: chunk, fileId, name, qdrantCollection , summaryOfChunk , keywords },
                             opts: { removeOnComplete: true, removeOnFail: true }
                         });
 
