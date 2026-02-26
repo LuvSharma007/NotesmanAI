@@ -20,6 +20,7 @@ import type { Job } from "bullmq";
 
 import { redisConfig } from "../../lib/redisClient.js";
 import { DB } from "../../db/client.js";
+import { openai } from "../../lib/openAIClient.js";
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
@@ -162,6 +163,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         await fileModel.findByIdAndUpdate(fileId, { status: "chunking" })
         console.log("updated status chunking");
 
+        
+
 
         async function processStreamBatches(
             // batchSizeInBytes:number
@@ -177,10 +180,6 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
             try {
 
                 // creating qdrant Collection
-
-                // create qdrant collection with user + userId + fileName
-
-
                 try {
                     console.log("Collection Name", qdrantCollection);
                     const qdrantCollectionAlreadyExists = await client.collectionExists(qdrantCollection);
@@ -234,9 +233,45 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                     console.log("Collection Name", qdrantCollection);
                     for await (const chunk of chunks) {
                         console.log("----------------------------chunk:", chunk);
+                        // create a metadata summary for chunk
+
+                        const response = await openai.chat.completions.create({
+                            model:"gpt-4.1-mini",
+                            messages:[
+                                {
+                                    role:"system",
+                                    content:"You are a Professional AI assistant that summaries the content with max 20 words"
+                                },
+                                {
+                                    role:"user",
+                                    content:chunk
+                                }
+                            ]
+                        })
+                        const summaryOfChunk = response.choices[0].message.content
+                        console.log("Summary of Chunk:",summaryOfChunk);
+                        
+                        // create keywords
+                        const response2 = await openai.chat.completions.create({
+                            model:"gpt-4.1-mini",
+                            messages:[
+                                {
+                                    role:"system",
+                                    content:"You are a Professional AI assistant that creates max 20 different Keywords from a content , and that keywords relevent and resemble to that content"
+                                },
+                                {
+                                    role:"user",
+                                    content:chunk
+                                }
+                            ]
+                        })
+
+                        const keywords = response2.choices[0].message.content
+                        console.log("Keywords:",keywords);
+
                         bulkJobs.push({
                             name: "batchesForText",
-                            data: { data: chunk, fileId, name, qdrantCollection },
+                            data: { data: chunk, fileId, name, qdrantCollection ,},
                             opts: { removeOnComplete: true, removeOnFail: true }
                         });
 
