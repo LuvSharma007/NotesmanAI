@@ -223,7 +223,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 })
                 let buffer: string | undefined = "";
                 let bulkJobs: any[] = [];
-                let summaryOfChunk:string
+                let summaryOfChunk:string = ""
                 let keywords = [];
 
                 for await (const streamChunk of stream) {

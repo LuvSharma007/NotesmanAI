@@ -9,8 +9,9 @@ import urlModel from "../../models/url.model.js";
 import type { Job } from "bullmq";
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
-import { redisConfig } from "../../lib/redisClient.js"; 
+import { redisConfig } from "../../lib/redisClient.js";
 import { DB } from "../../db/client.js";
+import { openai } from "../../lib/openAIClient.js";
 
 await DB()
 const client = new QdrantClient({
@@ -46,7 +47,7 @@ const worker = new Worker("url-queue", async (job: Job) => {
 
             fs.mkdirSync(dirPath, { recursive: true });
             try {
-                await urlModel.findByIdAndUpdate(urlId,{status:"chunking"})
+                await urlModel.findByIdAndUpdate(urlId, { status: "chunking" })
                 console.log("update status chunking");
 
                 // write data into file
@@ -66,7 +67,6 @@ const worker = new Worker("url-queue", async (job: Job) => {
                     console.log(`Error writing data to ${filePath}`);
                 })
 
-                
                 // creating a qdrant collection 
                 try {
                     console.log("Collection Name", qdrantCollection);
@@ -89,15 +89,15 @@ const worker = new Worker("url-queue", async (job: Job) => {
                         // creating index for payload
 
                         await client.createPayloadIndex(qdrantCollection, {
-                        field_name: "payloadValue",
-                        field_schema: "keyword",
-                        wait: true
-                    });
+                            field_name: "payloadValue",
+                            field_schema: "keyword",
+                            wait: true
+                        });
 
                         console.log("Indexing created Qdrant collection", collectionCreated);
                         console.log("Qdrant collection created", collectionCreated);
                     }
-                    
+
                 } catch (error) {
                     throw new Error("Error creating qdrantCollection")
                 }
@@ -115,6 +115,8 @@ const worker = new Worker("url-queue", async (job: Job) => {
                 })
                 let buffer: string | undefined = "";
                 let bulkJobs: any[] = [];
+                let summaryOfChunk: string = ""
+                let keywords = [];
 
                 for await (const streamChunk of stream) {
                     buffer += streamChunk;
@@ -124,9 +126,58 @@ const worker = new Worker("url-queue", async (job: Job) => {
                     }
                     for await (const chunk of chunks) {
                         console.log("chunk:-----", chunk.length);
+
+                        // create a metadata summary for chunk
+
+                        const response = await openai.chat.completions.create({
+                            model: "gpt-4.1-mini",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: "You are a Professional AI assistant that summaries the content with max 20 words"
+                                },
+                                {
+                                    role: "user",
+                                    content: chunk
+                                }
+                            ]
+                        })
+                        summaryOfChunk = response.choices[0].message.content!
+
+                        console.log("Summary of Chunk:", summaryOfChunk);
+
+                        // create keywords
+                        const response2 = await openai.chat.completions.create({
+                            model: "gpt-4.1-mini",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: "You are a Professional AI assistant that creates max 10 different Keywords from a contentand that keywords relevent and resemble to that content. return only JSON Object with keywords , key containing an array of strings , example : {\"keywords\": [\"tag1\",\"tag1\"] } "
+                                },
+                                {
+                                    role: "user",
+                                    content: chunk
+                                }
+                            ],
+                            response_format: { type: "json_object" }
+                        })
+                        console.log("response2:", response2.choices[0].message);
+
+
+                        try {
+                            const content = response2.choices[0].message.content;
+                            if (content) {
+                                const parseResponse = JSON.parse(content);
+                                keywords = parseResponse.keywords || [];
+                            }
+                        } catch (error) {
+                            throw new Error("something went wrong while creating keywords")
+                        }
+
+
                         bulkJobs.push({
                             name: "batchesForUrl",
-                            data: { data: chunk, urlId, url, qdrantCollection },
+                            data: { data: chunk, urlId, url, qdrantCollection , summaryOfChunk , keywords },
                             opts: { removeOnComplete: true, removeOnFail: true }
                         })
 
@@ -144,14 +195,14 @@ const worker = new Worker("url-queue", async (job: Job) => {
                 // leftover chunks in case
                 if (buffer.length > 0) {
                     await batchQueue.add("batchesForUrl", {
-                        data: buffer, urlId, url, name,qdrantCollection
+                        data: buffer, urlId, url, name, qdrantCollection , summaryOfChunk , keywords
                     }, { removeOnComplete: true, removeOnFail: true })
                 }
 
                 console.log("Stream processing completed");
                 console.log("data pushed to queue");
 
-                await urlModel.findByIdAndUpdate(urlId,{status:"processing"})
+                await urlModel.findByIdAndUpdate(urlId, { status: "processing" })
                 console.log("status updated Processing");
             } catch (error) {
                 console.log("Error writing data", error);
@@ -159,7 +210,7 @@ const worker = new Worker("url-queue", async (job: Job) => {
                 console.log("Temp file deleted:", filePath);
                 client.deleteCollection(qdrantCollection)
                 console.log("removed Qdrant collection");
-                await urlModel.findByIdAndDelete({_id:urlId})
+                await urlModel.findByIdAndDelete({ _id: urlId })
                 console.log("MongoDB url schema deleted");
                 throw new Error("Error writing Data:");
             }
@@ -172,7 +223,7 @@ const worker = new Worker("url-queue", async (job: Job) => {
         fs.unlinkSync(filePath);
         console.log("Temp file deleted:", filePath);
     }
-}, { connection:redisConfig })
+}, { connection: redisConfig })
 
 worker.on('completed', (job) => {
     console.log(`Job ${job.id} completed successfully.`);
