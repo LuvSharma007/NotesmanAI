@@ -223,6 +223,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 })
                 let buffer: string | undefined = "";
                 let bulkJobs: any[] = [];
+                let summaryOfChunk:string
+                let keywords = [];
 
                 for await (const streamChunk of stream) {
                     buffer += streamChunk;
@@ -248,7 +250,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                                 }
                             ]
                         })
-                        const summaryOfChunk = response.choices[0].message.content
+                        summaryOfChunk = response.choices[0].message.content!
+                        
                         console.log("Summary of Chunk:",summaryOfChunk);
                         
                         // create keywords
@@ -266,9 +269,9 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                             ],
                             response_format:{type:"json_object"}
                         })
-                        console.log("response2:",response2);
+                        console.log("response2:",response2.choices[0].message);
                         
-                        let keywords = [];
+                        
                         try {
                             const content = response2.choices[0].message.content;
                             if(content){
@@ -298,7 +301,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 // leftover chunks in case
                 if (buffer.length > 0) {
                     await batchQueue.add("batchesForText", {
-                        data: buffer, fileId, name, qdrantCollection
+                        data: buffer, fileId, name, qdrantCollection 
                     }, { removeOnComplete: true, removeOnFail: true })
                 }
 
