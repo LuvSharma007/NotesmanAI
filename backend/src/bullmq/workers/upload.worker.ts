@@ -257,17 +257,27 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                             messages:[
                                 {
                                     role:"system",
-                                    content:"You are a Professional AI assistant that creates max 20 different Keywords from a content , and that keywords relevent and resemble to that content"
+                                    content:"You are a Professional AI assistant that creates max 20 different Keywords from a contentand that keywords relevent and resemble to that content. return only JSON Object with keywords , key containing an array of strings , example : {\"keywords\": [\"tag1\",\"tag1\"] } "
                                 },
                                 {
                                     role:"user",
                                     content:chunk
                                 }
-                            ]
+                            ],
+                            response_format:{type:"json_object"}
                         })
-                        const parseResponse = JSON.parse(response2.choices[0].message.content!)
-                        const keywords = parseResponse.keywords
-                        console.log("Keywords:",keywords);
+                        console.log("response2:",response2);
+                        
+                        let keywords = [];
+                        try {
+                            const content = response2.choices[0].message.content;
+                            if(content){
+                                const parseResponse = JSON.parse(content);
+                                keywords = parseResponse.keywords || [];
+                            }
+                        } catch (error) {
+                            throw new Error("something went wrong while creating keywords")
+                        }
 
                         bulkJobs.push({
                             name: "batchesForText",
