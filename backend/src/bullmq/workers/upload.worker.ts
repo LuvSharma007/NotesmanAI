@@ -20,7 +20,6 @@ import type { Job } from "bullmq";
 
 import { redisConfig } from "../../lib/redisClient.js";
 import { DB } from "../../db/client.js";
-import { openai } from "../../lib/openAIClient.js";
 
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
@@ -223,8 +222,8 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                 })
                 let buffer: string | undefined = "";
                 let bulkJobs: any[] = [];
-                let summaryOfChunk:string = ""
-                let keywords = [];
+                // let summaryOfChunk:string = ""
+                // let keywords = [];
 
                 for await (const streamChunk of stream) {
                     buffer += streamChunk;
@@ -237,54 +236,56 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
                         console.log("----------------------------chunk:", chunk);
                         // create a metadata summary for chunk
 
-                        const response = await openai.chat.completions.create({
-                            model:"gpt-4.1-mini",
-                            messages:[
-                                {
-                                    role:"system",
-                                    content:"You are a Professional AI assistant that summaries the content with max 20 words"
-                                },
-                                {
-                                    role:"user",
-                                    content:chunk
-                                }
-                            ]
-                        })
-                        summaryOfChunk = response.choices[0].message.content!
+                        // const response = await openai.chat.completions.create({
+                        //     model:"gpt-4.1-mini",
+                        //     messages:[
+                        //         {
+                        //             role:"system",
+                        //             content:"You are a Professional AI assistant that summaries the content with max 20 words"
+                        //         },
+                        //         {
+                        //             role:"user",
+                        //             content:chunk
+                        //         }
+                        //     ]
+                        // })
+                        // summaryOfChunk = response.choices[0].message.content!
                         
-                        console.log("Summary of Chunk:",summaryOfChunk);
+                        // console.log("Summary of Chunk:",summaryOfChunk);
                         
-                        // create keywords
-                        const response2 = await openai.chat.completions.create({
-                            model:"gpt-4.1-mini",
-                            messages:[
-                                {
-                                    role:"system",
-                                    content:"You are a Professional AI assistant that creates max 20 different Keywords from a contentand that keywords relevent and resemble to that content. return only JSON Object with keywords , key containing an array of strings , example : {\"keywords\": [\"tag1\",\"tag1\"] } "
-                                },
-                                {
-                                    role:"user",
-                                    content:chunk
-                                }
-                            ],
-                            response_format:{type:"json_object"}
-                        })
-                        console.log("response2:",response2.choices[0].message);
+                        // // create keywords
+                        // const response2 = await openai.chat.completions.create({
+                        //     model:"gpt-4.1-mini",
+                        //     messages:[
+                        //         {
+                        //             role:"system",
+                        //             content:"You are a Professional AI assistant that creates max 20 different Keywords from a contentand that keywords relevent and resemble to that content. return only JSON Object with keywords , key containing an array of strings , example : {\"keywords\": [\"tag1\",\"tag1\"] } "
+                        //         },
+                        //         {
+                        //             role:"user",
+                        //             content:chunk
+                        //         }
+                        //     ],
+                        //     response_format:{type:"json_object"}
+                        // })
+                        // console.log("response2:",response2.choices[0].message);
                         
                         
-                        try {
-                            const content = response2.choices[0].message.content;
-                            if(content){
-                                const parseResponse = JSON.parse(content);
-                                keywords = parseResponse.keywords || [];
-                            }
-                        } catch (error) {
-                            throw new Error("something went wrong while creating keywords")
-                        }
+                        // try {
+                        //     const content = response2.choices[0].message.content;
+                        //     if(content){
+                        //         const parseResponse = JSON.parse(content);
+                        //         keywords = parseResponse.keywords || [];
+                        //     }
+                        // } catch (error) {
+                        //     throw new Error("something went wrong while creating keywords")
+                        // }
 
                         bulkJobs.push({
                             name: "batchesForText",
-                            data: { data: chunk, fileId, name, qdrantCollection , summaryOfChunk , keywords },
+                            data: { data: chunk, fileId, name, qdrantCollection , 
+                                // summaryOfChunk , keywords
+                            },
                             opts: { removeOnComplete: true, removeOnFail: true }
                         });
 
