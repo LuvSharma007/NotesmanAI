@@ -11,6 +11,15 @@ services:
     <<: *default-logging
     image: redis/redis-stack-server:latest
     container_name: redis-stack
+    command: >
+      redis-stack-server
+      --appendonly yes
+      --maxmemory 400mb
+      --maxmemory-policy allkeys-lru
+    restart: always
+    mem_limit: 500m
+    volumes:
+      - redis_data:/data
     ports:
       - "6379:6379"
       - "8001:8001"
@@ -167,6 +176,7 @@ services:
 
 volumes:
   temp_files:
+  redis_data:
 
 networks:
   notesmanAI-network:

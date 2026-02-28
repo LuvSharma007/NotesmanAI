@@ -14,9 +14,18 @@ export const getMessage = async(req:Request,res:Response)=>{
             return res.status(400).json({success:false,message:"filedId or userId is required"})
         }
 
-        const cacheMessages = redisClient.lrange(`chat:${userId}:${id}`,0,4)
-        console.log("Messages from redis",cacheMessages);       
-
+        const cacheMessages = await redisClient.lrange(`chat:${userId}:${id}`,0,4)
+        if(cacheMessages && cacheMessages.length > 0){
+            console.log("Cache hit");
+            const parseMessages = cacheMessages.map(msg => JSON.parse(msg))
+            console.log("Messages from redis",cacheMessages); 
+            return res.status(200).json({
+                success:true,
+                message:parseMessages,
+                source:"redis"
+            })
+        }
+        console.log("Cache hit");        
         const userMessages = await messageModel.find({userId,id}).sort({createdAt:1});  // returns the messages in asc order(oldest to newest)
         console.log("User Messages Found:",userMessages);     
 
@@ -31,7 +40,8 @@ export const getMessage = async(req:Request,res:Response)=>{
         return res.status(200)
             .json({
             success:true,
-            messages:userMessages
+            messages:userMessages,
+            source:"database"
         })
 
     } catch (error) {
