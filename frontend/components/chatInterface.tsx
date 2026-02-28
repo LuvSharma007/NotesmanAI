@@ -131,8 +131,7 @@ export function ChatInterface({
           setMessages(formatted)
         }
 
-      } catch (error) {
-        console.log("error",error);        
+      } catch (error) {    
         toast.error("Error Fetching messages");
       }
     }

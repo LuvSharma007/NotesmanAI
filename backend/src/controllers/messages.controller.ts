@@ -21,7 +21,7 @@ export const getMessage = async(req:Request,res:Response)=>{
             console.log("Messages from redis",cacheMessages); 
             return res.status(200).json({
                 success:true,
-                message:parseMessages,
+                messages:parseMessages,
                 source:"redis"
             })
         }
