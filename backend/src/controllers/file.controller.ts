@@ -98,7 +98,9 @@ export const uploadFile = async (req: Request, res: Response) => {
 
             const isTxt = req.file?.mimetype === "text/plain"
             if ((type && allowedMimeTypes.includes(type.mime)) || isTxt) {
-                console.log("File type cheked");        
+                console.log("File validation completed successfully");        
+            }else{
+                throw new Error("Unsupported file type")
             }
         } catch (error) {
             console.log("file type not supported:", error);
