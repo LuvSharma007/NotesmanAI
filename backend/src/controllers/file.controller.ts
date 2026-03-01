@@ -29,49 +29,6 @@ export const uploadFile = async (req: Request, res: Response) => {
                 message: "Unauthorised Access"
             })
         }
-
-        // validate sources 
-        // find the user exists in customUserModel
-        // if exists then (matlab qdrant collection hoga)
-        // if not exists then create it
-        try {
-            const customUserExists = await customUserModel.findOne({ userId })
-            console.log("customUserExists:", customUserExists);
-
-            if (customUserExists) {
-                if (customUserExists.sourceLimit >= 3) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Your free tier limit has reached, you should upgrade to pro plan",
-                        statusText: "Bad Request"
-                    })
-                } else {
-                    // update the sourceLimit
-                    customUserExists.sourceLimit += 1;
-                    await customUserExists.save();
-                }
-                console.log("Successfully updated customUser");
-            } else {
-                // create qdrantCollection 
-                const qdrantCollection = `user_${userId}`
-                console.log("qdrantCollection:", qdrantCollection);
-
-                await customUserModel.create({
-                    userId,
-                    sourceLimit: 1,
-                    qdrantCollection
-                })
-            }
-            console.log("Successfully created customUser");
-
-        } catch (error) {
-            return res.status(500).json({
-                success: false,
-                message: "Something went wrong"
-            })
-        }
-
-
         // validate file
 
         const file = req.file;
@@ -121,6 +78,46 @@ export const uploadFile = async (req: Request, res: Response) => {
             })
         }
 
+        // validate sources 
+        // find the user exists in customUserModel
+        // if exists then (matlab qdrant collection hoga)
+        // if not exists then create it
+        try {
+            const customUserExists = await customUserModel.findOne({ userId })
+            console.log("customUserExists:", customUserExists);
+
+            if (customUserExists) {
+                if (customUserExists.sourceLimit >= 3) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Your free tier limit has reached, you should upgrade to pro plan",
+                        statusText: "Bad Request"
+                    })
+                } else {
+                    // update the sourceLimit
+                    customUserExists.sourceLimit += 1;
+                    await customUserExists.save();
+                }
+                console.log("Successfully updated customUser");
+            } else {
+                // create qdrantCollection 
+                const qdrantCollection = `user_${userId}`
+                console.log("qdrantCollection:", qdrantCollection);
+
+                await customUserModel.create({
+                    userId,
+                    sourceLimit: 1,
+                    qdrantCollection
+                })
+            }
+            console.log("Successfully created customUser");
+
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: "Something went wrong"
+            })
+        }
 
         const fileSaved = await fileModel.create({
             userId,
