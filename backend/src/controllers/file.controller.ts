@@ -125,8 +125,8 @@ export const uploadFile = async (req: Request, res: Response) => {
             diskName: file.filename,
             fileType: file.mimetype,
             fileSize: file.size,
-            url: (uploadedFile as any).secure_url,
-            publicId: (uploadedFile as any).public_id,
+            url: uploadedFile.secure_url,
+            publicId: uploadedFile.public_id,
             // qdrantCollection
         })
 
