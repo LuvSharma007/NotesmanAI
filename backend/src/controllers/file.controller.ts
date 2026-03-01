@@ -29,6 +29,46 @@ export const uploadFile = async (req: Request, res: Response) => {
                 message: "Unauthorised Access"
             })
         }
+        // validate file
+
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                error: "No file Provided"
+            })
+        }
+
+        if (file.size > 10485760) {
+            return res.status(400).json({
+                success: false,
+                message: "File should be lower than 15mb"
+            })
+        }
+        console.log("got the file and Size ", file.size);
+        const fileSize = file.size
+
+        // validate file type
+        try {
+            const type = await fileTypeFromFile(file.path)
+            console.log("Type:", type);
+
+            const isTxt = req.file?.mimetype === "text/plain"
+            if ((type && allowedMimeTypes.includes(type.mime)) || isTxt) {
+                console.log("File validation completed successfully");        
+            }else{
+                throw new Error("Unsupported file type")
+            }
+        } catch (error) {
+            console.log("file type not supported:", error);
+            console.log("removing file");
+            await fs.unlink(file.path)
+            return res.status(400).json({
+                success: false,
+                message: "File type not supported"
+            })
+        }
 
         // validate sources 
         // find the user exists in customUserModel
@@ -68,47 +108,6 @@ export const uploadFile = async (req: Request, res: Response) => {
             return res.status(500).json({
                 success: false,
                 message: "Something went wrong"
-            })
-        }
-
-        // validate file
-
-        const file = req.file;
-
-        if (!file) {
-            return res.status(400).json({
-                success: false,
-                error: "No file Provided"
-            })
-        }
-
-        if (file.size > 10485760) {
-            return res.status(400).json({
-                success: false,
-                message: "File should be lower than 15mb"
-            })
-        }
-        console.log("got the file and Size ", file.size);
-        const fileSize = file.size
-
-        // validate file type
-        try {
-            const type = await fileTypeFromFile(file.path)
-            console.log("Type:", type);
-
-            const isTxt = req.file?.mimetype === "text/plain"
-            if ((type && allowedMimeTypes.includes(type.mime)) || isTxt) {
-                console.log("File validation completed successfully");        
-            }else{
-                throw new Error("Unsupported file type")
-            }
-        } catch (error) {
-            console.log("file type not supported:", error);
-            console.log("removing file");
-            await fs.unlink(file.path)
-            return res.status(400).json({
-                success: false,
-                message: "File type not supported"
             })
         }
         
