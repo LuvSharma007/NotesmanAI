@@ -6,11 +6,14 @@ import mongoose from "mongoose";
 import { deleteFileQueue } from "../bullmq/queues/delete.queue.js";
 import urlModel from "../models/url.model.js";
 import customUserModel from "../models/customUser.model.js";
+import {fileTypeFromFile} from "file-type"
+import { allowedMimeTypes, CloudinaryResponse } from "../middlewares/upload.middleware.js";
+import fs from "fs/promises"
 
 export const uploadFile = async (req: Request, res: Response) => {
     // check userId
-    // validate sources in userModel
     // validate file
+    // validate sources in userModel
     // upload on cloudinary
     // create qdrant collection
     // save the file in fileModel
@@ -79,6 +82,7 @@ export const uploadFile = async (req: Request, res: Response) => {
                 error: "No file Provided"
             })
         }
+
         if (file.size > 10485760) {
             return res.status(400).json({
                 success: false,
@@ -89,24 +93,35 @@ export const uploadFile = async (req: Request, res: Response) => {
         const fileSize = file.size
 
         // validate file type
-        // pending-----------------
-
-        console.log("Uploading to cloudinary");
-
         const filePath = req.file?.path;
-        if (!filePath) {
-            // console.log("No file path found 1");
-
-            throw new Error("No file path found")
+        let uploadedFile = {} as CloudinaryResponse
+        try {
+            const type = await fileTypeFromFile(file.path)
+            console.log("Type:",type);
+            
+            const isTxt = req.file?.mimetype === "text/plain"
+            if((type && allowedMimeTypes.includes(type.mime)) || isTxt ){
+                console.log("Uploading to cloudinary");
+        
+                console.log("-----------------------", file.path);
+                uploadedFile = await uploadOnCloudinary(file.path)
+        
+                if (!uploadedFile) {
+                    throw new Error("File required")
+                }
+                console.log("Uploaded to cloudinary:", uploadedFile);
+            }else{
+            }
+        } catch (error) {
+            console.log("file type not supported:",error);
+            console.log("removing file");            
+            await fs.unlink(file.path)
+            return res.status(400).json({
+                success:false,
+                message:"File type not supported"
+            })
         }
 
-        console.log("-----------------------", filePath);
-        const uploadedFile = await uploadOnCloudinary(filePath)
-
-        if (!uploadedFile) {
-            throw new Error("File required")
-        }
-        console.log("Uploaded to cloudinary:", uploadedFile);
 
         const fileSaved = await fileModel.create({
             userId,

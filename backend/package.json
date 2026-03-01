@@ -34,6 +34,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.4",
     "express": "^5.1.0",
+    "file-type": "^21.3.0",
     "ioredis": "^5.8.1",
     "mongodb": "^6.21.0",
     "mongoose": "^8.19.0",
