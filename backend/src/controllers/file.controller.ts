@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import { deleteFileQueue } from "../bullmq/queues/delete.queue.js";
 import urlModel from "../models/url.model.js";
 import customUserModel from "../models/customUser.model.js";
-import {fileTypeFromFile} from "file-type"
+import { fileTypeFromFile } from "file-type"
 import { allowedMimeTypes, CloudinaryResponse } from "../middlewares/upload.middleware.js";
 import fs from "fs/promises"
 
@@ -27,54 +27,6 @@ export const uploadFile = async (req: Request, res: Response) => {
             return res.status(404).json({
                 success: false,
                 message: "Unauthorised Access"
-            })
-        }
-        // validate file
-
-        const file = req.file;
-
-        if (!file) {
-            return res.status(400).json({
-                success: false,
-                error: "No file Provided"
-            })
-        }
-
-        if (file.size > 10485760) {
-            return res.status(400).json({
-                success: false,
-                message: "File should be lower than 15mb"
-            })
-        }
-        console.log("got the file and Size ", file.size);
-        const fileSize = file.size
-
-        // validate file type
-        const filePath = req.file?.path;
-        let uploadedFile = {} as CloudinaryResponse
-        try {
-            const type = await fileTypeFromFile(file.path)
-            console.log("Type:",type);
-            
-            const isTxt = req.file?.mimetype === "text/plain"
-            if((type && allowedMimeTypes.includes(type.mime)) || isTxt ){
-                console.log("Uploading to cloudinary");
-        
-                console.log("-----------------------", file.path);
-                uploadedFile = await uploadOnCloudinary(file.path)
-        
-                if (!uploadedFile) {
-                    throw new Error("File required")
-                }
-                console.log("Uploaded to cloudinary:", uploadedFile);
-            }
-        } catch (error) {
-            console.log("file type not supported:",error);
-            console.log("removing file");            
-            await fs.unlink(file.path)
-            return res.status(400).json({
-                success:false,
-                message:"File type not supported"
             })
         }
 
@@ -118,6 +70,55 @@ export const uploadFile = async (req: Request, res: Response) => {
                 message: "Something went wrong"
             })
         }
+
+        // validate file
+
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                error: "No file Provided"
+            })
+        }
+
+        if (file.size > 10485760) {
+            return res.status(400).json({
+                success: false,
+                message: "File should be lower than 15mb"
+            })
+        }
+        console.log("got the file and Size ", file.size);
+        const fileSize = file.size
+
+        // validate file type
+        try {
+            const type = await fileTypeFromFile(file.path)
+            console.log("Type:", type);
+
+            const isTxt = req.file?.mimetype === "text/plain"
+            if ((type && allowedMimeTypes.includes(type.mime)) || isTxt) {
+                console.log("File type cheked");        
+            }
+        } catch (error) {
+            console.log("file type not supported:", error);
+            console.log("removing file");
+            await fs.unlink(file.path)
+            return res.status(400).json({
+                success: false,
+                message: "File type not supported"
+            })
+        }
+        
+        const filePath = req.file?.path;
+        let uploadedFile: CloudinaryResponse
+        console.log("-----------------------", file.path);
+        uploadedFile = await uploadOnCloudinary(file.path)
+
+        if (!uploadedFile) {
+            throw new Error("File required")
+        }
+        console.log("Uploaded to cloudinary:", uploadedFile);
 
         const fileSaved = await fileModel.create({
             userId,
@@ -290,7 +291,7 @@ export const deleteFile = async (req: Request, res: Response) => {
     }
 }
 
-export const initialFileStatus = async (req:Request,res:Response)=>{
+export const initialFileStatus = async (req: Request, res: Response) => {
     try {
         const fileId = req.params.id as string;
         if (!mongoose.Types.ObjectId.isValid(fileId)) {
@@ -301,20 +302,20 @@ export const initialFileStatus = async (req:Request,res:Response)=>{
 
         console.log("FileID:", fileId);
         const file = await fileModel.findById(fileId)
-        if(file?.status === "completed"){
+        if (file?.status === "completed") {
             return res.status(200).json({
-                success:200,
-                message:"File processed successfully",
-                status:file?.status
+                success: 200,
+                message: "File processed successfully",
+                status: file?.status
             })
         }
         return res.status(200).json({
-            status:file?.status
+            status: file?.status
         })
-        
+
     } catch (error) {
         return res.status(400).json({
-            success:false
+            success: false
         })
     }
 }
@@ -362,7 +363,7 @@ export const getFileStatus = async (req: Request, res: Response) => {
         })
 
     } catch (error) {
-        if(!res.headersSent) {
+        if (!res.headersSent) {
             res.status(500).end();
         }
     }
