@@ -110,7 +110,6 @@ export const uploadFile = async (req: Request, res: Response) => {
                     throw new Error("File required")
                 }
                 console.log("Uploaded to cloudinary:", uploadedFile);
-            }else{
             }
         } catch (error) {
             console.log("file type not supported:",error);
@@ -185,7 +184,7 @@ export const uploadFile = async (req: Request, res: Response) => {
         console.error("Error uploading file:", error);
         res.status(500).json({
             success: false,
-            error: "Upload failed",
+            message: "Upload failed",
             details: (error as Error).message
         })
     }
