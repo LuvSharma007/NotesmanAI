@@ -46,8 +46,6 @@ export const uploadFile = async (req: Request, res: Response) => {
                 message: "File should be lower than 15mb"
             })
         }
-        console.log("got the file and Size ", file.size);
-        const fileSize = file.size
 
         // validate file type
         try {
@@ -156,7 +154,7 @@ export const uploadFile = async (req: Request, res: Response) => {
             userId,
             qdrantCollection: `user_${userId}`,
             filePath,
-            fileSize,
+            fileSize:file.size
         }, { removeOnComplete: true, removeOnFail: true })
 
         console.log(`Job added to the queue ${job}`);
@@ -177,6 +175,7 @@ export const uploadFile = async (req: Request, res: Response) => {
                 url: fileSaved.url,
                 type: fileSaved.fileType,
                 size: fileSaved.fileSize,
+                createdAt:fileSaved.createdAt
             },
         })
     } catch (error) {

@@ -11,7 +11,7 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["src"],
+  "include": ["src", "../frontend/lib/calculateFilesize.ts"],
   "ts-node": {
     "esm": true
   }

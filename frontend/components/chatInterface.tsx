@@ -75,7 +75,7 @@ export function ChatInterface({
 
       if (!res.body) {
         console.error("No response body received from the stream.");
-        return;
+      return;
       }
 
       const reader = res.body.getReader();

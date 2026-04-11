@@ -28,7 +28,6 @@ interface UrlResponse {
   name: string
 }
 
-
 interface SourcePanelProps {
   onSourceSelect: (source: Source) => void
   onSourceDelete?: (deletedId: string) => void
@@ -95,7 +94,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
     }
 
     uploadFile()
-  }, [file]) // runs automatically when file changes
+  }, [file])
 
   const handleDeleteFile = async (id: string, sourceType: "file" | "url") => {
     try {

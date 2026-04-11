@@ -126,7 +126,8 @@ export const scrapeUrl = async (req: Request, res: Response) => {
             message: "Extracting content through URL",
             url: {
                 id: dataSaved._id.toString(),
-                name: fileName
+                name: fileName,
+                createdAt:dataSaved.createdAt
             }
         })
     } catch (error) {

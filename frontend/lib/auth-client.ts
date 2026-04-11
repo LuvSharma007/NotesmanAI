@@ -5,12 +5,14 @@ export const authClient = createAuthClient({
     plugins: [ 
         usernameClient(),
     ], 
-    baseURL:'https://notesman.in',
+    baseURL: process.env.NODE_ENV === "development" ?
+    "http://localhost:4000" : process.env.NEXT_PUBLIC_API_URL,
     trustedOrigins: [
-		// 'http://localhost:4000',
+		'http://localhost:4000',
         // 'http://76.13.242.203:4000',
-		'http://api:4000',
-        "https://notesman.in"],
+		// 'http://api:4000',
+        // "https://notesman.in"
+    ],
 })
 
 export const { useSession, signIn, signOut, signUp } = authClient

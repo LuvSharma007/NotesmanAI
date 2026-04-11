@@ -9,8 +9,8 @@ app.use(
     cors({
         origin:[
             'http://localhost:3000'
-            ,'http://frontend:3000',
-            'https://notesman.in',
+            // ,'http://frontend:3000',
+            // 'https://notesman.in',
         ],
         methods:["GET","POST","PUT","DELETE"],
         credentials:true
@@ -31,11 +31,13 @@ import userRouter from "./routes/user.routes.js"
 import chatRouter from "./routes/chat.routes.js"
 import messageRouter from "./routes/messages.routes.js";
 import urlRouter from "./routes/url.route.js"
+import usageRouter from "./routes/usage.routes.js"
 
 app.use("/api/v1/users",userRouter)
 app.use("/api/v1/userchats",chatRouter)
 app.use("/api/v1/userMessages",messageRouter)
 app.use("/api/v1/url",urlRouter)
+app.use("/api/v1/usage",usageRouter)
 
 export default app;
 

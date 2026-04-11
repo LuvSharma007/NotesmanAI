@@ -1,45 +1,67 @@
-import z from "zod";
-import { conversationQueue ,conversationQueueEvents} from "../../bullmq/queues/conversation.queue.js";
-import { tool } from "@openai/agents";
-import {openai} from "../../lib/openAIClient.js"
+import mongoose from "mongoose";
+import messageModel from "../../models/messages.model.js";
 
-export const getConversation = tool({
-    name:"get_conversation",
-    description:"Returns the summarized AI and user conversation to agent",
-    parameters:z.object({}),
-    async execute(_,toolContext:any){
-        console.log("getConvertsation tool called");
-        const {id,userId} = toolContext.context
-        console.log("id",id);
-        console.log("userID",userId);
+// export const getConversation = tool({
+//     name:"get_conversation",
+//     description:"Returns the summarized AI and user conversation to agent",
+//     parameters:z.object({}),
+//     async execute(_,toolContext:any){
+//         console.log("getConversation tool called");
+//         const {sourceIds,userId , finalConversationId} = toolContext.context
+//         console.log("SourcesIds",sourceIds);
+//         console.log("userID",userId);
+//         console.log("ConversationID",finalConversationId);
+
+
         
-        if(!id){
-            throw new Error("id not found")
+//         if(sourceIds.length === 0){
+//             throw new Error("id not found")
+//         }
+        // if(!userId){
+        //     throw new Error("userId not found")
+        // }
+
+        // const messages = await messageModel.find({
+        //     userId,
+        //     conversationId:finalConversationId
+        // })
+        // .sort({createdAt:1})
+        // .select('role content -_id')
+        // .lean()
+        // .limit(20)
+
+        // console.log("messages from getConversation:",messages);
+        
+        // return messages     
+
+//     }
+// })
+
+export const getConversation = async (userId:string,conversationId:mongoose.Types.ObjectId)=>{
+    try {
+        if(!userId || !conversationId){
+            throw new Error("No Messages found for this user")
         }
         if(!userId){
             throw new Error("userId not found")
         }
 
-        const job = await conversationQueue.add("get-conversation",{
+        const messages = await messageModel.find({
             userId,
-            id
-        }, { removeOnComplete: true, removeOnFail: true })
-
-        const messages = await job.waitUntilFinished(conversationQueueEvents);
-        console.log("messages from redis",messages);
-
-        const response = await openai.chat.completions.create({
-            model:"gpt-4.1-mini",
-            messages:[
-                messages,
-                {role:"user",content:"Summarize the user and AI chat , Do not include any timestamps , do not add anything from yourself extra.",}
-            ]
+            conversationId
         })
-        console.log("SummaryResult:",response.choices[0].message.content);
+        .sort({createdAt:1})
+        .select('role content -_id')
+        .lean()
+        .limit(20)
 
-        return {conversationSummary:response.choices[0].message.content as string};     
+        console.log("messages from getConversation:",messages);
+        
+        return messages     
+    } catch (error:any) {
+        throw new Error("Error:",error)
     }
-})
+}
 
 
 

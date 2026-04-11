@@ -10,11 +10,11 @@ const worker = new Worker('conversation-queue',async(job:Job)=>{
     console.log("Get messages worker runned");
 
     try {
-        const {id,userId} = job.data;
-        console.log("id",id);
+        const {conversationId,userId} = job.data;
+        console.log("conversationID",conversationId);
         console.log("UserId",userId);
 
-        const messagesId = `chat:${userId}:${id}`
+        const messagesId = `chat:${userId}:${conversationId}`
         
         const messages = await redisClient.lrange(messagesId,0,-1);
         if(messages.length === 0){

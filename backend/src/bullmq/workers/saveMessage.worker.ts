@@ -12,29 +12,28 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
     console.log("Starting worker");
 
     try {
-        const {id,userId,userMessage,aiMessage,name,sourceType} = job.data;
+        const {conversationId,userId,userMessage,aiMessage} = job.data;
+        console.log("ConversationId",conversationId);
+        console.log("userId",userId);        
         
-        if(!id || !userId || !userMessage || !aiMessage || !sourceType){
-            console.error("Context is misssing:",aiMessage);
+        if(!conversationId || !userId || !userMessage || !aiMessage){
+            throw new Error("Context is missing")
         }
         
-        
-        console.log(`Processing Job ${job.id} for file:${name}`);
+        console.log(`Processing Job ${job.id} for file`);
 
         const messageSaved = await messageModel.insertMany(
             [
             {
-                id,
+                conversationId,
                 userId,
                 role:'user',
-                sourceType,
-                content:userMessage
+                content:userMessage,
             },
             {
-                id,
+                conversationId,
                 userId,
-                role:'assisstant',
-                sourceType,
+                role:'assistant',
                 content:aiMessage
             }
         ]
@@ -44,21 +43,23 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
     // saving in the redis
 
     const userMsg = JSON.stringify({
+        _id:messageSaved[0]._id,
         role:"user",
         content:userMessage,
         createdAt:new Date()
     })
 
     const aiMsg = JSON.stringify({
+        _id:messageSaved[1]._id,
         role:"assistant",
         content:aiMessage,
         createdAt:new Date()
     })
 
-    const RedisMessageSaved = await redisClient.rpush(`chat:${userId}:${id}`,userMsg,aiMsg);
-    await redisClient.ltrim(`chat:${userId}:${id}`,-20,-1);  // Negative indexes: Negative numbers can be used to specify offsets from the end of the list, where -1 is the last element, -2 is the penultimate
-    await redisClient.expire(`chat:${userId}:${id}`,1800) // expire the messages after half an hour
-    console.log("Message Saved in redis:",RedisMessageSaved);
+    // const RedisMessageSaved = await redisClient.rpush(`chat:${userId}:${conversationId}`,userMsg,aiMsg);
+    // await redisClient.ltrim(`chat:${userId}:${conversationId}`,-20,-1);  // Negative indexes: Negative numbers can be used to specify offsets from the end of the list, where -1 is the last element, -2 is the penultimate
+    // await redisClient.expire(`chat:${userId}:${conversationId}`,1800) // expire the messages after half an hour
+    // console.log("Message Saved in redis:",RedisMessageSaved);
     
     } catch (error) {
         console.error("Worker job failed:",error);

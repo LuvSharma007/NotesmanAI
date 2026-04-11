@@ -14,7 +14,8 @@
     "worker:delete": "npx tsx src/bullmq/workers/delete.worker.ts",
     "worker:getMessage": "npx tsx src/bullmq/workers/getMessage.worker.ts",
     "worker:saveMessage": "npx tsx src/bullmq/workers/saveMessage.worker.ts",
-    "worker:url": "npx tsx src/bullmq/workers/url.worker.ts"
+    "worker:url": "npx tsx src/bullmq/workers/url.worker.ts",
+    "worker:deleteChat": "npx tsx src/bullmq/workers/deleteChat.worker.ts"
   },
   "keywords": [],
   "author": "",

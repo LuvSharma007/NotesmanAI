@@ -4,7 +4,9 @@ export interface IUrl extends Document{
     userId:mongoose.Types.ObjectId,
     url:string,
     status:string,
-    name:string
+    name:string,
+    createdAt:string,
+    sourceType:string
 }
 
 const urlSchema:Schema<IUrl> = new Schema({
@@ -20,6 +22,10 @@ const urlSchema:Schema<IUrl> = new Schema({
     name:{
         type:String,
         required:true
+    },
+    sourceType:{
+        type:String,
+        default:"url"
     },
     status:{
         type:String,

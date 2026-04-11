@@ -3,7 +3,7 @@ import { NextResponse,NextRequest } from "next/server";
 export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
-        const cookie = request.cookies.get("__Secure-notesman.session_token")?.value;
+        const cookie = request.cookies.get("notesman.session_token")?.value;
         if(!cookie){
             console.log("Unauthorized Access");        
             return NextResponse.redirect(new URL("/login",request.url))
@@ -16,5 +16,5 @@ export async function middleware(request:NextRequest){
 }
 
 export const config = {
-    matcher:"/c/:path*"
+    matcher:["/chat/:path*","/sources"]
 }

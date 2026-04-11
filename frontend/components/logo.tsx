@@ -3,9 +3,10 @@ import { cn } from "@/lib/utils"
 interface NotesmanLogoProps {
   className?: string
   size?: "sm" | "md" | "lg"
+  showName?:boolean
 }
 
-export function Logo({ className, size = "md" }: NotesmanLogoProps) {
+export function Logo({ className, size = "md" , showName=true}: NotesmanLogoProps) {
   const sizeClasses = {
     sm: "w-8 h-8 text-lg",
     md: "w-10 h-10 text-xl",
@@ -17,13 +18,15 @@ export function Logo({ className, size = "md" }: NotesmanLogoProps) {
       <div
         className={cn(
           "flex items-center justify-center rounded-lg font-bold border border-border shadow-sm",
-          "bg-black text-white dark:bg-white dark:text-black", // 👈 flips correctly
+          "bg-black text-white dark:bg-white dark:text-black",
           sizeClasses[size],
         )}
       >
         N
       </div>
-      <span className="font-semibold text-foreground tracking-tight">Notesman</span>
+      {showName && (
+        <span className="font-semibold text-foreground tracking-tight">Notesman</span>
+      )}
     </div>
   )
 }

@@ -120,3 +120,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Customize scrollbar thickness for all scrollable elements */
+::-webkit-scrollbar {
+  width: 6px; /* Change this to your preferred thickness */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: oklch(1 0 0 / 15%);; /* Tailwind gray-600 */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+

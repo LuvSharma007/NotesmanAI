@@ -2,7 +2,7 @@ import { Redis } from "ioredis";
 import type { RedisOptions } from "ioredis";
 
 export const redisConfig: RedisOptions = {
-    host: process.env.REDIS_HOST || "redis-stack",
+    host: process.env.NODE_ENV === "development" ? "localhost" : process.env.REDIS_HOST ,
     port: Number(process.env.REDIS_PORT) || 6379,
     maxRetriesPerRequest: null
 }

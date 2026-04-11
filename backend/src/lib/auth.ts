@@ -1,4 +1,4 @@
-import { betterAuth} from "better-auth";
+import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { username } from "better-auth/plugins";
 import { MongoClient } from 'mongodb'
@@ -17,7 +17,7 @@ if (!mongoDBConnectionString || !googleClientId || !googleClientSecret) {
 const mongodb = new MongoClient(mongoDBConnectionString).db(mongoDbName)
 
 const createResetEmailTemplate = (resetUrl: string, userName: string) => {
-	return `
+    return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -37,25 +37,26 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL: process.env.BETTER_AUTH_URL,
+    baseURL: process.env.NODE_ENV === "development" ?
+        "http://localhost:4000" : process.env.BETTER_AUTH_URL,
 
     emailAndPassword: {
         enabled: true,
         resetPasswordTokenExpiresIn: 3600,
-        sendResetPassword: async ({ user, url, token },Request) => {
+        sendResetPassword: async ({ user, url, token }, Request) => {
 
-            const emailHtml = createResetEmailTemplate(url,user.name)
+            const emailHtml = createResetEmailTemplate(url, user.name)
 
-            const {data,error} = await resend.emails.send({
+            const { data, error } = await resend.emails.send({
                 from: "Notesman@mail.notesman.in",   // any_name@subDomain
                 to: user.email,
                 subject: "Reset Your Password",
-                html:emailHtml
+                html: emailHtml
             })
-            if(error){
-                console.log("Resend Error:",error);
-            }       
-            
+            if (error) {
+                console.log("Resend Error:", error);
+            }
+
         },
         requireEmailVerification: false
     },
@@ -72,56 +73,66 @@ export const auth = betterAuth({
         },
     },
     session: {
-        create:{
-            after:async(session:any)=>{
+        create: {
+            after: async (session: any) => {
                 // deleting the all previous sessions of the user
                 const previousSession = mongodb.collection("session").find({
-                    userId:session.userId,
-                    _id:{$ne:session._id}
+                    userId: session.userId,
+                    _id: { $ne: session._id }
                 })
-                console.log("previous session deleted",previousSession);
-                
+                console.log("previous session deleted", previousSession);
+
             }
         },
-        cookieCache:{
-            maxAge:60 * 60 * 24 * 60, // 2 month
-            strategy:"jwt",
-            refreshCache:{
+        cookieCache: {
+            maxAge: 60 * 60 * 24 * 60, // 2 month
+            strategy: "jwt",
+            refreshCache: {
                 updateAge: 60 * 60 * 24,
             },
         },
         expiresIn: 60 * 60 * 24 * 60, // 2 month
         updateAge: 60 * 60 * 24 // 1 day before session is expires
     },
+    // advanced: {
+    //     crossSiteCookies: true,
+    //     cookiePrefix:"notesman",
+    //     ipAddress:{
+    //         ipAddressHeaders:["x-forwarded-for"]
+    //     },
+    //     defaultCookieAttributes:{
+    //         sameSite:'Lax',
+    //         secure:true,
+    //         httpOnly:true
+    //     }
+    // },
     advanced: {
-        cookiePrefix:"notesman",
-        ipAddress:{
-            ipAddressHeaders:["x-forwarded-for"]
-        },
-        defaultCookieAttributes:{
-            sameSite:'Lax',
-            secure:true,
-            httpOnly:true
+        cookiePrefix: "notesman",
+        useSecureCookies: false, // Set to false in development with http://localhost
+        defaultCookieAttributes: {
+            sameSite: 'lax',
+            secure: false, // Must be false for http://localhost
+            httpOnly: true
         }
     },
-    rateLimit:{
-        window:60, // time window in seconds
+    rateLimit: {
+        window: 60, // time window in seconds
         max: 10, // ,ax requests in the window
-        customRules:{
-            "/sign-in/email":{
-                window:10,
-                max:3
+        customRules: {
+            "/sign-in/email": {
+                window: 10,
+                max: 3
             },
-            "/get-session":false
+            "/get-session": false
         }
     },
     trustedOrigins: [
         "http://localhost:3000",
         "http://localhost:4000",
-        "http://frontend:3000",
-        "http://api:4000",
+        // "http://frontend:3000",
+        // "http://api:4000",
         // "http://76.13.242.203:3000",
         // "http://76.13.242.203:4000",
-        "https://notesman.in"
+        // "https://notesman.in"
     ],
 });

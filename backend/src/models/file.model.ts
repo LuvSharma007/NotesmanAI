@@ -9,7 +9,9 @@ export interface IFile extends Document{
     url:string
     publicId:string,
     status:string,
-
+    size:number,
+    createdAt:string
+    sourceType:string
 }
 
 const fileSchema:Schema<IFile> = new Schema({
@@ -41,12 +43,18 @@ const fileSchema:Schema<IFile> = new Schema({
     publicId:{
         type:String,
     },
+    sourceType:{
+        type:String,
+        default:"file"
+    },
     status:{
         type:String,
         enum:['pending','chunking', 'processing' ,'completed','failed',],
         default:'pending'
-    }
-})
+    },
+},
+{timestamps:{createdAt:true,updated:false}}
+)
 
 const fileModel:Model<IFile> = mongoose.model("file",fileSchema)
 export default fileModel;

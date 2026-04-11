@@ -39,7 +39,7 @@ export default function HeroSection() {
                                     <Button
                                         size="lg"
                                         asChild>
-                                        <Link href="/c">
+                                        <Link href="/chat">
                                             <Rocket className="relative size-4" />
                                             <span className="text-nowrap">Notesman</span>
                                         </Link>

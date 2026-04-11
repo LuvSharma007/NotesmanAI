@@ -37,7 +37,7 @@ export function LoginForm({
       })
       if (data) {
         // router.push("/c")
-        window.location.href = "/c"; 
+        window.location.href = "/chat"; 
         toast.success("Login successfully")
       } else {
         toast.error(error?.message || "Login failed")
@@ -55,7 +55,7 @@ export function LoginForm({
     try {
       await authClient.signIn.social({
         provider:'google',
-        callbackURL:"https://notesman.in/c"
+        callbackURL:"https://notesman.in/chat"
       })
       
     } catch (error) {
