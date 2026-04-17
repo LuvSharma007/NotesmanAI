@@ -48,7 +48,7 @@ export default function Providers({children}:Props){
 
     return (
         <PersistQueryClientProvider 
-        client={queryClient}
+        client={config.client}
         persistOptions={{ persister: config.persister }}
         >
             {children}

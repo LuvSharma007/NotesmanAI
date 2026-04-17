@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from '@/components/ui/button'
-import { Card, CardAction, CardDescription, CardTitle } from '@/components/ui/card'
+import { Card, CardAction, CardTitle } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -49,7 +49,8 @@ export const SourceComponent = () => {
                 </>
               )}
             </Button>
-            <Button variant={'ghost'} className='border-2 bg-border-gray-200 cursor-pointer'>
+            <Button variant={'ghost'} className='border-2 bg-border-gray-200 cursor-pointer'
+            >
               <Folder />
               New Folder
             </Button>
@@ -90,8 +91,6 @@ export const SourceComponent = () => {
                   )}
                   <div>
                     <CardTitle className='text-base'>{`${source.name}`}</CardTitle>
-
-                    <CardDescription>This is the description of the file</CardDescription>
                   </div>
                 </div>
                 <div className="flex flex-col">

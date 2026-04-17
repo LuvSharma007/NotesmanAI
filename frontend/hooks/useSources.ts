@@ -25,7 +25,18 @@ export interface Source {
     sourceType: "file" | "url"
     size?: number
     createdAt: string,
-    url?: string
+    url?: string,
+    status?:string
+}
+
+export interface SourceResponse {
+    _id: string
+    name?: string,
+    sourceType: "file" | "url"
+    fileSize?:number
+    createdAt: string,
+    url?: string,
+    status?:string
 }
 
 export const useSource = () => {
@@ -37,51 +48,87 @@ export const useSource = () => {
     const [isGlobeActive , setIsGlobeActive] = useState(false)
     
 
-    // load all files and Urls
+    // // load all files and Urls
 
-    const loadSources = async () => {
+    // const loadSources = async () => {
+    //     try {
+    //         const [allFiles, allUrls] = await Promise.all([
+    //             fetch(`/api/v1/users/get-files`, { credentials: "include" }),
+    //             fetch(`/api/v1/url/getAllUrls`, { credentials: "include" })
+    //         ])
+    //         if (!allFiles.ok) {
+    //             const errorData = await allFiles.json();
+    //             toast.error(errorData.message || "Something went wrong")
+    //             return;
+    //         }
+
+    //         if (!allUrls.ok) {
+    //             const errorData = await allUrls.json();
+    //             toast.error(errorData.message || "Something went wrong")
+    //             return;
+    //         }
+
+    //         const filesData = await allFiles.json()
+    //         const urlsData = await allUrls.json()
+    //         if (filesData.success && filesData.files.length === 0
+    //             && urlsData.success && urlsData.urls.length === 0) {
+    //             return;
+    //         }
+
+    //         const files: Source[] = filesData.files.map((f: FileResponse) => ({
+    //             _id: f._id,
+    //             name: f.name,
+    //             sourceType: "file",
+    //             size: f.fileSize,
+    //             url: f.url,
+    //             createdAt: f.createdAt
+    //         }))
+
+    //         const urls: Source[] = urlsData.urls.map((u: UrlResponse) => ({
+    //             _id: u._id,
+    //             name: u.name,
+    //             sourceType: "url",
+    //             createdAt: u.createdAt
+    //         }))
+    //         setSources([...files, ...urls])
+    //     } catch (error) {
+    //         toast.error("Failed to load sources")
+    //     }
+    // }
+
+    // useEffect(() => {
+    //     loadSources()
+    // }, [])
+
+    const loadSources = async ()=>{
         try {
-            const [allFiles, allUrls] = await Promise.all([
-                fetch(`/api/v1/users/get-files`, { credentials: "include" }),
-                fetch(`/api/v1/url/getAllUrls`, { credentials: "include" })
-            ])
-            if (!allFiles.ok) {
-                const errorData = await allFiles.json();
-                toast.error(errorData.message || "Something went wrong")
+            const skip = 0;
+            const response = await fetch(`/api/v1/users/getSources?skip=${skip}`,{
+                method:'GET',
+                credentials:"include",
+            })
+
+            if(!response.ok){
+                console.log("No Sources in Body");
+                return
+            }
+            const data = await response.json()
+            if(data.success && data.sources.length === 0){
                 return;
             }
-
-            if (!allUrls.ok) {
-                const errorData = await allUrls.json();
-                toast.error(errorData.message || "Something went wrong")
-                return;
-            }
-
-            const filesData = await allFiles.json()
-            const urlsData = await allUrls.json()
-            if (filesData.success && filesData.files.length === 0
-                && urlsData.success && urlsData.urls.length === 0) {
-                return;
-            }
-
-            const files: Source[] = filesData.files.map((f: FileResponse) => ({
-                _id: f._id,
-                name: f.name,
-                sourceType: "file",
-                size: f.fileSize,
-                url: f.url,
-                createdAt: f.createdAt
+            const allSources: Source[] = data.sources.map((s:SourceResponse)=>({
+                _id: s._id,
+                name: s.name,
+                sourceType:s.sourceType,
+                size:s.fileSize,
+                url:s.url,
+                createdAt:s.createdAt
             }))
+            setSources(allSources)           
 
-            const urls: Source[] = urlsData.urls.map((u: UrlResponse) => ({
-                _id: u._id,
-                name: u.name,
-                sourceType: "url",
-                createdAt: u.createdAt
-            }))
-            setSources([...files, ...urls])
         } catch (error) {
-            toast.error("Failed to load sources")
+            console.log("Error fetching sources",error);
+            toast.error("Error fetching sources")            
         }
     }
 
@@ -222,7 +269,7 @@ export const useSource = () => {
         selectSource,
         setSelectedSources,
         isGlobeActive,
-        setIsGlobeActive
+        setIsGlobeActive,
     }
 
 }

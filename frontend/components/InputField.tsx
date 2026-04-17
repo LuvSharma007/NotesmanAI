@@ -26,7 +26,7 @@ const InputField = () => {
         <>
             <div className='flex justify-center w-full lg:px-8'>
                 <div className='max-w-3xl w-full'>
-                    <form onSubmit={handleSubmit} className='overflow-hidden rounded-sm border shadow-sm w-full bg-sidebar border-[#EEF4F9] dark:border-[#23272F]'>
+                    <form onSubmit={handleSubmit} className='overflow-hidden border shadow-sm w-full bg-sidebar border-[#EEF4F9] dark:border-[#23272F]'>
                         <div className='flex flex-wrap gap-2 px-3 pt-2 pb-1 border-t overflow-hidden'>
                             {selectedSources.map((source) => (
                                 <div className='group relative bg-card border overflow-hidden transition-all duration-200 min-w-44 hover:border-vblue-400/50 hover:shadow-md border-border shadow-sm flex flex-row'

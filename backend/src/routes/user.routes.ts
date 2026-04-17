@@ -3,6 +3,7 @@ import { isAuthenticated } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
 import { deleteFile,getAllFiles, getFileStatus, initialFileStatus, uploadFile } from '../controllers/file.controller.js';
 import { rateLimiter } from '../lib/rateLimiter.js';
+import { getAllSources } from '../controllers/sources.controller.js';
 
 
 const router = express.Router();
@@ -11,6 +12,8 @@ router.post("/upload", rateLimiter, isAuthenticated , upload.single("file"),uplo
 router.get("/get-files",rateLimiter,isAuthenticated,getAllFiles)
 router.delete("/delete-file/:id",isAuthenticated,deleteFile)
 router.get("/file-initial-status/:id",isAuthenticated,initialFileStatus)
+router.get("/getSources",rateLimiter,isAuthenticated,getAllSources)
+
 // SSE
 router.get("/file-SSE/:id",isAuthenticated,getFileStatus)
 
