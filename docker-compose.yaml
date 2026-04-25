@@ -165,21 +165,18 @@ services:
 
   frontend:
     <<: *default-logging
-    container_name: frontend
     build:
       context: ./frontend
       args:
-      - NEXT_PUBLIC_REDIRECT_API_URL=${NEXT_PUBLIC_REDIRECT_API_URL}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_REDIRECT_API_URL=${NEXT_PUBLIC_REDIRECT_API_URL}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    env_file: .env
     ports:
     - "3000:3000"
     networks:
     - notesmanAI-network
     depends_on:
     - redis-stack
-    environment:
-      - NODE_ENV=${NODE_ENV}
-      - PORT=${PORT}
       
 
 volumes:
