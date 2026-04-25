@@ -37,8 +37,7 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL: process.env.NODE_ENV === "development" ?
-        "http://localhost:4000" : process.env.BETTER_AUTH_URL,
+    baseURL:"http://localhost:4000",
 
     emailAndPassword: {
         enabled: true,
@@ -56,7 +55,6 @@ export const auth = betterAuth({
             if (error) {
                 console.log("Resend Error:", error);
             }
-
         },
         requireEmailVerification: false
     },
@@ -95,7 +93,10 @@ export const auth = betterAuth({
         updateAge: 60 * 60 * 24 // 1 day before session is expires
     },
     // advanced: {
-    //     crossSiteCookies: true,
+    //     crossSubDomainCookies:{
+    //         enabled:true,
+    //         domain:''
+    //     },
     //     cookiePrefix:"notesman",
     //     ipAddress:{
     //         ipAddressHeaders:["x-forwarded-for"]
@@ -129,8 +130,8 @@ export const auth = betterAuth({
     trustedOrigins: [
         "http://localhost:3000",
         "http://localhost:4000",
-        // "http://frontend:3000",
-        // "http://api:4000",
+        "http://frontend:3000",
+        "http://api:4000",
         // "http://76.13.242.203:3000",
         // "http://76.13.242.203:4000",
         // "https://notesman.in"

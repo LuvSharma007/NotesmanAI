@@ -42,7 +42,7 @@ const ChatComponent = () => {
             <React.Fragment key={message._id}>
               {message.role === "user" && (
                 <div className='w-full flex justify-end items-start'>
-                  <div className='bg-card text-white p-3 rounded-lg max-w-[80%] break-words shadow-sm'>
+                  <div className='bg-primary text-primary-foreground p-3 rounded-lg max-w-[80%] break-words shadow-sm'>
                     <p className='font-mono text-sm font-medium'>
                       {message.content}
                     </p>
@@ -52,7 +52,7 @@ const ChatComponent = () => {
               {message.role === "assistant" && (
                 <div className='w-full flex justify-start items-start'
                 > 
-                  <div className='text-white p-3 rounded-lg max-w-[80%] break-words shadow-sm'>
+                  <div className='text-foreground p-3 rounded-lg max-w-[80%] break-words shadow-sm'>
                     <p className='font-mono text-sm font-medium'>
                       {message.content || (isLoading && "AI is thinking...")}
                     </p>

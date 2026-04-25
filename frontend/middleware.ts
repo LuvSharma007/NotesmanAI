@@ -4,6 +4,8 @@ export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
         const cookie = request.cookies.get("notesman.session_token")?.value;
+        console.log("notesman.seesion_token:",cookie);
+        
         if(!cookie){
             console.log("Unauthorized Access");        
             return NextResponse.redirect(new URL("/login",request.url))

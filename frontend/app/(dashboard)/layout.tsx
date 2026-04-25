@@ -1,5 +1,4 @@
 "use client"
-import InputField from "@/components/InputField";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ChatsProvider } from "@/context/chatsContext";
 import { SourcesProvider } from "@/context/SourceContext";
@@ -9,10 +8,10 @@ import React from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import Header from "@/components/Header";
 
-export default function ChatLayout({children}:{children:React.ReactNode}){
+export default function ChatLayout({ children }: { children: React.ReactNode }) {
 
-    return (
-      <QueryProvider> 
+  return (
+    <QueryProvider>
       <SourcesProvider>
         <UploadDialogProvider>
           <ChatsProvider>
@@ -33,7 +32,7 @@ export default function ChatLayout({children}:{children:React.ReactNode}){
         </UploadDialogProvider>
       </SourcesProvider>
     </QueryProvider>
-    )
+  )
 }
 
 

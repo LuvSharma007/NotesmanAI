@@ -1,10 +1,5 @@
 'use client'
 import React from 'react'
-import 'swiper/css'
-import 'swiper/css/autoplay'
-import 'swiper/css/navigation'
-import 'swiper/css/pagination'
-import 'swiper/css/effect-coverflow'
 import Link from 'next/link'
 import { ArrowRight, Rocket, } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -31,7 +26,7 @@ export default function HeroSection() {
                                 </Link>
 
                                 <h1 className="mt-8 text-6xl font-semibold md:text-5xl xl:text-5xl xl:[line-height:1.125] font-sans">
-                                    Your personal AI knowledge companion
+                                    Your personal AI knowledge assistant
                                 </h1>
                                 <p className="mx-auto mt-8 hidden max-w-2xl text-wrap text-lg sm:block font-sans">Ask questions, get summaries, and turn raw notes into actionable knowledge</p>
                             
