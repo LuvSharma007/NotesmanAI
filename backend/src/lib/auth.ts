@@ -37,7 +37,7 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL:"http://localhost:4000",
+    baseURL:"https://notesman.in",
 
     emailAndPassword: {
         enabled: true,
@@ -92,30 +92,30 @@ export const auth = betterAuth({
         expiresIn: 60 * 60 * 24 * 60, // 2 month
         updateAge: 60 * 60 * 24 // 1 day before session is expires
     },
-    // advanced: {
-    //     crossSubDomainCookies:{
-    //         enabled:true,
-    //         domain:''
-    //     },
-    //     cookiePrefix:"notesman",
-    //     ipAddress:{
-    //         ipAddressHeaders:["x-forwarded-for"]
-    //     },
-    //     defaultCookieAttributes:{
-    //         sameSite:'Lax',
-    //         secure:true,
-    //         httpOnly:true
-    //     }
-    // },
     advanced: {
-        cookiePrefix: "notesman",
-        useSecureCookies: false, // Set to false in development with http://localhost
-        defaultCookieAttributes: {
-            sameSite: 'lax',
-            secure: false, // Must be false for http://localhost
-            httpOnly: true
+        crossSubDomainCookies:{
+            enabled:true,
+            domain:''
+        },
+        cookiePrefix:"notesman",
+        ipAddress:{
+            ipAddressHeaders:["x-forwarded-for"]
+        },
+        defaultCookieAttributes:{
+            sameSite:'Lax',
+            secure:true,
+            httpOnly:true
         }
     },
+    // advanced: {
+    //     cookiePrefix: "notesman",
+    //     useSecureCookies: false, // Set to false in development with http://localhost
+    //     defaultCookieAttributes: {
+    //         sameSite: 'lax',
+    //         secure: false, // Must be false for http://localhost
+    //         httpOnly: true
+    //     }
+    // },
     rateLimit: {
         window: 60, // time window in seconds
         max: 10, // ,ax requests in the window
@@ -128,12 +128,12 @@ export const auth = betterAuth({
         }
     },
     trustedOrigins: [
-        "http://localhost:3000",
-        "http://localhost:4000",
-        "http://frontend:3000",
-        "http://api:4000",
+        // "http://localhost:3000",
+        // "http://localhost:4000",
+        // "http://frontend:3000",
+        // "http://api:4000",
         // "http://76.13.242.203:3000",
         // "http://76.13.242.203:4000",
-        // "https://notesman.in"
+        "https://notesman.in"
     ],
 });
