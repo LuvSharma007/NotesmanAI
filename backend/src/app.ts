@@ -11,6 +11,8 @@ app.use(
             // 'http://localhost:3000' 
             // ,'http://frontend:3000',
             'https://notesman.in',
+            'http://187.127.156.129.in',
+
         ],
         methods:["GET","POST","PUT","DELETE"],
         credentials:true
