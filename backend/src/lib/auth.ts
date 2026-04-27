@@ -37,7 +37,7 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL:"https://notesman.in",
+    baseURL:process.env.BETTER_AUTH_URL,
 
     emailAndPassword: {
         enabled: true,
@@ -95,17 +95,12 @@ export const auth = betterAuth({
     advanced: {
         crossSubDomainCookies:{
             enabled:true,
-            domain:''
+            domain:'notesman.in'
         },
         cookiePrefix:"notesman",
         ipAddress:{
             ipAddressHeaders:["x-forwarded-for"]
         },
-        defaultCookieAttributes:{
-            sameSite:'Lax',
-            secure:true,
-            httpOnly:true
-        }
     },
     // advanced: {
     //     cookiePrefix: "notesman",
