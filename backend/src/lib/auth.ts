@@ -37,7 +37,7 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL:"http://187.127.156.129:4000",
+    baseURL:"https://notesman.in",
 
     emailAndPassword: {
         enabled: true,
