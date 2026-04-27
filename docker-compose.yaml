@@ -34,21 +34,21 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot
+      # - ./certbot/conf:/etc/letsencrypt:ro
+      # - ./certbot/www:/var/www/certbot
     depends_on:
       - redis-stack
       - frontend
     networks:
       - notesmanAI-network
 
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap extt TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  # certbot:
+  #   image: certbot/certbot
+  #   container_name: certbot
+  #   volumes:
+  #     - ./certbot/conf:/etc/letsencrypt
+  #     - ./certbot/www:/var/www/certbot
+  #   entrypoint: "/bin/sh -c 'trap extt TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   api:
     <<: *default-logging
@@ -58,8 +58,8 @@ services:
     env_file: ./backend/.env
     depends_on:
     - redis-stack
-    ports:
-    - "4000:4000"
+    # ports:
+    # - "4000:4000"
     networks:
     - notesmanAI-network
     restart: unless-stopped
@@ -171,8 +171,8 @@ services:
         - NEXT_PUBLIC_REDIRECT_API_URL=${NEXT_PUBLIC_REDIRECT_API_URL}
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     env_file: .env
-    ports:
-    - "3000:3000"
+    # ports:
+    # - "3000:3000"
     networks:
     - notesmanAI-network
     depends_on:
