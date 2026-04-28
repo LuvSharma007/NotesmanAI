@@ -95,8 +95,9 @@ export const auth = betterAuth({
     advanced: {
         crossSubDomainCookies:{
             enabled:true,
-            domain:'notesman.in'
+            domain:'.notesman.in'
         },
+        useSecureCookies:false,
         cookiePrefix:"notesman",
         ipAddress:{
             ipAddressHeaders:["x-forwarded-for"]
