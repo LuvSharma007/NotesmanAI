@@ -67,7 +67,7 @@ export const auth = betterAuth({
             prompt: "select_account",
             clientId: process.env.GOOGLE_CLIENT_ID as string,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-            redirectURI: "https://notesman.in/api/auth/callback/google"
+            redirectURI: "http://notesman.in/api/auth/callback/google"
         },
     },
     session: {
@@ -129,6 +129,6 @@ export const auth = betterAuth({
         // "http://api:4000",
         "http://187.127.156.129:3000",
         "http://187.127.156.129:4000",
-        "https://notesman.in"
+        "http://notesman.in"
     ],
 });
