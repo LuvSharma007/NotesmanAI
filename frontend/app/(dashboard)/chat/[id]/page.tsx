@@ -11,7 +11,7 @@ export default function ChatDetailPage() {
         </div>
       </div>
       
-      <div className="flex-shrink-0 w-full bg-background pb-4">
+      <div className="flex-shrink-0 w-full bg-background pb-2">
         <InputField />
       </div>
     </div>
