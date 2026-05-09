@@ -95,7 +95,7 @@ export const auth = betterAuth({
     advanced: {
         crossSubDomainCookies:{
             enabled:true,
-            domain:'.notesman.in'
+            domain:'notesman.in'
         },
         useSecureCookies:true,
         trustedProxyHeaders:true,
