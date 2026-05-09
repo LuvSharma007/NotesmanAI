@@ -97,7 +97,7 @@ export const auth = betterAuth({
             enabled:true,
             domain:'.notesman.in'
         },
-        useSecureCookies:false,
+        useSecureCookies:true,
         cookiePrefix:"notesman",
         ipAddress:{
             ipAddressHeaders:["x-forwarded-for"]
