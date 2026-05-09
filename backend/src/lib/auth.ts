@@ -67,7 +67,7 @@ export const auth = betterAuth({
             prompt: "select_account",
             clientId: process.env.GOOGLE_CLIENT_ID as string,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-            redirectURI: "http://notesman.in/api/auth/callback/google"
+            redirectURI: "https://notesman.in/api/auth/callback/google"
         },
     },
     session: {
@@ -103,15 +103,6 @@ export const auth = betterAuth({
             ipAddressHeaders:["x-forwarded-for"]
         },
     },
-    // advanced: {
-    //     cookiePrefix: "notesman",
-    //     useSecureCookies: false, // Set to false in development with http://localhost
-    //     defaultCookieAttributes: {
-    //         sameSite: 'lax',
-    //         secure: false, // Must be false for http://localhost
-    //         httpOnly: true
-    //     }
-    // },
     rateLimit: {
         window: 60, // time window in seconds
         max: 10, // ,ax requests in the window
@@ -128,8 +119,8 @@ export const auth = betterAuth({
         // "http://localhost:4000",
         // "http://frontend:3000",
         // "http://api:4000",
-        "http://187.127.156.129:3000",
-        "http://187.127.156.129:4000",
-        "http://notesman.in"
+        // "http://187.127.156.129:3000",
+        // "http://187.127.156.129:4000",
+        "https://notesman.in"
     ],
 });
