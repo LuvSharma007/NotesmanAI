@@ -3,8 +3,8 @@ import { NextResponse,NextRequest } from "next/server";
 export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
-        const cookie = request.cookies.get("notesman.session_token")?.value;
-        console.log("notesman.seesion_token:",cookie);
+        const cookie = request.cookies.get("__Secure-notesman.session_token")?.value;
+        console.log("__Secure-notesman.session_token:",cookie);
         
         if(!cookie){
             console.log("Unauthorized Access");        
