@@ -98,10 +98,16 @@ export const auth = betterAuth({
             domain:'.notesman.in'
         },
         useSecureCookies:true,
+        trustedProxyHeaders:true,
         cookiePrefix:"notesman",
         ipAddress:{
             ipAddressHeaders:["x-forwarded-for"]
         },
+        defaultCookieAttributes:{
+            secure:true,
+            sameSiteL:'lax',
+            httpOnly:true
+        }
     },
     rateLimit: {
         window: 60, // time window in seconds
