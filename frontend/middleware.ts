@@ -1,13 +1,9 @@
 import { NextResponse,NextRequest } from "next/server";
-import {getSessionCookie} from 'better-auth/cookies'
-
+import { cookies } from "next/headers";
 export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
-        const cookie = getSessionCookie(request,{
-            cookiePrefix:"notesman",
-            cookieName:"session_token"
-        })
+        const cookie = (await cookies()).get("notesman.session_token")        
         console.log("cookie:",cookie);
         
         
