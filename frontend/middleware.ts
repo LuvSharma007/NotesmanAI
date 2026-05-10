@@ -3,7 +3,7 @@ export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
 
-        const cookie = request.cookies.get("notesman.session_token");
+        const cookie = request.cookies.get("__Secure-notesman.session_token");
         console.log("Cookie:", cookie);
         
         if(!cookie){
