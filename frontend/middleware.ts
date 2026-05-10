@@ -1,10 +1,15 @@
 import { NextResponse,NextRequest } from "next/server";
+import {getSessionCookie} from 'better-auth/cookies'
 
 export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
-        const cookie = request.cookies.get("__Secure-notesman.session_token")?.value;
-        console.log("__Secure-notesman.session_token:",cookie);
+        const cookie = getSessionCookie(request,{
+            cookiePrefix:"notesman",
+            cookieName:"session_token"
+        })
+        console.log("cookie:",cookie);
+        
         
         if(!cookie){
             console.log("Unauthorized Access");        
