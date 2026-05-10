@@ -1,11 +1,10 @@
 import { NextResponse,NextRequest } from "next/server";
-import { cookies } from "next/headers";
 export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
-        const cookie = (await cookies()).get("notesman.session_token")        
-        console.log("cookie:",cookie);
-        
+
+        const cookie = request.cookies.get("notesman.session_token");
+        console.log("Cookie:", cookie);
         
         if(!cookie){
             console.log("Unauthorized Access");        
