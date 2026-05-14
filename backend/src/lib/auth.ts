@@ -8,6 +8,7 @@ const mongoDBConnectionString = process.env.MONGODB_CONNECTION_STRING
 const mongoDbName = process.env.MONGODB_NAME
 const googleClientId = process.env.GOOGLE_CLIENT_ID
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
+const isProduction = process.env.NODE_ENV
 
 
 if (!mongoDBConnectionString || !googleClientId || !googleClientSecret) {
@@ -37,7 +38,7 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL:process.env.NODE_ENV === "production" ? process.env.BETTER_AUTH_URL : "http://localhost:3000" ,
+    baseURL: isProduction === "production" ? process.env.BETTER_AUTH_URL : "http://localhost:3000" ,
 
     emailAndPassword: {
         enabled: true,
@@ -95,17 +96,17 @@ export const auth = betterAuth({
     advanced: {
         crossSubDomainCookies:{
             enabled:true,
-            domain:'notesman.in'
+            domain: isProduction === 'production' ? 'notesman.in' : undefined
         },
-        useSecureCookies:true,
+        useSecureCookies:isProduction === 'production' ? true : false,
         trustedProxyHeaders:true,
         cookiePrefix:"notesman",
         ipAddress:{
             ipAddressHeaders:["x-forwarded-for"]
         },
         defaultCookieAttributes:{
-            secure:true,
-            sameSite:'Lax',
+            secure:isProduction === 'production' ? true : false,
+            sameSite:isProduction === 'production' ? 'Lax' : 'None',
             httpOnly:true
         }
     },
