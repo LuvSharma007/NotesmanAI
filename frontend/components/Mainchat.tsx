@@ -9,7 +9,7 @@ const Mainchat = () => {
 
   const { sources, toggleSource, selectedSources, loading } = useSourcesContext()
   const { openUploadDialog } = useUploadDialog()
-  console.log(sources);
+  // console.log(sources);
 
 
 
