@@ -87,7 +87,7 @@ export const useChats = () => {
             }
 
             const convId = res.headers.get('X-Conversation-Id')
-            console.log("ConvId:", convId);
+            // console.log("ConvId:", convId);
 
             if (convId && isNewChat) {
                 const newChat = {
