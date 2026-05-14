@@ -3,7 +3,7 @@ export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
 
-        const cookie = request.cookies.get("__Secure-notesman.session_token");
+        const cookie = request.cookies.get( process.env.NODE_ENV === "production" ? "__Secure-notesman.session_token" : "notesman.session_token");
         
         if(!cookie){
             console.log("Unauthorized Access");        
