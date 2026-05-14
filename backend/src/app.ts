@@ -5,15 +5,21 @@ import cors from 'cors';
 
 const app = express();
 
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? ["https://notesman.in"]
+    : ["http://localhost:3000" ,"http://frontend:3000","http://187.127.156.129:3000"]
+
 app.use(
     cors({
-        origin:[
-            // 'http://localhost:3000' 
-            // ,'http://frontend:3000',
-            'https://notesman.in',
-            // 'http://187.127.156.129:3000',
-
-        ],
+        origin: function (origin,cb){
+            if(!origin) return cb(null,true)
+            
+                if(allowedOrigins.indexOf(origin) !==-1){
+                    cb(null,true);
+                }else{
+                    cb(new Error("Not allowed by CORS"))
+                }
+        },
         methods:["GET","POST","PUT","DELETE"],
         credentials:true
     })

@@ -37,7 +37,7 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL:process.env.BETTER_AUTH_URL,
+    baseURL:process.env.NODE_ENV === "production" ? process.env.BETTER_AUTH_URL : "localhost:3000" ,
 
     emailAndPassword: {
         enabled: true,
@@ -121,10 +121,10 @@ export const auth = betterAuth({
         }
     },
     trustedOrigins: [
-        // "http://localhost:3000",
-        // "http://localhost:4000",
-        // "http://frontend:3000",
-        // "http://api:4000",
+        "http://localhost:3000",
+        "http://localhost:4000",
+        "http://frontend:3000",
+        "http://api:4000",
         // "http://187.127.156.129:3000",
         // "http://187.127.156.129:4000",
         "https://notesman.in"
