@@ -144,9 +144,9 @@ services:
     build:
       context: ./frontend
       args:
-      - NEXT_PUBLIC_AUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_APP_ENV=development
+      - INTERNAL_BACKEND_URL=http://api:4000
     environment:
-    - INTERNAL_BACKEND_URL=http://api:4000
     - NEXT_PUBLIC_AUTH_URL=http://localhost:3000
     ports:
     - "3000:3000"
