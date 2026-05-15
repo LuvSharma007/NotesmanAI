@@ -170,6 +170,8 @@ services:
       args:
         - NEXT_PUBLIC_REDIRECT_API_URL=${NEXT_PUBLIC_REDIRECT_API_URL}
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_APP_ENV=production        
+        - INTERNAL_BACKEND_URL=http://api:4000 
     env_file: ./frontend/.env
     ports:
     - "3000:3000"

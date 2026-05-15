@@ -25,6 +25,9 @@ COPY . .
 ARG INTERNAL_BACKEND_URL=https://notesman.in
 ENV INTERNAL_BACKEND_URL=$INTERNAL_BACKEND_URL
 
+ARG NEXT_PUBLIC_APP_ENV=production
+ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
+
 RUN npm run build
 
 # Production image, copy all the files and run next
