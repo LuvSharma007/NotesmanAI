@@ -5,7 +5,7 @@ export const authClient = createAuthClient({
     plugins: [ 
         usernameClient(),
     ], 
-    baseURL: process.env.NODE_ENV === "production" ? "https://notesman.in" : "http://localhost:4000",
+    baseURL: "/",
     trustedOrigins: [
 		'http://localhost:4000',
 		'http://api:4000',

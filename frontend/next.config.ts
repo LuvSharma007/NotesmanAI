@@ -6,14 +6,16 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds:true
   },
   async rewrites() {
+    const urlCompitable = process.env.INTERNAL_BACKEND_URL || "https://notesman.in"
+
     return [
       {
         source:"/api/v1/:path*",
-        destination:"http://api:4000/api/v1/:path*"
+        destination: `${urlCompitable}/api/v1/:path*`
       },
       {
 				source: "/api/auth/:path*",
-				destination: "http://api:4000/api/auth/:path*"
+				destination: `${urlCompitable}/api/auth/:path*`
 			}
     ]
   },

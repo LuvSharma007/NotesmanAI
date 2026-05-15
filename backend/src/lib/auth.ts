@@ -38,7 +38,7 @@ const createResetEmailTemplate = (resetUrl: string, userName: string) => {
 
 export const auth = betterAuth({
     database: mongodbAdapter(mongodb),
-    baseURL: isProduction === "production" ? process.env.BETTER_AUTH_URL : "http://localhost:3000" ,
+    baseURL: process.env.NODE_ENV === "production" ? process.env.BETTER_AUTH_URL : "http://localhost:4000" ,
 
     emailAndPassword: {
         enabled: true,
@@ -106,7 +106,7 @@ export const auth = betterAuth({
         },
         defaultCookieAttributes:{
             secure:isProduction === 'production' ? true : false,
-            sameSite:isProduction === 'production' ? 'Lax' : 'None',
+            sameSite:isProduction === 'production' ? 'None' : 'Lax',
             httpOnly:true
         }
     },

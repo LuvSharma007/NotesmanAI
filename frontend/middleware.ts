@@ -2,7 +2,8 @@ import { NextResponse,NextRequest } from "next/server";
 export async function middleware(request:NextRequest){
     try {
         console.log("Middleware runned",);
-
+        console.log(process.env.NODE_ENV);
+        
         const cookie = request.cookies.get( process.env.NODE_ENV === "production" ? "__Secure-notesman.session_token" : "notesman.session_token");
         
         if(!cookie){
