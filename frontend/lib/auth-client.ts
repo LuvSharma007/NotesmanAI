@@ -1,12 +1,6 @@
 import { createAuthClient } from "better-auth/react"  // Change this line
 import { usernameClient } from "better-auth/client/plugins"
 
-console.log("NODE_ENV in autheClient:",process.env.NODE_ENV);
-
-const appEnv = process.env.NEXT_PUBLIC_APP_ENV;
-console.log("APP_ENV in authClient:", appEnv);
-
-
 export const authClient = createAuthClient({
     plugins: [ 
         usernameClient(),

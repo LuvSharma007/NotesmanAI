@@ -283,7 +283,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
 
                         bulkJobs.push({
                             name: "batchesForText",
-                            data: { data: chunk, fileId, name, qdrantCollection , 
+                            data: { data: chunk, fileId, name, qdrantCollection 
                                 // summaryOfChunk , keywords
                             },
                             opts: { removeOnComplete: true, removeOnFail: true }

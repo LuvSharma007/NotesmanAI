@@ -28,7 +28,9 @@ export const getMessage = async(req:Request,res:Response)=>{
         //     })
         // }
         console.log("Cache miss");        
-        const userMessages = await messageModel.find({userId,conversationId})
+        const userMessages = await messageModel.find({ userId, conversationId })
+            .sort({ createdAt: 1})
+            .lean();            
         if(userMessages.length === 0){
             return res.status(200).json({
                 success:true,

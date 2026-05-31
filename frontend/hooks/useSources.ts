@@ -27,12 +27,11 @@ export const useSource = () => {
     
     const [loading, setLoading] = useState(false)
     const [selectedSources, setSelectedSources] = useState<Source[]>([])
-    const [isGlobeActive , setIsGlobeActive] = useState(false)
 
     const loadSources = async ()=>{
         try {
             const skip = 0;
-            const response = await fetch(`/api/v1/users/getSources?skip=${skip}`,{
+            const response = await fetch(`/api/v1/files/getSources?skip=${skip}`,{
                 method:'GET',
                 credentials:"include",
             })
@@ -73,7 +72,7 @@ export const useSource = () => {
             const formData = new FormData()
             formData.append("file", file)
 
-            const res = await fetch(`/api/v1/users/upload`, {
+            const res = await fetch(`/api/v1/files/upload`, {
                 method: "POST",
                 body: formData,
                 credentials: "include"
@@ -151,7 +150,7 @@ export const useSource = () => {
     const deleteSource = async (id: string, type: "file" | "url") => {
         try {
 
-            const res = await fetch(`/api/v1/users/delete-file/${id}?sourceType=${type}`, {
+            const res = await fetch(`/api/v1/files/delete-file/${id}?sourceType=${type}`, {
                 method: "DELETE",
                 credentials: "include"
             })
@@ -197,8 +196,6 @@ export const useSource = () => {
         selectedSources,
         selectSource,
         setSelectedSources,
-        isGlobeActive,
-        setIsGlobeActive,
     }
 
 }

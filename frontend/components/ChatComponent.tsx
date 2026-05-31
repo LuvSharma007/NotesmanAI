@@ -3,6 +3,9 @@ import { useChatsContext } from '@/context/chatsContext'
 import { useSourcesContext } from '@/context/SourceContext'
 import { useParams } from 'next/navigation'
 import React, { useEffect } from 'react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { ChevronDown } from 'lucide-react'
+import { ThinkingMessage } from './thinking-message'
 
 const ChatComponent = () => {
 
@@ -49,12 +52,15 @@ const ChatComponent = () => {
                   </div>
                 </div>
               )}
+              {message.role === "thinking" && (
+                <ThinkingMessage content={message.content} />
+              )}
               {message.role === "assistant" && (
                 <div className='w-full flex justify-start items-start'
                 > 
                   <div className='text-foreground p-3 rounded-lg max-w-[80%] break-words shadow-sm'>
                     <p className='font-mono text-sm font-medium'>
-                      {message.content || (isLoading && "AI is thinking...")}
+                      {message.content}
                     </p>
                   </div>
                 </div>

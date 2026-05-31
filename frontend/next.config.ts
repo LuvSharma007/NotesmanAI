@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@lobehub/icons', '@lobehub/ui'],
   output:"standalone",
   eslint:{
     ignoreDuringBuilds:true
+  },
+  compiler:{
+    removeConsole:false,
   },
   async rewrites() {
     const urlCompitable = process.env.INTERNAL_BACKEND_URL || "https://notesman.in"

@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import messageModel from "../../models/messages.model.js";
+import { tool } from "@openai/agents";
+import z from "zod";
 
 // export const getConversation = tool({
 //     name:"get_conversation",
@@ -8,31 +10,29 @@ import messageModel from "../../models/messages.model.js";
 //     async execute(_,toolContext:any){
 //         console.log("getConversation tool called");
 //         const {sourceIds,userId , finalConversationId} = toolContext.context
-//         console.log("SourcesIds",sourceIds);
+//         // console.log("SourcesIds",sourceIds);
 //         console.log("userID",userId);
 //         console.log("ConversationID",finalConversationId);
 
-
-        
-//         if(sourceIds.length === 0){
-//             throw new Error("id not found")
+//         // if(sourceIds.length === 0){
+//         //     throw new Error("id not found")
+//         // }
+//         if(!userId){
+//             throw new Error("userId not found")
 //         }
-        // if(!userId){
-        //     throw new Error("userId not found")
-        // }
 
-        // const messages = await messageModel.find({
-        //     userId,
-        //     conversationId:finalConversationId
-        // })
-        // .sort({createdAt:1})
-        // .select('role content -_id')
-        // .lean()
-        // .limit(20)
+//         const messages = await messageModel.find({
+//             userId,
+//             conversationId:finalConversationId
+//         })
+//         .sort({createdAt:1})
+//         .select('role content -_id')
+//         .lean()
+//         .limit(20)
 
-        // console.log("messages from getConversation:",messages);
+//         console.log("messages from getConversation:",messages);
         
-        // return messages     
+//         return messages     
 
 //     }
 // })
@@ -55,7 +55,7 @@ export const getConversation = async (userId:string,conversationId:mongoose.Type
         .lean()
         .limit(20)
 
-        console.log("messages from getConversation:",messages);
+        // console.log("messages from getConversation:",messages);
         
         return messages     
     } catch (error:any) {

@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@animateicons/react": "^0.3.3",
+    "@lobehub/icons": "^5.8.0",
+    "@lobehub/ui": "^5.14.0",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-label": "^2.1.7",

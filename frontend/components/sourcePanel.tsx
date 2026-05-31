@@ -62,7 +62,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
         formData.append("file", file)
 
         // Example: Adjust this API endpoint to your backend route
-        const res = await fetch(`/api/v1/users/upload`, {
+        const res = await fetch(`/api/v1/files/upload`, {
           method: "POST",
           body: formData,
           credentials: "include"
@@ -99,7 +99,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
   const handleDeleteFile = async (id: string, sourceType: "file" | "url") => {
     try {
       setDeleting((prev) => [...prev, id]);
-      const res = await fetch(`/api/v1/users/delete-file/${id}?sourceType=${sourceType}`, {
+      const res = await fetch(`/api/v1/files/delete-file/${id}?sourceType=${sourceType}`, {
         method: 'DELETE',
         credentials: "include",
       })
@@ -164,7 +164,7 @@ export function SourcePanel({ onSourceSelect, onSourceDelete }: SourcePanelProps
     const loadSources = async () => {
       try {
         const [allFiles, allUrls] = await Promise.all([
-          fetch("/api/v1/users/get-files", { credentials: "include" }),
+          fetch("/api/v1/files/get-files", { credentials: "include" }),
           fetch("/api/v1/url/getAllUrls", { credentials: "include" })
         ])
                

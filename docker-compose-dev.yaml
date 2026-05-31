@@ -28,8 +28,10 @@ services:
 
   api:
     <<: *default-logging
-    build: ./backend
-    command: node dist/index.js
+    build: 
+      context: ./backend
+      target: development
+    command: npm run dev
     container_name: api
     env_file: ./backend/.env
     depends_on:
@@ -38,62 +40,92 @@ services:
     - "4000:4000"
     networks:
     - notesmanAI-network
+    - shared-network
+    dns:                  
+      - 8.8.8.8           
+      - 1.1.1.1           
     restart: unless-stopped
     environment:
     - REDIS_HOST=redis-stack
     volumes:
+    - ./backend:/app
+    - /app/node_modules
     - temp_files:/app/public/temp
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   upload-worker:
     <<: *default-logging
-    build: ./backend
+    build: 
+      context: ./backend
+      target: development
     command: npm run worker:upload
     container_name: upload-worker
     env_file: ./backend/.env
-    depends_on:
-    - api
-    - redis-stack
     networks:
     - notesmanAI-network
     restart: always
     environment:
     - REDIS_HOST=redis-stack
     volumes:
+    - ./backend:/app
+    - /app/node_modules
     - temp_files:/app/public/temp
+    depends_on:
+    - api
+    - redis-stack
 
   qdrant-worker:
     <<: *default-logging
-    build: ./backend
+    build: 
+      context: ./backend
+      target: development
     command: npm run worker:qdrant
     container_name: qdrant-worker
     env_file: ./backend/.env
-    depends_on:
-    - api
-    - redis-stack
     networks:
     - notesmanAI-network
+    dns:               
+      - 8.8.8.8
+      - 1.1.1.1
     restart: always
     environment:
     - REDIS_HOST=redis-stack
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+    - api
+    - redis-stack
 
   delete-worker:
     <<: *default-logging
-    build: ./backend
+    build: 
+      context: ./backend
+      target: development
     command: npm run worker:delete
     container_name: delete-worker
     env_file: ./backend/.env
-    depends_on:
-    - api
-    - redis-stack
     networks:
     - notesmanAI-network
+    dns:                
+      - 8.8.8.8
+      - 1.1.1.1
     restart: always
     environment:
     - REDIS_HOST=redis-stack
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+    - api
+    - redis-stack
 
   save-message-worker:
     <<: *default-logging
-    build: ./backend
+    build: 
+      context: ./backend
+      target: development
     command: npm run worker:saveMessage
     container_name: save-message-worker
     env_file: ./backend/.env
@@ -105,61 +137,110 @@ services:
     restart: always
     environment:
     - REDIS_HOST=redis-stack
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
 
   get-message-worker:
     <<: *default-logging
-    build: ./backend
+    build: 
+      context: ./backend
+      target: development
     command: npm run worker:getMessage
     container_name: get-message-worker
     env_file: ./backend/.env
-    depends_on:
-    - api
-    - redis-stack
-    networks:
-    - notesmanAI-network
-    restart: always
-    environment:
-    - REDIS_HOST=redis-stack
-
-  url-worker:
-    <<: *default-logging
-    build: ./backend
-    command: npm run worker:url
-    container_name: url-worker
-    env_file: ./backend/.env
-    depends_on:
-    - api
-    - redis-stack
     networks:
     - notesmanAI-network
     restart: always
     environment:
     - REDIS_HOST=redis-stack
     volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+    - api
+    - redis-stack
+
+  url-worker:
+    <<: *default-logging
+    build: 
+      context: ./backend
+      target: development
+    command: npm run worker:url
+    container_name: url-worker
+    env_file: ./backend/.env
+    networks:
+    - notesmanAI-network
+    dns:                 
+      - 8.8.8.8
+      - 1.1.1.1
+    restart: always
+    environment:
+    - REDIS_HOST=redis-stack
+    volumes:
+    - ./backend:/app
+    - /app/node_modules
     - temp_files:/app/public/temp
+    depends_on:
+    - api
+    - redis-stack
+
+  delete-chat-worker:
+    <<: *default-logging
+    build: 
+      context: ./backend
+      target: development
+    command: npm run worker:deleteChat
+    container_name: delete-chat-worker
+    env_file: ./backend/.env
+    networks:
+    - notesmanAI-network
+    dns:                  
+      - 8.8.8.8
+      - 1.1.1.1
+    restart: always
+    environment:
+    - REDIS_HOST=redis-stack
+    volumes:
+    - ./backend:/app 
+    - /app/node_modules
+    depends_on:
+    - api
+    - redis-stack
 
 
   frontend:
     <<: *default-logging
     build:
       context: ./frontend
+      dockerfile: Dockerfile.dev
       args:
-      - NEXT_PUBLIC_APP_ENV=development
-      - INTERNAL_BACKEND_URL=http://api:4000
+        - NEXT_PUBLIC_APP_ENV=development
+        - INTERNAL_BACKEND_URL=http://api:4000
+    command: npm run dev
     environment:
     - NEXT_PUBLIC_AUTH_URL=http://localhost:3000
+    - INTERNAL_BACKEND_URL=http://api:4000 
+    - NODE_OPTIONS=--enable-source-maps
     ports:
     - "3000:3000"
     networks:
     - notesmanAI-network
+    volumes:
+      - ./frontend:/app          
+      - /app/node_modules
+      # - frontend_node_modules:/app/node_modules     
+      - /app/.next  
     depends_on:
     - redis-stack
       
-
 volumes:
   temp_files:
   redis_data:
+  # frontend_node_modules:
 
 networks:
   notesmanAI-network:
     driver: bridge
+  shared-network:
+    external: true

@@ -8,13 +8,13 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Message {
     _id: string;
-    role: "user" | "assistant"
+    role: "user" | "assistant" | "thinking"
     content: string;
 }
 
 interface MessageResponse {
     _id: string,
-    role: "user" | "assistant",
+    role: "user" | "assistant" | "thinking"
     content: string,
 }
 
@@ -23,51 +23,56 @@ export const useChats = () => {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [messages, setMessages] = useState<Message[]>([])
+    const [isThinking,setIsThinking] = useState(false);
 
     const [activeChat, setActiveChat] = useState<string | null>(null)
     const params = useParams();
     const currentActiveId = params.id
     // console.log("currentActiveId:",currentActiveId);
-    
+
 
     const { selectedSources, setSelectedSources } = useSourcesContext()
     const router = useRouter()
     const queryClient = useQueryClient();
 
-    const doChat = async (conversationID: string) => {
+    const doChat = async (conversationID: string,isWebSearch:boolean) => {
 
         const trimmedInput = input.trim();
-        if (!trimmedInput) {
-            return;
-        }
+    if (!trimmedInput) {
+        return;
+    }
 
-        setIsLoading(true)
+    setIsLoading(true);
 
-        const userMessage: Message = {
-            _id: uuidv4(),
-            content: trimmedInput,
-            role: "user"
-        };
+    const userMsgId = uuidv4();
+    const thinkingMsgId = uuidv4();
+    const assistantMsgId = uuidv4();
 
-        setMessages((prev) => [...prev, userMessage]);
-        setInput("");
+    const userMessage: Message = {
+        _id: userMsgId,
+        content: trimmedInput,
+        role: "user"
+    };
 
-        const aiMessage: Message = {
-            _id: uuidv4(),
-            content: "",
-            role: "assistant"
-        }
-        setMessages((prev) => [...prev, aiMessage])
+    setInput("");
 
-        const sourceIdsPayload = {
-            sources: selectedSources.map(s => ({
-                sourceId: s._id,
-                sourceType: s.sourceType,
-            }))
-        }
+    setMessages((prevHistory) => [
+        ...prevHistory,                                         
+        userMessage,                                            
+        { _id: thinkingMsgId, content: "", role: "thinking" },  
+        { _id: assistantMsgId, content: "", role: "assistant" }
+    ]);
+
+    const sourceIdsPayload = {
+        sources: selectedSources.map(s => ({
+            sourceId: s._id,
+            sourceType: s.sourceType,
+        }))
+    };
         const isNewChat = !conversationID || conversationID === "new";
         const idToSend = conversationID && conversationID !== "undefined" ? conversationID : "new";
 
+        setIsThinking(true)
         try {
             const res = await fetch(`/api/v1/userchats/c/${idToSend}?isNewChat=${isNewChat}`, {
                 method: "POST",
@@ -78,6 +83,7 @@ export const useChats = () => {
                 body: JSON.stringify({
                     query: trimmedInput,
                     sourceIds: sourceIdsPayload,
+                    isWebSearch
                 })
             })
 
@@ -118,34 +124,82 @@ export const useChats = () => {
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
 
+            let buffer = "";
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
-                const chunk = decoder.decode(value, { stream: true });
+                buffer += decoder.decode(value, { stream: true });
 
-                setMessages((prevMessages) => {
-                    return prevMessages.map((msg) => {
-                        if (msg._id === aiMessage._id) {
-                            return { ...msg, content: (msg.content || "") + chunk }
+                // Split by double newline to separate SSE frames safely
+                let boundary = buffer.indexOf("\n\n");
+
+                while (boundary !== -1) {
+                    const rawEvent = buffer.slice(0, boundary).trim();
+                    buffer = buffer.slice(boundary + 2);
+
+                    // Initialize clean payload data placeholder
+                    let eventData = "";
+
+                    // Parse out only lines beginning with 'data: '
+                    const lines = rawEvent.split("\n");
+                    for (const line of lines) {
+                        if (line.startsWith("data: ")) {
+                            // Concatenate data content just in case an event spans multiple data lines
+                            eventData += line.slice(6).trim();
                         }
-                        return msg;
-                    })
-                })
+                    }
+
+                    if (eventData) {
+                        try {
+                            const payload = JSON.parse(eventData);
+                            // Safely pull your data schema out
+                            const message = payload.json;
+
+                            if (message && message.type) {
+                                switch (message.type) {
+                                    case "reasoning-delta": {
+                                        setIsThinking(true);
+                                        const chunk = message.delta ?? "";
+                                        setMessages((prev) =>
+                                            prev.map((msg) =>
+                                                msg.role === "thinking"
+                                                    ? { ...msg, content: (msg.content || "") + chunk }
+                                                    : msg
+                                            )
+                                        );
+                                        break;
+                                    }
+
+                                    case "text-delta": {
+                                        setIsThinking(false)
+                                        const chunk = message.delta ?? "";
+                                        setMessages((prev) =>
+                                            prev.map((msg) =>
+                                                msg.role === "assistant"
+                                                    ? { ...msg, content: (msg.content || "") + chunk }
+                                                    : msg
+                                            )
+                                        );
+                                        break;
+                                    }
+                                    default:
+                                        break;
+                                }
+                            }
+                        } catch (err) {
+                            console.error("Failed to parse clean SSE payload:", err, "Raw Data:", eventData);
+                        }
+                    }
+
+                    // Refresh boundary tracking for the next event in this chunk sequence
+                    boundary = buffer.indexOf("\n\n");
+                }
             }
-
-
-        } catch (error) {
-
-            console.error("Error generating response", error);
-            toast.error("Opps , something went wrong");
-            setMessages((prev) =>
-                prev!.map((msg) =>
-                    msg._id === aiMessage._id ? { ...msg, content: "Error: Failed to fetch response." } : msg
-                )
-            );
         } finally {
             setIsLoading(false);
+            setIsThinking(false);
         }
     }
 
@@ -187,8 +241,8 @@ export const useChats = () => {
 
             const messagesData = await messageResponse.json()
             const sourceData = await sourcesResponse.json()
-            // console.log("messagesData:",messagesData);
-            // console.log("sourceType:",sourceData);
+            console.log("messagesData:", messagesData);
+            console.log("sourceType:", sourceData);
 
             if (messagesData.success && sourceData.success &&
                 messagesData.messages.length === 0 && sourceData.sources.length === 0
@@ -218,7 +272,7 @@ export const useChats = () => {
     }
 
     const deleteChat = async ({ chatId }: { chatId: string }) => {
-        
+
         queryClient.setQueryData(['chats'], (oldData: any) => {
             if (!oldData) return oldData;
             return {
@@ -230,7 +284,7 @@ export const useChats = () => {
             };
         });
 
-        if(chatId === currentActiveId){
+        if (chatId === currentActiveId) {
             router.replace('/chat')
         }
 
@@ -242,6 +296,7 @@ export const useChats = () => {
             if (!res.ok) {
                 toast.error("something went wrong")
             }
+            setMessages([]);
             toast("chat deleted successfully")
 
         } catch (error) {
@@ -250,12 +305,12 @@ export const useChats = () => {
 
     }
 
-    const renameChat = async ()=>{
-        toast.message("feature coming soon")        
+    const renameChat = async () => {
+        toast.message("feature coming soon")
     }
 
-    const shareChat = async ()=>{
-        toast.message("feature coming soon")        
+    const shareChat = async () => {
+        toast.message("feature coming soon")
     }
 
     return {
@@ -271,6 +326,7 @@ export const useChats = () => {
         setMessages,
         deleteChat,
         renameChat,
-        shareChat
+        shareChat,
+        isThinking
     }
 }

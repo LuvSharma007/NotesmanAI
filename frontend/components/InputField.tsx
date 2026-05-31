@@ -1,13 +1,18 @@
 "use client"
 import { useChatsContext } from '@/context/chatsContext'
 import { useSourcesContext } from '@/context/SourceContext'
-import { ArrowRight, Globe, X } from 'lucide-react'
+import { ArrowRight, Globe, X, GlobeLock, ChevronUp } from 'lucide-react'
 import { useParams } from 'next/navigation'
-import React from 'react'
+import React, { useState } from 'react'
+import Models from './Models'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { Button } from './ui/button'
+import { OpenAI } from '@lobehub/icons'
 
 const InputField = () => {
     const { doChat, input, setInput } = useChatsContext();
-    const { selectedSources, toggleSource, isGlobeActive, setIsGlobeActive } = useSourcesContext()
+    const { selectedSources, toggleSource } = useSourcesContext()
+    const [webSearchEnabled, setWebSearchEnabled] = useState<boolean>(false);    
 
     // console.log("selected Sources",selectedSources);
 
@@ -15,11 +20,7 @@ const InputField = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        doChat(id);
-    }
-
-    const handleWebSearch = () => {
-        setIsGlobeActive(!isGlobeActive)
+        doChat(id,webSearchEnabled);
     }
 
     return (
@@ -54,23 +55,46 @@ const InputField = () => {
                                 placeholder='Ask Questions...'
                             />
                             <div className='flex justify-between items-center'>
-                                <div className='ml-2 flex items-center'>
-                                    <button
-                                        type='button'
+                                <div className='ml-2 flex items-center gap-x-5'>
+                                    <div className='border-2 flex items-center justify-center gap-x-1 m-1 rounded-xl'>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="default" className="cursor-pointer text-sm bg-card hover:bg-transparent text-black dark:text-white border-none rounded-xl">
+                                                    <OpenAI/>
+                                                    <span>GPT-5</span>
+                                                    <ChevronUp size={20} className="shrink-0" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
 
-                                        className={`mr-3 p-1 cursor-pointer transition-colors flex items-center justify-center rounded-xl ${isGlobeActive ? 'text-white rounded-xl bg-blue-600' : 'text-gray-600'
+                                            <DropdownMenuContent className="p-3 w-[450px] max-w-[90vw]">
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                    <Models />
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+
+                                    <Button
+                                        type='button'
+                                        variant="outline"
+
+                                        className={`mr-2 p-1 cursor-pointer bg-card transition-colors flex items-center justify-center rounded-xl hover:bg-transparent ${webSearchEnabled ? 'text-black dark:text-white border-primary' : 'text-muted-foreground'
                                             }`}
-                                        onClick={handleWebSearch}
+                                        onClick={() => setWebSearchEnabled(!webSearchEnabled)}
                                     >
-                                        <Globe size={20} />
-                                    </button>
-                                    
+                                        {webSearchEnabled ?
+                                            <Globe size={20} />
+                                            :
+                                            <GlobeLock size={20} />
+                                        }
+                                        <span className='ml-1.5 text-sm'>web search</span>
+                                    </Button>
                                 </div>
 
                                 <button className='hover:opacity-80 mr-3 border-bg-gray-700 cursor-pointer rounded-xl'
                                     type="submit"
                                 >
-                                    <ArrowRight size={28}/>
+                                    <ArrowRight size={28} />
                                 </button>
                             </div>
                         </div>
