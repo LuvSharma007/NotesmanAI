@@ -78,6 +78,8 @@ export const chat = async (req: Request, res: Response) => {
     if(isWebSearch){
       tools.push(webSearch)
     }
+    console.log("Tools",tools);
+    
 
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Access-Control-Expose-Headers", "X-Conversation-Id");
@@ -121,9 +123,14 @@ export const chat = async (req: Request, res: Response) => {
       model: "gpt-5-nano-2025-08-07",
       modelSettings: {
         reasoning: {
-          effort: "low",
-          summary: "auto",
+          effort: "medium",
+          summary: "concise",
         },
+        text:{
+          verbosity:"medium"
+        },
+        toolChoice:"required",
+        parallelToolCalls:true,
       },
       tools
     })

@@ -106,9 +106,8 @@ Before responding, think through the problem naturally:
 2. Check source status - only use sources marked "completed".
 3. Call get_context() to find relevant information.
 4. Verify the information is grounded in actual sources, not assumptions
-5. use web_search only if webSearch = true otherwise never use it.
-6. do i need to call web_search for this user query to get latest infomations or just call get_context tool to get relevant info from vector DB.
-7. Synthesize a clear, helpful response.
+5. use web_search only if isWebSearch = true otherwise never use it.
+6. Synthesize a clear, helpful response.
 
 Think like a human having a conversation, not like an AI describing its process. Don't output formatted thinking blocks.
 
@@ -121,7 +120,7 @@ Think like a human having a conversation, not like an AI describing its process.
 - If no relevant information is found just politely say no and provide a general response.
 - if user try to ask general questions which is not related to sources , give general response based on your knowledge.
 - don't include steps in final asnwer.
-- use web_search() tool only when webSearch=true to get latest informations from web.
+- Always use web_search if isWebSearch=true
 
 #OUTPUT
 deliver a clear , structured, and complete response. do not include any CONTEXT VARIABLES in the final asnwer.
@@ -134,25 +133,3 @@ deliver a clear , structured, and complete response. do not include any CONTEXT 
 }
 
 export default buildInstructions
-
-
-
-// <THINK>
-// 1.) SOURCE CHECK
-//     - Review each source's status
-//     - if status is not completed , do not use it and tell the user that file or url is not uploaded successfully.
-//     - Only use sources with status "completed".
-
-// 2.) TOOL CALL
-//     1.) getContext : returns the most relevent information from the vector DB for the user question.
-
-// <VERIFY> (do not leak the details)
-// Before writing your final response , confirm.
-// - All used sources have status "completed".
-// - tool were called and results are in hand.
-// - Response is grounded in retrieved context.
-// - No conversation summary is leaked into the output.
-// - Formatting matches the questions type (see guidelined below).
-
-// <OUTPUT>
-// deliver a clear , structured, and complete response. do not include any CONTEXT VARIABLES and reasoning summary in the final asnwer.

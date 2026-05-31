@@ -4,7 +4,7 @@ import { openai } from "../../lib/openAIClient.js";
 
 export const webSearch = tool({
     name: "web_search",
-    description: "Returns the latest information from the web.",
+    description: "Use this tool to returns the latest information from the web about the user query.",
     parameters: z.object({ query: z.string() }),
     async execute({ query }) {
         console.log("-------------------------------------------------web search tool called------------------------------------------------------");
@@ -50,7 +50,6 @@ export const webSearch = tool({
             body: JSON.stringify({
                 query: refreshUserQuery,
                 limit: 5,
-                sources: ['web'],
                 timeout: 60000,
                 ignoreInvalidURLs: false,
                 scrapeOptions: {
@@ -62,33 +61,29 @@ export const webSearch = tool({
                     mobile: false,
                     skipTlsVerification: true,
                     timeout: 60000,
-                    parsers: ['pdf'],
                     removeBase64Images: true,
                     blockAds: true,
                     proxy: 'auto',
-                    storeInCache: true,
-                    lockdown: false,
-                    profile: {
-                        saveChanges: true,
-                        name: "NotesmanAI"
-                    }
+                    storeInCache: true
                 }
             })
         };
 
         try {
-            
+
             const res = await fetch('http://firecrawl-api:3002/v1/search', options);
-            
+
             if (!res.ok) {
-                throw new Error(`HTTP error! Status: ${res.status} - ${res.statusText}`);
+                const errorBody = await res.json();
+                console.log("Validation errors:", errorBody.details || errorBody.error);
+                throw new Error(`HTTP ${res.status}: ${JSON.stringify(errorBody)}`);
             }
-            
+
             const data = await res.json();
             console.log("data received:", data);
-            
+
             return data;
-            
+
         } catch (error) {
             console.log("Error web search:", error);
             throw new Error("Web search tool not working");
