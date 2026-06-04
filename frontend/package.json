@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@animateicons/react": "^0.3.3",
+    "@excalidraw/excalidraw": "^0.18.1",
     "@lobehub/icons": "^5.8.0",
     "@lobehub/ui": "^5.14.0",
     "@radix-ui/react-avatar": "^1.1.10",

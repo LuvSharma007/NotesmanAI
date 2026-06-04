@@ -6,6 +6,8 @@ import React, { useEffect } from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { ChevronDown } from 'lucide-react'
 import { ThinkingMessage } from './thinking-message'
+import dynamic from 'next/dynamic'
+import ExcalidrawWrapper from './excalidrawWrapper.tsx'
 
 const ChatComponent = () => {
 
@@ -52,10 +54,15 @@ const ChatComponent = () => {
                   </div>
                 </div>
               )}
-              {message.role === "thinking" && (
-                <ThinkingMessage content={message.content} />
+              {message.role === "assistant" && message.reasoning && (
+                <ThinkingMessage reasoning={message.reasoning} />
               )}
-              {message.role === "assistant" && (
+
+              {message.role === "assistant" && message.diagramData && (
+                  <ExcalidrawWrapper diagramData={message.diagramData}/>
+              )}
+
+              {message.role === "assistant" && message.content && (
                 <div className='w-full flex justify-start items-start'
                 > 
                   <div className='text-foreground p-3 rounded-lg max-w-[80%] break-words shadow-sm'>

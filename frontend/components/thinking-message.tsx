@@ -6,22 +6,25 @@ import { useChatsContext } from '@/context/chatsContext'
 import { useEffect, useState } from 'react'
 
 interface ThinkingMessageProps {
-  content: string
+  reasoning?: string 
 }
 
-export function ThinkingMessage({ content }: ThinkingMessageProps) {
+export function ThinkingMessage({ reasoning }: ThinkingMessageProps) {
 
 
   const {isThinking } = useChatsContext();
-  const [isOpen,setIsOpen] = useState(false);
+  
+  const [isOpen, setIsOpen] = useState(() => {
+  return !isThinking && !!reasoning;
+});
 
   useEffect(() => {
-    if (isThinking && content.length > 0) {
+    if (isThinking && reasoning && reasoning!.length > 0) {
       setIsOpen(true);
     } else if (!isThinking) {
       setIsOpen(false);
     }
-  }, [isThinking, content]);
+  }, [isThinking]);
 
 
   return (
@@ -42,9 +45,9 @@ export function ThinkingMessage({ content }: ThinkingMessageProps) {
 
       {isOpen && (
         <div className='w-full'>
-          <div className='bg-muted/30 p-3 rounded-lg max-w-[80%] border border-border/50'>
+          <div className='bg-muted/30 p-3 rounded-sm w-full'>
             <p className='font-mono text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap'>
-              {content}
+              {reasoning}
             </p>
           </div>
         </div>

@@ -2,10 +2,11 @@ import mongoose, { Document, Model, Schema } from 'mongoose'
 
 export interface IMessage extends Document{
     userId:mongoose.Types.ObjectId,
-    role:"user" | "assistant" | "thinking",
+    role:"user" | "assistant"
     content:string,
     conversationId:mongoose.Types.ObjectId
     reasoning?:string
+    diagramData?:Record<string, any> 
 }
 
 const messageSchema:Schema<IMessage> = new Schema({
@@ -16,7 +17,7 @@ const messageSchema:Schema<IMessage> = new Schema({
     },
     role:{
         type:String,
-        enum:["user","assistant","thinking"],
+        enum:["user","assistant"],
         required:true,
     },
     content:{
@@ -32,8 +33,12 @@ const messageSchema:Schema<IMessage> = new Schema({
         type:String,
         required:false,
         default:null
+    },
+    diagramData:{
+        type:Schema.Types.Mixed,
+        required:false,
+        default:null
     }
-    
 },
 {timestamps:{createdAt:true,updatedAt:false}}
 )

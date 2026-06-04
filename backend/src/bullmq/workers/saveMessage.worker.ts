@@ -12,7 +12,7 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
     console.log("Starting worker");
 
     try {
-        const {conversationId,userId,userMessage,aiMessage,reasoning} = job.data;
+        const {conversationId,userId,userMessage,aiMessage,reasoning , diagramData} = job.data;
         console.log("ConversationId",conversationId);
         console.log("userId",userId);        
         
@@ -33,16 +33,12 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
             {
                 conversationId,
                 userId,
-                role:'thinking',
-                content:reasoning,
-            },
-            {
-                conversationId,
-                userId,
                 role:'assistant',
-                content:aiMessage
+                content:aiMessage,
+                reasoning:reasoning,
+                diagramData:diagramData
             }
-        ]
+        ],
     )
     console.log(`Messages saved in mongoDB`,messageSaved);
 

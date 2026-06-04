@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { getContext } from "../agents/tools/getContextTool.js";
 import { messageQueue } from "../bullmq/queues/message.queue.js";
 import { getConversation } from "../agents/tools/getConversation.js";
-import { Agent, AgentInputItem, run } from "@openai/agents";
+import { Agent, AgentInputItem, MCPServerStreamableHttp, run } from "@openai/agents";
 import conversationModel from "../models/conversation.model.js";
 import mongoose from "mongoose";
 import usageModel from "../models/usage.model.js";
@@ -11,7 +11,6 @@ import buildInstructions from "../lib/systemPrompt.js";
 import fs from 'fs'
 import { ObjectId } from "mongodb";
 import { webSearch } from "../agents/tools/webSearchTool.js";
-import { id } from "zod/v4/locales";
 
 export interface SourceItem {
   sourceId: string;
@@ -29,6 +28,7 @@ interface RequestBody {
 }
 
 export const chat = async (req: Request, res: Response) => {
+  let excalidrawMcp: MCPServerStreamableHttp | null = null;
   try {
     const userId = (req as any).user.id;
     const { query, sourceIds , isWebSearch } = req.body as Partial<RequestBody>;
@@ -80,7 +80,6 @@ export const chat = async (req: Request, res: Response) => {
     }
     console.log("Tools",tools);
     
-
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Access-Control-Expose-Headers", "X-Conversation-Id");
     res.setHeader("X-Conversation-Id", finalConversationId.toString())
@@ -115,7 +114,18 @@ export const chat = async (req: Request, res: Response) => {
       content: query
     });
 
-
+    // MCP
+      excalidrawMcp = new MCPServerStreamableHttp({
+        url: "https://excalidraw-mcp-igrx.vercel.app/mcp",
+        name: "Excalidraw MCP Server",
+      });
+  
+      const MCP = await excalidrawMcp.connect()
+      console.log("---------MCP:",MCP);     
+      console.log(
+        await excalidrawMcp.listTools()
+      );
+       
 
     const notesmanAgent = new Agent({
       name: "NotesmanAI",
@@ -126,13 +136,11 @@ export const chat = async (req: Request, res: Response) => {
           effort: "medium",
           summary: "concise",
         },
-        text:{
-          verbosity:"medium"
-        },
-        toolChoice:"required",
-        parallelToolCalls:true,
+        toolChoice: "required",
+        parallelToolCalls: true,
       },
-      tools
+      tools,
+      mcpServers: [excalidrawMcp]
     })
 
     const result = await run(
@@ -146,85 +154,95 @@ export const chat = async (req: Request, res: Response) => {
 
     let aiMessage = "";
     let reasoning = "";
-    // const stream = result.toTextStream({ compatibleWithNodeStreams: true });
-    // for await (const event of stream) {
-    // console.log("---------Chunk",chunk.toString());      
-
-    // aiMessage += chunk;
-
-    // res.write(chunk)
-    // }
-
-    //--------------------------------------------------------------------
+    let elements = [];
 
     for await (const event of result) {
-  if (event.type !== "raw_model_stream_event") continue;
+        
+      if (event.type !== "raw_model_stream_event") continue;
 
-  const data = event.data;
-  // reasoning phase
-  if (data.type === "model" && data.event) {
-    if (data.event.type === "response.reasoning_summary_text.delta") {
-      const reasoningChunk = data.event.delta || "";
-      process.stdout.write(reasoningChunk);
-      reasoning += reasoningChunk;
+      const data = event.data;
+      // reasoning events
+      if (data.type === "model" && data.event) {
+        if (data.event.type === "response.reasoning_summary_text.delta") {
+          const reasoningChunk = data.event.delta || "";
+          process.stdout.write(reasoningChunk);
+          reasoning += reasoningChunk;
 
-      res.write(`event: message\ndata: ${(JSON.stringify({
-        json:{
-          type:"reasoning-delta",
-          id:"0",
-          delta:reasoningChunk
+          res.write(`event: message\ndata: ${(JSON.stringify({
+            json: {
+              type: "reasoning-delta",
+              id: "0",
+              delta: reasoningChunk
+            }
+          }))}\n\n`)
         }
-      }))}\n\n`)
-    }
-    if (data.event.type === "response.reasoning_summary_text.done") {
-      console.log("\n[REASONING COMPLETED]\n");
-    }
-
-  //   if (data.event.type === "run_item_stream_event" && data.event.item){
-  //   const item = data.event.item;
-
-  //   if (item.type === "tool_call_item" && item.raw_item) {
-  //     const toolName = item.raw_item.name || "";
-  //     const toolArgs = JSON.stringify(item.raw_item.arguments || {});
-      
-  //     console.log(`\n[tool call]: ${toolName}(${toolArgs})`);
-
-  //     // Stream the tool call metadata to the frontend
-  //     const toolData = JSON.stringify({ name: toolName, arguments: toolArgs });
-  //     res.write(`event: tool_call\ndata: ${(toolData)}\n\n`);
-  //   }
-  // }
-    
-    //stop duplicates
-    if (data.event.type === "response.output_text.delta") {
-      continue; 
-    }
-  }
-
-  // output_text_delta - final response of models
-  if (data.type === "output_text_delta") {
-    const textChunk = data.delta || "";
-    
-    process.stdout.write(textChunk);
-    aiMessage += textChunk;
-    res.write(`event: message\ndata: ${(JSON.stringify({
-      json:{
-        type:"text-delta",
-        id:"0",
-        delta:textChunk
+        if (data.event.type === "response.reasoning_summary_text.done") {
+          console.log("\n[REASONING COMPLETED]\n");
         }
-    }))}\n\n`);
-  }
 
-}
+        if (data.event.type === "response.output_text.delta") {
+          continue;
+        }
+      }
 
-  // log the events in file
-    //----------------------------------------------------------------------------
+      // excalidraw diagram events
 
-    // 1. Define the log file destination path
+      if(data.type === "model" && data.event){
+        if(data.event.type === "response.function_call_arguments.done"){
+          console.log(`---------------------Data Event Types :${data.event.type}`);
+          console.log("Arguments",data.event.arguments);
+          if(!data.event.arguments){
+            console.log("Received empty arguments string");
+            continue;
+          }
+          try {
+            const args = JSON.parse(data.event.arguments);
+            if(args && args.elements){
+              if(typeof args.elements === "string"){
+                elements = JSON.parse(args.elements);
+              }else if(Array.isArray(args.elements)){
+                elements = args.elements
+              }
+            }else{
+              console.log("Arguments object was Empty");
+              continue;
+            }
+            res.write(`event: message\ndata: ${JSON.stringify({
+              json:{
+                type: "diagram",
+                id: "0",
+                elements,
+              }
+            })}\n\n`)
+          } catch (error) {
+            console.log("Failed parsing Excalidraw payload",error);
+          }
+          continue;
+        }
+      }
+
+
+      // output events
+      if (data.type === "output_text_delta") {
+        const textChunk = data.delta || "";
+
+        process.stdout.write(textChunk);
+        aiMessage += textChunk;
+        res.write(`event: message\ndata: ${(JSON.stringify({
+          json: {
+            type: "text-delta",
+            id: "0",
+            delta: textChunk
+          }
+        }))}\n\n`);
+      }
+    }
+
+    // log the events in file
+    
+
     // const logFilePath = './stream_debug.json';
 
-    // // 2. Clear the file and initialize a clean JSON array structure on every request
     // fs.writeFileSync(logFilePath, '[\n');
     // let isFirstEntry = true;
 
@@ -242,19 +260,16 @@ export const chat = async (req: Request, res: Response) => {
     //     console.log(`---------------------${event.type} %o`, event.item);
     //   }
 
-    //   // 3. Append the raw event into your JSON file
     //   try {
     //     const commaDelimiter = isFirstEntry ? "" : ",\n";
     //     isFirstEntry = false;
 
-    //     // Safely append the formatted object string to the file
     //     fs.appendFileSync(logFilePath, commaDelimiter + JSON.stringify(event, null, 2));
     //   } catch (err) {
     //     fs.appendFileSync(logFilePath, `,\n{"error": "Failed to stringify an event item"}`);
     //   }
     // }
 
-    // // 4. Properly seal the JSON array brackets when the stream ends completely
     // fs.appendFileSync(logFilePath, '\n]');
 
 
@@ -266,6 +281,8 @@ export const chat = async (req: Request, res: Response) => {
 
     // end the HTTP stream
     res.end();
+    console.log("Elements",elements);
+    
 
     // find the user usage
     // update it
@@ -301,8 +318,8 @@ export const chat = async (req: Request, res: Response) => {
       conversationId: finalConversationId,
       userMessage: query,
       aiMessage,
-      reasoning
-
+      reasoning,
+      diagramData:elements
     }, { removeOnComplete: true, removeOnFail: true })
 
     console.log(`Job added to the queue ${job}`);
@@ -314,6 +331,8 @@ export const chat = async (req: Request, res: Response) => {
     } else {
       res.end();
     }
+  }finally{
+    await excalidrawMcp?.close()
   }
 };
 

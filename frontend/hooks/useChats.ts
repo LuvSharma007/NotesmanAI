@@ -5,17 +5,22 @@ import { useSourcesContext } from '@/context/SourceContext';
 import { useParams, useRouter } from 'next/navigation';
 import { Source } from './useSources';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { ExcalidrawElementSkeleton } from '@excalidraw/excalidraw/data/transform';
 
 interface Message {
     _id: string;
-    role: "user" | "assistant" | "thinking"
-    content: string;
+    role: "user" | "assistant";
+    content?: string;
+    reasoning?:string;
+    diagramData?: ExcalidrawElementSkeleton[] | null;
 }
 
 interface MessageResponse {
-    _id: string,
-    role: "user" | "assistant" | "thinking"
-    content: string,
+    _id: string;
+    role: "user" | "assistant";
+    content?: string;
+    reasoning?:string;
+    diagramData?: ExcalidrawElementSkeleton[] | null;
 }
 
 export const useChats = () => {
@@ -45,7 +50,6 @@ export const useChats = () => {
     setIsLoading(true);
 
     const userMsgId = uuidv4();
-    const thinkingMsgId = uuidv4();
     const assistantMsgId = uuidv4();
 
     const userMessage: Message = {
@@ -58,9 +62,8 @@ export const useChats = () => {
 
     setMessages((prevHistory) => [
         ...prevHistory,                                         
-        userMessage,                                            
-        { _id: thinkingMsgId, content: "", role: "thinking" },  
-        { _id: assistantMsgId, content: "", role: "assistant" }
+        userMessage,                                             
+        { _id: assistantMsgId, content: "", role: "assistant",reasoning:"" }
     ]);
 
     const sourceIdsPayload = {
@@ -154,9 +157,11 @@ export const useChats = () => {
                     if (eventData) {
                         try {
                             const payload = JSON.parse(eventData);
-                            // Safely pull your data schema out
+                            // console.log("Payload",payload);
+                            
                             const message = payload.json;
-
+                            // console.log("message:",message);
+                            
                             if (message && message.type) {
                                 switch (message.type) {
                                     case "reasoning-delta": {
@@ -164,8 +169,8 @@ export const useChats = () => {
                                         const chunk = message.delta ?? "";
                                         setMessages((prev) =>
                                             prev.map((msg) =>
-                                                msg.role === "thinking"
-                                                    ? { ...msg, content: (msg.content || "") + chunk }
+                                                msg._id === assistantMsgId
+                                                    ? { ...msg, role:"assistant", reasoning: (msg.reasoning || "") + chunk }
                                                     : msg
                                             )
                                         );
@@ -177,10 +182,28 @@ export const useChats = () => {
                                         const chunk = message.delta ?? "";
                                         setMessages((prev) =>
                                             prev.map((msg) =>
-                                                msg.role === "assistant"
-                                                    ? { ...msg, content: (msg.content || "") + chunk }
+                                                msg._id === assistantMsgId
+                                                    ? { ...msg, role:"assistant",content: (msg.content || "") + chunk }
                                                     : msg
                                             )
+                                        );
+                                        break;
+                                    }
+                                    case "diagram": {
+                                            setIsThinking(false)
+                                            console.log("Raw streaming message Elements:", message.elements);
+                                        setMessages((prev) =>
+                                            prev.map((msg) => {
+                                                if (msg._id !== assistantMsgId){
+                                                    console.log("Id does not matched");
+                                                     return msg
+                                                };                                               
+                                                return {
+                                                    ...msg,
+                                                    role: "assistant",
+                                                    diagramData: message.elements
+                                                };
+                                            })
                                         );
                                         break;
                                     }
@@ -242,7 +265,7 @@ export const useChats = () => {
             const messagesData = await messageResponse.json()
             const sourceData = await sourcesResponse.json()
             console.log("messagesData:", messagesData);
-            console.log("sourceType:", sourceData);
+            // console.log("sourceType:", sourceData);
 
             if (messagesData.success && sourceData.success &&
                 messagesData.messages.length === 0 && sourceData.sources.length === 0
@@ -253,9 +276,13 @@ export const useChats = () => {
             const messages: MessageResponse[] = messagesData.messages.map((msg: MessageResponse) => ({
                 _id: msg._id,
                 role: msg.role,
-                content: msg.content
+                content: msg.content,
+                reasoning:msg.reasoning,
+                diagramData:msg.diagramData                
             }))
             setMessages(messages)
+            console.log(messages);
+            
 
             const sources: Source[] = sourceData.sources.map((source: Source) => ({
                 _id: source._id,
