@@ -12,7 +12,7 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
     console.log("Starting worker");
 
     try {
-        const {conversationId,userId,userMessage,aiMessage} = job.data;
+        const {conversationId,userId,userMessage,aiMessage,reasoning , diagramData} = job.data;
         console.log("ConversationId",conversationId);
         console.log("userId",userId);        
         
@@ -27,34 +27,36 @@ const worker = new Worker('save-message-queue',async (job:Job)=>{
             {
                 conversationId,
                 userId,
-                role:'user',
-                content:userMessage,
+                role:"user",
+                content:userMessage
             },
             {
                 conversationId,
                 userId,
                 role:'assistant',
-                content:aiMessage
+                content:aiMessage,
+                reasoning:reasoning,
+                diagramData:diagramData
             }
-        ]
+        ],
     )
     console.log(`Messages saved in mongoDB`,messageSaved);
 
     // saving in the redis
 
-    const userMsg = JSON.stringify({
-        _id:messageSaved[0]._id,
-        role:"user",
-        content:userMessage,
-        createdAt:new Date()
-    })
+    // const userMsg = JSON.stringify({
+    //     _id:messageSaved[0]._id,
+    //     role:"user",
+    //     content:userMessage,
+    //     createdAt:new Date()
+    // })
 
-    const aiMsg = JSON.stringify({
-        _id:messageSaved[1]._id,
-        role:"assistant",
-        content:aiMessage,
-        createdAt:new Date()
-    })
+    // const aiMsg = JSON.stringify({
+    //     _id:messageSaved[1]._id,
+    //     role:"assistant",
+    //     content:aiMessage,
+    //     createdAt:new Date()
+    // })
 
     // const RedisMessageSaved = await redisClient.rpush(`chat:${userId}:${conversationId}`,userMsg,aiMsg);
     // await redisClient.ltrim(`chat:${userId}:${conversationId}`,-20,-1);  // Negative indexes: Negative numbers can be used to specify offsets from the end of the list, where -1 is the last element, -2 is the penultimate

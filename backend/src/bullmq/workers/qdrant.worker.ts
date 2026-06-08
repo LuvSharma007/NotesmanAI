@@ -16,7 +16,7 @@ const client = new QdrantClient({
 
 await DB()
 const worker = new Worker("batch-queue", async (job: Job) => {
-    const { qdrantCollection, fileId, name, urlId , 
+    const { qdrantCollection, fileId, name, urlId
         // summaryOfChunk , keywords
      } = job.data;
     try {
@@ -47,7 +47,8 @@ const worker = new Worker("batch-queue", async (job: Job) => {
                 // keywords : job.data.keywords
             }
 
-            const vectors = await embeddings.embedDocuments(inputData);
+            const vectors = await embeddings.embedDocuments(inputData)
+                
             console.log("vectors", vectors);
 
             await client.upsert(qdrantCollection, {

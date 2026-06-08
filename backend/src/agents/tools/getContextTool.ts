@@ -44,7 +44,7 @@ export const getContext = tool({
       ],
       temperature: 0.2
     })
-    console.log("Response:", response);
+    // console.log("Response:", response);
 
 
     const refreshUserQuery = response.choices[0].message.content
@@ -65,7 +65,7 @@ export const getContext = tool({
     if (embeddings.length > 0) {
       console.log("Vector Embeddings of user's query");
     }
-    console.log("Embeddings:", embeddings);
+    // console.log("Embeddings:", embeddings);
 
 
     const qdrantCollection = `user_${userId}`
@@ -93,7 +93,7 @@ export const getContext = tool({
     const contexts = searchResult.map(r => r.payload?.text)
       .filter((text): text is string => typeof text === 'string' && text.trim() !== "")
       .join("\n\n");
-    console.log("context:", contexts);
+    // console.log("context:", contexts);d
 
     return contexts || "No relevant context found.";
 

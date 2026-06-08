@@ -3,6 +3,11 @@ import { useChatsContext } from '@/context/chatsContext'
 import { useSourcesContext } from '@/context/SourceContext'
 import { useParams } from 'next/navigation'
 import React, { useEffect } from 'react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { ChevronDown } from 'lucide-react'
+import { ThinkingMessage } from './thinking-message'
+import dynamic from 'next/dynamic'
+import ExcalidrawWrapper from './excalidrawWrapper.tsx'
 
 const ChatComponent = () => {
 
@@ -49,12 +54,33 @@ const ChatComponent = () => {
                   </div>
                 </div>
               )}
-              {message.role === "assistant" && (
+              {message.role === "assistant" && message.reasoning && (
+                <ThinkingMessage reasoning={message.reasoning} />
+              )}
+              
+              {/* {message.role === "assistant" && message.diagramData && (
+                <div className='w-full flex justify-start items-start flex-col gap-2'>
+                  <div className='w-full max-w-[80%] p-3 bg-muted text-muted-foreground rounded-lg border border-border shadow-sm'>
+                    <p className='text-xs font-mono font-semibold mb-1 uppercase tracking-wider text-zinc-500'>
+                      Diagram Data Received
+                    </p>
+                    <pre className='text-xs font-mono bg-background/50 p-2 rounded overflow-x-auto max-h-40 text-zinc-400'>
+                      {JSON.stringify(message.diagramData, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )} */}
+
+              {message.role === "assistant" && message.diagramData && (
+                  <ExcalidrawWrapper diagramData={message.diagramData}/>
+              )}
+
+              {message.role === "assistant" && message.content && (
                 <div className='w-full flex justify-start items-start'
                 > 
                   <div className='text-foreground p-3 rounded-lg max-w-[80%] break-words shadow-sm'>
                     <p className='font-mono text-sm font-medium'>
-                      {message.content || (isLoading && "AI is thinking...")}
+                      {message.content}
                     </p>
                   </div>
                 </div>

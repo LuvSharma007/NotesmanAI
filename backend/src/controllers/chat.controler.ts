@@ -2,25 +2,52 @@ import { Request, Response } from "express";
 import { getContext } from "../agents/tools/getContextTool.js";
 import { messageQueue } from "../bullmq/queues/message.queue.js";
 import { getConversation } from "../agents/tools/getConversation.js";
-import { Agent, AgentInputItem, run } from "@openai/agents";
-import { SYSTEM_PROMPT } from "../lib/systemPrompt.js"
+import { Agent, AgentInputItem, MCPServerStreamableHttp, run } from "@openai/agents";
 import conversationModel from "../models/conversation.model.js";
 import mongoose from "mongoose";
 import usageModel from "../models/usage.model.js";
 import { deleteChatQueue } from "../bullmq/queues/deleteChat.queue.js";
+import buildInstructions from "../lib/systemPrompt.js";
+import fs from 'fs'
+import { ObjectId } from "mongodb";
+import { webSearch } from "../agents/tools/webSearchTool.js";
+import path from "path";
+import { fileURLToPath } from "url"; // <-- Add this
+
+// Re-create __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export interface SourceItem {
+  sourceId: string;
+  sourceType: string;
+}
+
+export interface SourcePayload {
+  sources: SourceItem[];
+}
+
+interface RequestBody {
+  query: string;
+  sourceIds: SourcePayload;
+  isWebSearch:boolean
+}
 
 export const chat = async (req: Request, res: Response) => {
+  // let excalidrawMcp: MCPServerStreamableHttp | null = null;
+  let tldrawMcp:MCPServerStreamableHttp | null = null;
   try {
     const userId = (req as any).user.id;
-    const { query, sourceIds } = req.body;
+    const { query, sourceIds , isWebSearch } = req.body as Partial<RequestBody>;
     const { conversationId } = req.params;
     const { isNewChat } = req.query;
     console.log("ConversationId:", conversationId);
     console.log("SourceIds:", sourceIds);
+    console.log("isWebSearch",isWebSearch);
     console.log("Query:", query);
     console.log("isNewChat:", isNewChat);
 
-    if (!query || sourceIds.sources.length === 0) {
+    if (!query || !sourceIds?.sources || sourceIds.sources.length === 0) {
       return res.status(404).json({ message: "Missing required fields" });
     }
 
@@ -52,8 +79,30 @@ export const chat = async (req: Request, res: Response) => {
       finalConversationId = newConversation._id;
     }
 
-
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    // set web search
+    console.log("Path:",path.join(__dirname, "..", "..", "..", "excalidraw-diagram-skill"));
+    
+    const tools = [getContext,        
+        {
+          type: "shell",
+          name: "shell",
+          environment: {
+            type: "local",
+            skills: [
+              {
+                name: "excalidraw-diagrams",
+                description: "Generate beautiful, structured architecture diagrams, flowcharts, and mind maps in Excalidraw JSON format.",
+                path: path.join(__dirname, "..", "..", "..", "excalidraw-diagram-skill"),
+              },
+            ],
+          },
+        },]
+    if(isWebSearch){
+      tools.push(webSearch)
+    }
+    console.log("Tools",tools);
+    
+    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Access-Control-Expose-Headers", "X-Conversation-Id");
     res.setHeader("X-Conversation-Id", finalConversationId.toString())
     res.setHeader("Transfer-Encoding", "chunked");
@@ -87,13 +136,45 @@ export const chat = async (req: Request, res: Response) => {
       content: query
     });
 
+    // MCP
+      // excalidrawMcp = new MCPServerStreamableHttp({
+      //   url: "https://excalidraw-mcp-igrx.vercel.app/mcp",
+      //   name: "Excalidraw MCP Server",
+      // });
+
+      tldrawMcp = new MCPServerStreamableHttp({
+        url:"https://tldraw-mcp-app.tldraw.workers.dev/mcp",
+        name:"tldraw MCP Server"
+      })
+      
+      try {
+        // await excalidrawMcp.connect();
+        await tldrawMcp.connect();
+        
+        // console.log(await excalidrawMcp.listTools());
+        console.log(await tldrawMcp.listTools());        
+      } catch (error) {
+        throw new Error("Someting went wrong while connecting")
+      }
+       
+
     const notesmanAgent = new Agent({
       name: "NotesmanAI",
-      instructions: SYSTEM_PROMPT,
-      model: "gpt-4.1-mini",
-      tools: [
-        getContext
-      ],
+      instructions: buildInstructions,
+      model: "gpt-5-nano-2025-08-07",
+      modelSettings: {
+        reasoning: {
+          effort: "medium",
+          summary: "concise",
+        },
+        toolChoice: "auto",
+        parallelToolCalls: true,
+      },
+      tools: [getContext],
+      mcpServers: [
+        // excalidrawMcp,
+        tldrawMcp
+      ]
     })
 
     const result = await run(
@@ -101,49 +182,156 @@ export const chat = async (req: Request, res: Response) => {
       historyMessages,
       {
         stream: true,
-        context: { sourceIds, userId },
+        context: { sourceIds, userId , isWebSearch },
       }
     )
 
     let aiMessage = "";
-    const stream = result.toTextStream({ compatibleWithNodeStreams: true });
-    for await (const chunk of stream) {  
-      aiMessage += chunk;
+    let reasoning = "";
+    let elements = [];
 
-      res.write(chunk)
+    for await (const event of result) {
+        
+      if (event.type !== "raw_model_stream_event") continue;
+
+      const data = event.data;
+      // reasoning events
+      if (data.type === "model" && data.event) {
+        if (data.event.type === "response.reasoning_summary_text.delta") {
+          const reasoningChunk = data.event.delta || "";
+          process.stdout.write(reasoningChunk);
+          reasoning += reasoningChunk;
+
+          res.write(`event: message\ndata: ${(JSON.stringify({
+            json: {
+              type: "reasoning-delta",
+              id: "0",
+              delta: reasoningChunk
+            }
+          }))}\n\n`)
+        }
+        if (data.event.type === "response.reasoning_summary_text.done") {
+          console.log("\n[REASONING COMPLETED]\n");
+        }
+
+        if (data.event.type === "response.output_text.delta") {
+          continue;
+        }
+      }
+
+      // excalidraw diagram events
+
+      if(data.type === "model" && data.event){
+        if(data.event.type === "response.function_call_arguments.done"){
+          console.log(`---------------------Data Event Types :${data.event.type}`);
+          console.log("Arguments",data.event.arguments);
+          if(!data.event.arguments){
+            console.log("Received empty arguments string");
+            continue;
+          }
+          try {
+            const args = JSON.parse(data.event.arguments);
+            if(args && args.elements){
+              if(typeof args.elements === "string"){
+                elements = JSON.parse(args.elements);
+              }else if(Array.isArray(args.elements)){
+                elements = args.elements
+              }
+            }else{
+              console.log("Arguments object was Empty");
+              continue;
+            }
+            res.write(`event: message\ndata: ${JSON.stringify({
+              json:{
+                type: "diagram",
+                id: "0",
+                elements,
+              }
+            })}\n\n`)
+          } catch (error) {
+            console.log("Failed parsing Excalidraw payload",error);
+          }
+          continue;
+        }
+      }
+
+
+      // output events
+      if (data.type === "output_text_delta") {
+        const textChunk = data.delta || "";
+
+        process.stdout.write(textChunk);
+        aiMessage += textChunk;
+        res.write(`event: message\ndata: ${(JSON.stringify({
+          json: {
+            type: "text-delta",
+            id: "0",
+            delta: textChunk
+          }
+        }))}\n\n`);
+      }
     }
+
+    // log the events in file
+    
+
+    // const logFilePath = './stream_debug.json';
+
+    // fs.writeFileSync(logFilePath, '[\n');
+    // let isFirstEntry = true;
+
+    // for await (const event of result) {
+    //   // Your original console logs
+    //   console.log(event);
+
+    //   if (event.type === 'raw_model_stream_event') {
+    //     console.log(`--------------------${event.type} %o`, event.data);
+    //   }
+    //   if (event.type === 'agent_updated_stream_event') {
+    //     console.log(`---------------------${event.type} %s`, event.agent.name);
+    //   }
+    //   if (event.type === 'run_item_stream_event') {
+    //     console.log(`---------------------${event.type} %o`, event.item);
+    //   }
+
+    //   try {
+    //     const commaDelimiter = isFirstEntry ? "" : ",\n";
+    //     isFirstEntry = false;
+
+    //     fs.appendFileSync(logFilePath, commaDelimiter + JSON.stringify(event, null, 2));
+    //   } catch (err) {
+    //     fs.appendFileSync(logFilePath, `,\n{"error": "Failed to stringify an event item"}`);
+    //   }
+    // }
+
+    // fs.appendFileSync(logFilePath, '\n]');
+
 
     console.log("Response:", result.rawResponses);
     await result.completed;
     // const usage = result.state.usage
-    // if(usage){
-    //   const redisKey = `usage${userId}`
-    //   const {totalTokens} = usage
-    //   await Promise.all([
-    //     redisClient.hincrby(redisKey,"tokens",totalTokens),
-    //     redisClient.hincrby(redisKey,"query",1)
-    //   ])
-    //   console.log(`tokens ${totalTokens} used for run`);
-
-    //   // add data to usageQueue
-    //   await usageQueue.add('usage-queue',{
-    //     userId
-    //   })
-    // }
+    // console.log("usage:", usage);
 
 
+    // end the HTTP stream
     res.end();
-
+    // console.log("Elements",elements);
+    
 
     // find the user usage
     // update it
 
+    console.log(userId);
+    
     const userUsageSaved = await usageModel.findOneAndUpdate(
-      { userId: userId },
+      { userId: ObjectId.createFromHexString(userId.toString())},
       {
         $inc: {
           tokens: result.state.usage.totalTokens,
           query: 1
+        },
+        $addToSet:{
+          chatIds: ObjectId.createFromHexString(finalConversationId.toString())
         }
       },
       {
@@ -163,7 +351,9 @@ export const chat = async (req: Request, res: Response) => {
       userId,
       conversationId: finalConversationId,
       userMessage: query,
-      aiMessage
+      aiMessage,
+      reasoning,
+      diagramData:elements
     }, { removeOnComplete: true, removeOnFail: true })
 
     console.log(`Job added to the queue ${job}`);
@@ -175,52 +365,55 @@ export const chat = async (req: Request, res: Response) => {
     } else {
       res.end();
     }
+  }finally{
+    // await excalidrawMcp?.close()
+    await tldrawMcp?.close()
   }
 };
 
 
-export const deleteChat = async(req:Request,res:Response)=>{
-    // find chat and delete
-    // find all messages related to  that chat and delete
-    try {
-        const userId = (req as any).user.id;
-        const chatId = req.query.chatId as string
+export const deleteChat = async (req: Request, res: Response) => {
+  // find chat and delete
+  // find all messages related to  that chat and delete
+  try {
+    const userId = (req as any).user.id;
+    const chatId = req.query.chatId as string
 
-        if(!userId){
-            return res.status(400).json({
-                success:false,
-                message:"Something went wrong"
-            })
-        }
-
-        const chat = await conversationModel.findByIdAndUpdate(
-            {_id:chatId,userId,deletedAt:null},
-            {$set:{deletedAt:new Date()}},
-            {new:true}
-        )
-        if(!chat){
-            return res.status(404).json({
-                message:"chat not found",
-                success:false
-            })
-        }
-
-        const job = await deleteChatQueue.add("delete-chat-queue",{
-            userId,
-            chatId
-        },{ removeOnComplete: true, removeOnFail: true })
-
-        console.log(`Job added to the queue ${job}`);       
-        
-        return res.status(200).json({
-                success:true,
-                message:"chat deleted successfully"
-        })
-        
-    } catch (error) {
-        return res.status(400).json({
-            success:false,
-            message:"something went wrong"
-        })
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Something went wrong"
+      })
     }
+
+    const chat = await conversationModel.findByIdAndUpdate(
+      { _id: chatId, userId, deletedAt: null },
+      { $set: { deletedAt: new Date() } },
+      { new: true }
+    )
+    if (!chat) {
+      return res.status(404).json({
+        message: "chat not found",
+        success: false
+      })
+    }
+
+    const job = await deleteChatQueue.add("delete-chat-queue", {
+      userId,
+      chatId
+    }, { removeOnComplete: true, removeOnFail: true })
+
+    console.log(`Job added to the queue ${job}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "chat deleted successfully"
+    })
+
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: "something went wrong"
+    })
+  }
 }

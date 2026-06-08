@@ -146,3 +146,6 @@ dist
 
 # readme file
 ReadMe.txt
+
+#events
+stream_debug.json

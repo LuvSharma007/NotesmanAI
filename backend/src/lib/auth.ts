@@ -15,7 +15,7 @@ if (!mongoDBConnectionString || !googleClientId || !googleClientSecret) {
     throw new Error('Missing MongoDB Environment variables')
 }
 
-const mongodb = new MongoClient(mongoDBConnectionString).db(mongoDbName)
+export const mongodb = new MongoClient(mongoDBConnectionString).db(mongoDbName)
 
 const createResetEmailTemplate = (resetUrl: string, userName: string) => {
     return `
