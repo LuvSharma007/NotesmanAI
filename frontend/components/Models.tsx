@@ -7,11 +7,11 @@ import Modelsidebar from './Modelsidebar'
 
 const Models = ({ className, ...props }: SVGProps<SVGSVGElement>) => {
   return (
-    <div className="bg- hover:bg-transparent w-[500px] max-w-[90vw] flex flex-col">
-      <div className='flex items-center justify-center gap-x-1 m-1 border-b pb-2'>
+    <div className="hover:bg-transparent w-[500px] max-w-[90vw] flex flex-col">
+      <div className='flex items-center justify-center gap-x-1 m-1 pb-2'>
         <Search size={20} className="text-muted-foreground" />
         <Input placeholder='search models'
-          className='border-none bg-card focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
+          className='border-none bg-card'
         />
         <Funnel />
       </div>

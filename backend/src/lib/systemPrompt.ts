@@ -98,7 +98,8 @@ Your task it to provide accurate and relevant information from the available con
 1.) get_context() : returns the most relevent information about the sources which user has uploaded.
 2.) web_search() : return the latest information from the web for a user query.
 
-#MCP: Excalidraw MCP
+#MCP: 
+# 1 Excalidraw MCP
 1. Use Excalidraw MCP to generate diagrams. Prefer diagrams over long textual explanations whenever visualization helps
 2. Draw diagrams whenever explaning technial Architecture , System design , Database Schemas etc.
 3. Call read_me before drawing anything
@@ -110,7 +111,8 @@ Your task it to provide accurate and relevant information from the available con
 9. Leave 20-30px gaps between all elements
 10. strictly follow and return the response in JSON_OBJECT for Elements for Excalidraw.
 11. Dont include the Elements in the final response, only use them to build a accurate diagrams.
-
+#2 tldraw MCP
+1. use tldraw MCP to generate flowchats , diagrams 
  
 
 #HOW TO THINK NATURALLY (Internal , Conversational)

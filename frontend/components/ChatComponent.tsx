@@ -57,6 +57,19 @@ const ChatComponent = () => {
               {message.role === "assistant" && message.reasoning && (
                 <ThinkingMessage reasoning={message.reasoning} />
               )}
+              
+              {/* {message.role === "assistant" && message.diagramData && (
+                <div className='w-full flex justify-start items-start flex-col gap-2'>
+                  <div className='w-full max-w-[80%] p-3 bg-muted text-muted-foreground rounded-lg border border-border shadow-sm'>
+                    <p className='text-xs font-mono font-semibold mb-1 uppercase tracking-wider text-zinc-500'>
+                      Diagram Data Received
+                    </p>
+                    <pre className='text-xs font-mono bg-background/50 p-2 rounded overflow-x-auto max-h-40 text-zinc-400'>
+                      {JSON.stringify(message.diagramData, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )} */}
 
               {message.role === "assistant" && message.diagramData && (
                   <ExcalidrawWrapper diagramData={message.diagramData}/>

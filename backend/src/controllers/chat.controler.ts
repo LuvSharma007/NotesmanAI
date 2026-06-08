@@ -11,6 +11,12 @@ import buildInstructions from "../lib/systemPrompt.js";
 import fs from 'fs'
 import { ObjectId } from "mongodb";
 import { webSearch } from "../agents/tools/webSearchTool.js";
+import path from "path";
+import { fileURLToPath } from "url"; // <-- Add this
+
+// Re-create __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface SourceItem {
   sourceId: string;
@@ -28,7 +34,8 @@ interface RequestBody {
 }
 
 export const chat = async (req: Request, res: Response) => {
-  let excalidrawMcp: MCPServerStreamableHttp | null = null;
+  // let excalidrawMcp: MCPServerStreamableHttp | null = null;
+  let tldrawMcp:MCPServerStreamableHttp | null = null;
   try {
     const userId = (req as any).user.id;
     const { query, sourceIds , isWebSearch } = req.body as Partial<RequestBody>;
@@ -73,8 +80,23 @@ export const chat = async (req: Request, res: Response) => {
     }
 
     // set web search
-
-    const tools = [getContext]
+    console.log("Path:",path.join(__dirname, "..", "..", "..", "excalidraw-diagram-skill"));
+    
+    const tools = [getContext,        
+        {
+          type: "shell",
+          name: "shell",
+          environment: {
+            type: "local",
+            skills: [
+              {
+                name: "excalidraw-diagrams",
+                description: "Generate beautiful, structured architecture diagrams, flowcharts, and mind maps in Excalidraw JSON format.",
+                path: path.join(__dirname, "..", "..", "..", "excalidraw-diagram-skill"),
+              },
+            ],
+          },
+        },]
     if(isWebSearch){
       tools.push(webSearch)
     }
@@ -115,16 +137,25 @@ export const chat = async (req: Request, res: Response) => {
     });
 
     // MCP
-      excalidrawMcp = new MCPServerStreamableHttp({
-        url: "https://excalidraw-mcp-igrx.vercel.app/mcp",
-        name: "Excalidraw MCP Server",
-      });
-  
-      const MCP = await excalidrawMcp.connect()
-      console.log("---------MCP:",MCP);     
-      console.log(
-        await excalidrawMcp.listTools()
-      );
+      // excalidrawMcp = new MCPServerStreamableHttp({
+      //   url: "https://excalidraw-mcp-igrx.vercel.app/mcp",
+      //   name: "Excalidraw MCP Server",
+      // });
+
+      tldrawMcp = new MCPServerStreamableHttp({
+        url:"https://tldraw-mcp-app.tldraw.workers.dev/mcp",
+        name:"tldraw MCP Server"
+      })
+      
+      try {
+        // await excalidrawMcp.connect();
+        await tldrawMcp.connect();
+        
+        // console.log(await excalidrawMcp.listTools());
+        console.log(await tldrawMcp.listTools());        
+      } catch (error) {
+        throw new Error("Someting went wrong while connecting")
+      }
        
 
     const notesmanAgent = new Agent({
@@ -136,11 +167,14 @@ export const chat = async (req: Request, res: Response) => {
           effort: "medium",
           summary: "concise",
         },
-        toolChoice: "required",
+        toolChoice: "auto",
         parallelToolCalls: true,
       },
-      tools,
-      mcpServers: [excalidrawMcp]
+      tools: [getContext],
+      mcpServers: [
+        // excalidrawMcp,
+        tldrawMcp
+      ]
     })
 
     const result = await run(
@@ -281,7 +315,7 @@ export const chat = async (req: Request, res: Response) => {
 
     // end the HTTP stream
     res.end();
-    console.log("Elements",elements);
+    // console.log("Elements",elements);
     
 
     // find the user usage
@@ -332,7 +366,8 @@ export const chat = async (req: Request, res: Response) => {
       res.end();
     }
   }finally{
-    await excalidrawMcp?.close()
+    // await excalidrawMcp?.close()
+    await tldrawMcp?.close()
   }
 };
 
