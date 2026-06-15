@@ -4,31 +4,36 @@ import { useSourcesContext } from '@/context/SourceContext'
 import { ArrowRight, Globe, X, ChevronUp, Plus, Cable, Check, Info } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Button } from './ui/button'
 import { AudioLinesIcon } from "@animateicons/react/lucide";
 import { Switch } from './ui/switch'
 import { modelPicture } from './Modelsidebar'
 import { ModelsDropdownContent } from './model-component'
-import { DropdownMenuItemDesc } from '@lobehub/ui/es/base-ui/DropdownMenu/atoms'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { AvailableModels, McpTool, ThinkingEffort } from '@/hooks/useChats'
+
+
+interface SelectedModelObj {
+  company: string;
+  modelName: AvailableModels;
+}
 
 const InputField = () => {
-    const { doChat, input, setInput } = useChatsContext();
-    const { selectedSources, toggleSource } = useSourcesContext()
-    const [webSearchEnabled, setWebSearchEnabled] = useState<boolean>(false);  
-    const [effort, setEffort] = useState("Low");
-    const [thinking, setThinking] = useState(false);  
-    const [selectedModel, setSelectedModel] = useState(() => {
+    const { doChat, input, setInput ,webSearchEnabled,setWebSearchEnabled ,mcpSelected,setMcpSelected} = useChatsContext();
+    const { selectedSources, toggleSource } = useSourcesContext() 
+    const [effort, setEffort] = useState<ThinkingEffort>("low");
+    const [thinking, setThinking] = useState(false);      
+    // console.log(mcpSelected);
+    
+    const [selectedModel, setSelectedModel] = useState<SelectedModelObj>(() => {
         const saved = localStorage.getItem("selectedModel");
-
         return saved
             ? JSON.parse(saved)
-            : {
-                company: "OpenAI",
-                modelName: "GPT-5.5",
-            };
+            : { company: "OpenAI", modelName: "gpt-4.1-mini" };
     });
+    // console.log("selectedModel",selectedModel);
+    
 
     useEffect(() => {
         localStorage.setItem(
@@ -41,13 +46,19 @@ const InputField = () => {
         (m) => m.company === selectedModel.company
     );
 
-    // console.log("selected Sources",selectedSources);
+
+    const handleMcpTools = (tool:McpTool,ischecked:boolean)=>{
+        setMcpSelected((prev)=>
+        ischecked ? [...prev,tool] : prev.filter((t)=>t !== tool)
+        )
+    }
+
 
     const { id } = useParams<{ id: string }>()
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        doChat(id,webSearchEnabled);
+        doChat(id,webSearchEnabled,thinking,effort,selectedModel.modelName,mcpSelected);
     }
 
     // localstorage model
@@ -115,25 +126,29 @@ const InputField = () => {
                                                     <Cable/>
                                                     Connectors
                                                 </DropdownMenuSubTrigger>
-                                                <DropdownMenuPortal>
                                                     <DropdownMenuSubContent>
                                                             <DropdownMenuItem
                                                                 onSelect={(e) => e.preventDefault()}
                                                                 className='flex items-center justify-between gap-x-4 cursor-pointer'
                                                             >
                                                                 <label htmlFor='excalidraw' className='cursor-pointer'>Excalidraw</label>
-                                                                <Switch id='excalidraw' />
+                                                                <Switch id='excalidraw' 
+                                                                checked={mcpSelected.includes("excalidraw")}
+                                                                onCheckedChange={(checked) => handleMcpTools("excalidraw",checked)}
+                                                                />
                                                             </DropdownMenuItem>
 
-                                                            <DropdownMenuItem
+                                                            {/* <DropdownMenuItem
                                                                 onSelect={(e) => e.preventDefault()}
                                                                 className='flex items-center justify-between gap-x-4 cursor-pointer'
                                                             >
                                                                 <label htmlFor='tldraw' className='cursor-pointer'>Tldraw</label>
-                                                                <Switch id='tldraw' />
-                                                            </DropdownMenuItem>
+                                                                <Switch id='tldraw'
+                                                                checked={mcpSelected.includes("tldraw")}
+                                                                onCheckedChange={(checked) => handleMcpTools("tldraw",checked)}
+                                                                />
+                                                            </DropdownMenuItem> */}
                                                     </DropdownMenuSubContent>
-                                                </DropdownMenuPortal>
                                                 </DropdownMenuSub>
                                             </DropdownMenuGroup>
                                         </DropdownMenuContent>
@@ -187,14 +202,16 @@ const InputField = () => {
                                                 </div>
                                                 <div className="space-y-0.5">
                                                     {[
-                                                        { value: "Low", label: "Low", isDefault: true },
-                                                        { value: "Medium", label: "Medium" },
-                                                        { value: "High", label: "High" },
-                                                        { value: "Max", label: "Max", hasInfo: true },
+                                                        { value: "none", label: "None" },
+                                                        { value: "low", label: "Low", isDefault: true },
+                                                        { value: "minimal", label: "Menimal" },
+                                                        { value: "medium", label: "Medium" },
+                                                        { value: "high", label: "High" },
+                                                        { value: "xhigh", label: "Max", hasInfo: true },
                                                     ].map((item) => (
                                                         <DropdownMenuItem
                                                             key={item.value}
-                                                            onClick={() => setEffort(item.value)}
+                                                            onClick={() => setEffort(item.value as ThinkingEffort)}
                                                             
                                                             className="flex items-center justify-between px-2 py-2 rounded-md cursor-pointer text-sm font-medium"
                                                         >

@@ -3,11 +3,10 @@ import { useChatsContext } from '@/context/chatsContext'
 import { useSourcesContext } from '@/context/SourceContext'
 import { useParams } from 'next/navigation'
 import React, { useEffect } from 'react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
-import { ChevronDown } from 'lucide-react'
 import { ThinkingMessage } from './thinking-message'
-import dynamic from 'next/dynamic'
 import ExcalidrawWrapper from './excalidrawWrapper.tsx'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 const ChatComponent = () => {
 
@@ -71,17 +70,17 @@ const ChatComponent = () => {
                 </div>
               )} */}
 
-              {message.role === "assistant" && message.diagramData && (
+              {message.role === "assistant" && message.diagramData && message.diagramData.length > 0 &&( 
                   <ExcalidrawWrapper diagramData={message.diagramData}/>
               )}
 
               {message.role === "assistant" && message.content && (
                 <div className='w-full flex justify-start items-start'
                 > 
-                  <div className='text-foreground p-3 rounded-lg max-w-[80%] break-words shadow-sm'>
-                    <p className='font-mono text-sm font-medium'>
+                  <div className='text-foreground p-3 rounded-lg max-w-[80%] break-words shadow-sm prose dark:prose-invert prose-sm max-w-none'>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {message.content}
-                    </p>
+                    </ReactMarkdown>
                   </div>
                 </div>
               )}

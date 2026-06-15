@@ -19,7 +19,7 @@ interface ModelDetails {
     features:Features;
 }
 
-interface ModelsList {
+export interface ModelsList {
   company: string;
   models: ModelDetails[];
 }
@@ -30,19 +30,47 @@ export const aiModels: ModelsList[] = [
         company: "OpenAI",
         models: [
             {
-                name: "GPT-nano",
-                description: "Fastest GPT-5.4 tuned for speed and low cost",
+                name: "gpt-5.5",
+                description: "A new class of intelligence for coding and professional work.",
                 isPaid:true,
                 requiredSubscription:true,
                 features:{reasoning:true,agentic:true,coding:true,mcpSupport:true,pdfComprehension:true,toolCall:true,vision:true}
             },
             {
-                name: "GPT-5.5",
-                description: "OpenAI latest and greatest model",
+                name: "gpt-5.4",
+                description: "A more affordable model for coding and professional work.",
                 isPaid:true,
                 requiredSubscription:true,
                 features:{reasoning:true,agentic:true,coding:true,mcpSupport:true,pdfComprehension:true,toolCall:true,vision:true}
-            }
+            },
+            {
+                name: "gpt-5.4-mini",
+                description: "strongest mini model for coding, computer use, and subagents",
+                isPaid:true,
+                requiredSubscription:true,
+                features:{reasoning:true,agentic:true,coding:true,mcpSupport:true,pdfComprehension:true,toolCall:true,vision:true}
+            },
+            {
+                name: "gpt-5.4-nano",
+                description: "cheapest GPT-5.4-class model for simple high-volume tasks",
+                isPaid:true,
+                requiredSubscription:true,
+                features:{reasoning:true,agentic:true,coding:true,mcpSupport:true,pdfComprehension:true,toolCall:true,vision:true}
+            },
+            {
+                name: "gpt-4.1-mini",
+                description: "Smaller, faster version of GPT-4.1",
+                isPaid:true,
+                requiredSubscription:true,
+                features:{reasoning:true,agentic:true,coding:true,mcpSupport:true,pdfComprehension:true,toolCall:true,vision:true}
+            },
+            {
+                name: "gpt-4o-mini",
+                description: "Fast, affordable small model for focused tasks",
+                isPaid:true,
+                requiredSubscription:true,
+                features:{reasoning:true,agentic:true,coding:true,mcpSupport:true,pdfComprehension:true,toolCall:true,vision:true}
+            },
         ]
     },
     {
