@@ -73,7 +73,7 @@ export default function Pricing() {
                                 <Button
                                     asChild
                                     className="w-full">
-                                    <Link href="">Get Started</Link>
+                                    <Link href="">Comming Soon</Link>
                                 </Button>
                             </CardFooter>
                         </div>
@@ -106,7 +106,7 @@ export default function Pricing() {
                                 asChild
                                 variant="outline"
                                 className="w-full">
-                                <Link href="">Get Started</Link>
+                                <Link href="">Comming Soon</Link>
                             </Button>
                         </CardFooter>
                     </Card>

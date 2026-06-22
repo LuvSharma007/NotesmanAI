@@ -146,6 +146,12 @@ dist
 
 # readme file
 ReadMe.txt
+OpenSourceModels.txt
+OpenSourceModels.md
 
 #events
+#tldraw Events
 stream_debug.json
+
+#excalidraw Events
+excalidraw.json

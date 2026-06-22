@@ -25,6 +25,7 @@ interface MessageResponse {
 }
 
 export type ThinkingEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
+export type ThinkingSummary = "auto" | "concise" | "detailed" | null | undefined;
 export type AvailableModels = typeof aiModels[number]["models"][number]["name"];
 export type McpTool = "tldraw" | "excalidraw";
 
@@ -37,6 +38,8 @@ export const useChats = () => {
     const [mcpSelected , setMcpSelected] = useState<McpTool[]>([])
     const [webSearchEnabled, setWebSearchEnabled] = useState<boolean>(false);  
     const [activeChat, setActiveChat] = useState<string | null>(null)
+    const [thinkingSummary, setThinkingSummary] = useState<ThinkingSummary>("concise");
+    const [effort, setEffort] = useState<ThinkingEffort>("low");
     const params = useParams();
     const currentActiveId = params.id
     // console.log("currentActiveId:",currentActiveId);
@@ -48,7 +51,7 @@ export const useChats = () => {
     const doChat = async (
         conversationID: string,
         isWebSearch:boolean,
-        thinking:boolean,
+        thinkingSummary:ThinkingSummary,
         effort:ThinkingEffort="low",
         selectedModel:AvailableModels,
         mcpSelected:McpTool[]
@@ -99,7 +102,7 @@ export const useChats = () => {
                     query: trimmedInput,
                     sourceIds: sourceIdsPayload,
                     isWebSearch,
-                    thinking,
+                    thinkingSummary,
                     effort,
                     selectedModel,
                     mcpSelected
@@ -376,6 +379,10 @@ export const useChats = () => {
         webSearchEnabled,
         setWebSearchEnabled,
         mcpSelected,
-        setMcpSelected
+        setMcpSelected,
+        thinkingSummary,
+        setThinkingSummary,
+        effort,
+        setEffort        
     }
 }

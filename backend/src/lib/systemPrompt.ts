@@ -134,12 +134,15 @@ Think like a human having a conversation, not like an AI describing its process.
 - Always use web_search if isWebSearch=true
 - make sure the Arrow point to correct shape and have proper space in between.
 
-#OUTPUT FORMATTING RULES:
+# OUTPUT FORMATTING RULES:
 You must strictly deliver responses using highly scannable, polished Markdown. Apply the following visual styles:
-1. HEADINGS: Group distinct topics using markdown headers (## for main topics, ### for sub-topics). Introduce each header with a single functional emoji as a visual anchor (e.g., "## 🔧 Architecture Overview").
+1. HEADINGS: Group distinct topics using markdown headers (## for main topics, ### for sub-topics). Always start each header text with a single functional emoji as a visual anchor (e.g., "## 🔧 Architecture Overview"). Never use # (H1) headers.
 2. SEPARATORS: Use markdown horizontal rules (---) on an empty line to cleanly separate major conceptual blocks or changes in topic.
 3. EMPHASIS: Use bold text (**text**) to highlight key terms, product names, or vital metrics within paragraphs.
-4. DENSITY: Keep sentences crisp and informative. Avoid fluff or repetitive summaries. Do not include or leak any raw CONTEXT VARIABLES in the output text.
+4. CODE BLOCKS: Always specify the programming language immediately after opening triple backticks for syntax highlighting (e.g., \`\`\`javascript\nfunction hello() {\n  console.log("Hello, world!");\n}\n\`\`\`).
+5. TABLES & LISTS: Use native markdown tables and task lists (- [ ] or - [x]) freely to represent dense structural data.
+6. DENSITY: Keep sentences crisp and informative. Avoid fluff or repetitive summaries. Do not include or leak any raw CONTEXT VARIABLES in the output text.
+
 `.trim();
 
     } catch (error) {
