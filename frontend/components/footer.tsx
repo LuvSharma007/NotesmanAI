@@ -1,32 +1,32 @@
 import { Logo } from '@/components/logo'
 import Link from 'next/link'
 
-const links = [
-    {
-        title: 'Features',
-        href: '#',
-    },
-    {
-        title: 'Solution',
-        href: '#',
-    },
-    {
-        title: 'Customers',
-        href: '#',
-    },
-    {
-        title: 'Pricing',
-        href: '#',
-    },
-    {
-        title: 'Help',
-        href: '#',
-    },
-    {
-        title: 'About',
-        href: '#',
-    },
-]
+// const links = [
+//     {
+//         title: 'Features',
+//         href: '#',
+//     },
+//     {
+//         title: 'Solution',
+//         href: '#',
+//     },
+//     {
+//         title: 'Customers',
+//         href: '#',
+//     },
+//     {
+//         title: 'Pricing',
+//         href: '#',
+//     },
+//     {
+//         title: 'Help',
+//         href: '#',
+//     },
+//     {
+//         title: 'About',
+//         href: '#',
+//     },
+// ]
 
 export default function FooterSection() {
     return (
@@ -39,7 +39,7 @@ export default function FooterSection() {
                     <Logo />
                 </Link>
 
-                <div className="my-8 flex flex-wrap justify-center gap-6 text-sm">
+                {/* <div className="my-8 flex flex-wrap justify-center gap-6 text-sm">
                     {links.map((link, index) => (
                         <Link
                             key={index}
@@ -48,7 +48,7 @@ export default function FooterSection() {
                             <span>{link.title}</span>
                         </Link>
                     ))}
-                </div>
+                </div> */}
                 <div className="my-8 flex flex-wrap justify-center gap-6 text-sm">
                     <Link
                         href="https://x.com/BakiHanma_007"

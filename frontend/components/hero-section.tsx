@@ -17,12 +17,9 @@ export default function HeroSection() {
                                 <Link
                                     href="/"
                                     className="rounded-(--radius) mx-auto flex w-fit items-center gap-2 border p-1 pr-3">
-                                    <span className="text-1xl">Ready To become a Notesman</span>
+                                    <span className="text-sm font-medium">Powered By Open Source Tools</span>
                                     <span className="bg-(--color-border) block h-4 w-px"></span>
-
                                     <ArrowRight className="size-4" />
-                                    {/* <span className="size-3 rounded-full bg-green-500"></span> */}
-
                                 </Link>
 
                                 <h1 className="mt-8 text-6xl font-semibold md:text-5xl xl:text-5xl xl:[line-height:1.125] font-sans">

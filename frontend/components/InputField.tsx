@@ -1,7 +1,7 @@
 "use client"
 import { useChatsContext } from '@/context/chatsContext'
 import { useSourcesContext } from '@/context/SourceContext'
-import { ArrowRight, Globe, X, ChevronUp, Plus, Cable, Check, Info } from 'lucide-react'
+import { ArrowRight, Globe, X, ChevronUp, Plus, Cable, Check, Info, Brain } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from './ui/dropdown-menu'
@@ -12,7 +12,7 @@ import { modelPicture } from './Modelsidebar'
 import { ModelsDropdownContent } from './model-component'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { AvailableModels, McpTool, ThinkingEffort } from '@/hooks/useChats'
-
+import {MCP} from "@lobehub/icons"
 
 interface SelectedModelObj {
   company: string;
@@ -20,10 +20,22 @@ interface SelectedModelObj {
 }
 
 const InputField = () => {
-    const { doChat, input, setInput ,webSearchEnabled,setWebSearchEnabled ,mcpSelected,setMcpSelected} = useChatsContext();
+    const {
+        doChat,
+        input,
+        setInput,
+        webSearchEnabled,
+        setWebSearchEnabled,
+        mcpSelected,
+        setMcpSelected,
+        effort,
+        setEffort,
+        thinkingSummary,
+        setThinkingSummary
+    } = useChatsContext();    
+
     const { selectedSources, toggleSource } = useSourcesContext() 
-    const [effort, setEffort] = useState<ThinkingEffort>("low");
-    const [thinking, setThinking] = useState(false);      
+              
     // console.log(mcpSelected);
     
     const [selectedModel, setSelectedModel] = useState<SelectedModelObj>(() => {
@@ -58,7 +70,7 @@ const InputField = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        doChat(id,webSearchEnabled,thinking,effort,selectedModel.modelName,mcpSelected);
+        doChat(id,webSearchEnabled,thinkingSummary,effort,selectedModel.modelName,mcpSelected);
     }
 
     // localstorage model
@@ -104,6 +116,7 @@ const InputField = () => {
                                                 {webSearchEnabled && (
                                                     <Globe size={18} className="text-neutral-500 dark:text-neutral-400 shrink-0" />
                                                 )}
+                                                {mcpSelected.length > 0 && <MCP/>}  
                                             </button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent className='p-2 w-[180px] max-w-[90vw]'>
@@ -138,7 +151,7 @@ const InputField = () => {
                                                                 />
                                                             </DropdownMenuItem>
 
-                                                            {/* <DropdownMenuItem
+                                                            {/* {<DropdownMenuItem
                                                                 onSelect={(e) => e.preventDefault()}
                                                                 className='flex items-center justify-between gap-x-4 cursor-pointer'
                                                             >
@@ -147,7 +160,7 @@ const InputField = () => {
                                                                 checked={mcpSelected.includes("tldraw")}
                                                                 onCheckedChange={(checked) => handleMcpTools("tldraw",checked)}
                                                                 />
-                                                            </DropdownMenuItem> */}
+                                                            </DropdownMenuItem>} */}
                                                     </DropdownMenuSubContent>
                                                 </DropdownMenuSub>
                                             </DropdownMenuGroup>
@@ -193,6 +206,7 @@ const InputField = () => {
                                                     className="cursor-pointer text-sm bg-card hover:bg-transparent text-black dark:text-white rounded-sm gap-x-1">
                                                     <span className='text-muted-foreground'>{effort}</span>
                                                     <ChevronUp size={20} className="shrink-0" />
+                                                    {thinkingSummary === "detailed" && <Brain/>}
                                                 </Button>
                                             </DropdownMenuTrigger>
 
@@ -253,8 +267,8 @@ const InputField = () => {
                                                         <span className="text-xs text-neutral-500">Can think for more complex tasks</span>
                                                     </div>
                                                     <Switch
-                                                        checked={thinking}
-                                                        onCheckedChange={setThinking}
+                                                        checked={thinkingSummary === "detailed"}
+                                                        onCheckedChange={(checked) => setThinkingSummary(checked ? "detailed" : "concise")}
                                                         className="data-[state=checked]"
                                                     />
                                                 </div>
