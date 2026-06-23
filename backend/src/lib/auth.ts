@@ -128,6 +128,6 @@ export const auth = betterAuth({
         "http://api:4000",
         // "http://187.127.156.129:3000",
         // "http://187.127.156.129:4000",
-        "https://notesman.in"
+        "http://notesman.in"
     ],
 });

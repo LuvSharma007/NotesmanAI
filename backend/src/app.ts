@@ -8,8 +8,8 @@ const app = express();
 console.log(process.env.NODE_ENV);
 
 const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? ["https://notesman.in"]
-    : ["http://localhost:3000" ,"http://frontend:3000","http://187.127.156.129:3000"]
+    ? ["http://notesman.in"]
+    : ["http://localhost:3000" ,"http://frontend:3000","http://187.127.156.129:3000" ,]
 
 app.use(
     cors({

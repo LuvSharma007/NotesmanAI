@@ -55,7 +55,7 @@ export function LoginForm({
     try {
       await authClient.signIn.social({
         provider:'google',
-        callbackURL:"https://notesman.in/chat"
+        callbackURL:"http://notesman.in/chat"
       })
       
     } catch (error) {

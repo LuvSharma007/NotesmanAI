@@ -62,6 +62,7 @@ services:
     - "4000:4000"
     networks:
     - notesmanAI-network
+    - shared-network
     restart: unless-stopped
     environment:
     - REDIS_HOST=redis-stack
@@ -188,3 +189,5 @@ volumes:
 networks:
   notesmanAI-network:
     driver: bridge
+  shared-network:
+    external: true

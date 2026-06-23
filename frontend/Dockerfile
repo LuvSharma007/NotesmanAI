@@ -22,7 +22,7 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED=1
-ARG INTERNAL_BACKEND_URL=https://notesman.in
+ARG INTERNAL_BACKEND_URL=http://notesman.in
 ENV INTERNAL_BACKEND_URL=$INTERNAL_BACKEND_URL
 
 ARG NEXT_PUBLIC_APP_ENV=production
