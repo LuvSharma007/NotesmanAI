@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     removeConsole:false,
   },
   async rewrites() {
-    const urlCompitable = process.env.INTERNAL_BACKEND_URL || "http://notesman.in"
+    const urlCompitable = process.env.INTERNAL_BACKEND_URL || "https://notesman.in"
 
     return [
       {
