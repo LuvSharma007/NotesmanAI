@@ -167,7 +167,7 @@ services:
     <<: *default-logging
     build: ./backend
     command: npm run worker:deleteChat
-    container_name: -worker
+    container_name: delete-chat-worker
     env_file: ./backend/.env
     depends_on:
     - api
