@@ -42,7 +42,7 @@ const InputField = () => {
         const saved = localStorage.getItem("selectedModel");
         return saved
             ? JSON.parse(saved)
-            : { company: "OpenAI", modelName: "gpt-4.1-mini" };
+            : { company: "OpenAI", modelName: "gpt-5.4-mini" };
     });
     // console.log("selectedModel",selectedModel);
     
