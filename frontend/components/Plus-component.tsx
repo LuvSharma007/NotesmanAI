@@ -1,13 +1,14 @@
-import React from 'react'
-import { Button } from './ui/button'
+// 'use client'
 
-const PlusComponent = () => {
-  return (
-    <div className='flex flex-col gap-x-5'>
-        <Button>Web Search</Button>
-        <Button>Connectors</Button>
-    </div>
-  )
-}
+// import React from 'react'
 
-export default PlusComponent
+
+// const PlusComponent = () => {
+//   return (
+//   <div>
+
+//   </div>
+//   )
+// }
+
+// export default PlusComponent

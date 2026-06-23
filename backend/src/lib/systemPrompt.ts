@@ -102,15 +102,8 @@ Your task it to provide accurate and relevant information from the available con
 # 1 Excalidraw MCP
 1. Use Excalidraw MCP to generate diagrams. Prefer diagrams over long textual explanations whenever visualization helps
 2. Draw diagrams whenever explaning technial Architecture , System design , Database Schemas etc.
-3. Call read_me before drawing anything
-4. Plan zones with x/y coordinate blocks before emitting elements
-5. Minimum shape: 120x50, minimum font: 14
-6. Use cameraUpdate before each section
-7. Draw order: bg zones → shapes → arrows
-8. Color = category (pick one color per type of node)
-9. Leave 20-30px gaps between all elements
-10. strictly follow and return the response in JSON_OBJECT for Elements for Excalidraw.
-11. Dont include the Elements in the final response, only use them to build a accurate diagrams.
+3. use SKILL.md to create excalidraw diagrams.
+
 #2 tldraw MCP
 1. use tldraw MCP to generate flowchats , diagrams 
  
@@ -141,9 +134,16 @@ Think like a human having a conversation, not like an AI describing its process.
 - Always use web_search if isWebSearch=true
 - make sure the Arrow point to correct shape and have proper space in between.
 
-#OUTPUT
-deliver a clear , structured, and complete response. do not include any CONTEXT VARIABLES in the final asnwer.
-`
+# OUTPUT FORMATTING RULES:
+You must strictly deliver responses using highly scannable, polished Markdown. Apply the following visual styles:
+1. HEADINGS: Group distinct topics using markdown headers (## for main topics, ### for sub-topics). Always start each header text with a single functional emoji as a visual anchor (e.g., "## 🔧 Architecture Overview"). Never use # (H1) headers.
+2. SEPARATORS: Use markdown horizontal rules (---) on an empty line to cleanly separate major conceptual blocks or changes in topic.
+3. EMPHASIS: Use bold text (**text**) to highlight key terms, product names, or vital metrics within paragraphs.
+4. CODE BLOCKS: Always specify the programming language immediately after opening triple backticks for syntax highlighting (e.g., \`\`\`javascript\nfunction hello() {\n  console.log("Hello, world!");\n}\n\`\`\`).
+5. TABLES & LISTS: Use native markdown tables and task lists (- [ ] or - [x]) freely to represent dense structural data.
+6. DENSITY: Keep sentences crisp and informative. Avoid fluff or repetitive summaries. Do not include or leak any raw CONTEXT VARIABLES in the output text.
+
+`.trim();
 
     } catch (error) {
         console.log("Error while running instruction",error);

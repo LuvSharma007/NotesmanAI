@@ -2,21 +2,17 @@ import { Request, Response } from "express";
 import { getContext } from "../agents/tools/getContextTool.js";
 import { messageQueue } from "../bullmq/queues/message.queue.js";
 import { getConversation } from "../agents/tools/getConversation.js";
-import { Agent, AgentInputItem, MCPServerStreamableHttp, run } from "@openai/agents";
+import { Agent, AgentInputItem, FunctionTool, MCPServerStreamableHttp, run } from "@openai/agents";
 import conversationModel from "../models/conversation.model.js";
 import mongoose from "mongoose";
 import usageModel from "../models/usage.model.js";
 import { deleteChatQueue } from "../bullmq/queues/deleteChat.queue.js";
 import buildInstructions from "../lib/systemPrompt.js";
-import fs from 'fs'
 import { ObjectId } from "mongodb";
 import { webSearch } from "../agents/tools/webSearchTool.js";
-import path from "path";
-import { fileURLToPath } from "url"; // <-- Add this
-
-// Re-create __dirname for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {z} from "zod"
+import { excalidrawMCP } from "../agents/MCP/excalidrawMcp.js";
+import { tldrawMCP } from "../agents/MCP/tldraw.Mcp.js";
 
 export interface SourceItem {
   sourceId: string;
@@ -27,23 +23,50 @@ export interface SourcePayload {
   sources: SourceItem[];
 }
 
+export type toolsStrucure = (FunctionTool<unknown, z.ZodObject<{
+    query: z.ZodString;
+}, z.core.$strip>, string> | {
+    type: string;
+    name: string;
+    environment: {
+        type: string;
+        skills: {
+            name: string;
+            description: string;
+            path: string;
+        }[];
+      }
+  }
+)[];
+
+export type McpTool = "tldraw" | "excalidraw";
+type ThinkingEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
+type ThinkingSummary = "auto" | "concise" | "detailed" | null | undefined;
+
 interface RequestBody {
   query: string;
   sourceIds: SourcePayload;
-  isWebSearch:boolean
+  isWebSearch:boolean;
+  thinkingSummary:ThinkingSummary;
+  effort:ThinkingEffort;
+  selectedModel:"gpt-5.5" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.4-nano" | "gpt-4.1-mini" | "gpt-4o-mini";
+  mcpSelected:McpTool[]
 }
 
 export const chat = async (req: Request, res: Response) => {
-  // let excalidrawMcp: MCPServerStreamableHttp | null = null;
-  let tldrawMcp:MCPServerStreamableHttp | null = null;
+  
   try {
     const userId = (req as any).user.id;
-    const { query, sourceIds , isWebSearch } = req.body as Partial<RequestBody>;
+    const { query, sourceIds , isWebSearch,effort,mcpSelected,selectedModel,thinkingSummary } = req.body as Partial<RequestBody>;
     const { conversationId } = req.params;
     const { isNewChat } = req.query;
     console.log("ConversationId:", conversationId);
     console.log("SourceIds:", sourceIds);
     console.log("isWebSearch",isWebSearch);
+    console.log("effort",effort);
+    console.log("thinking",thinkingSummary);    
+    console.log("MCP-selected",mcpSelected);
+    console.log("selected-Model",selectedModel);
     console.log("Query:", query);
     console.log("isNewChat:", isNewChat);
 
@@ -77,30 +100,14 @@ export const chat = async (req: Request, res: Response) => {
         }))
       });
       finalConversationId = newConversation._id;
-    }
-
-    // set web search
-    console.log("Path:",path.join(__dirname, "..", "..", "..", "excalidraw-diagram-skill"));
+    }  
     
-    const tools = [getContext,        
-        {
-          type: "shell",
-          name: "shell",
-          environment: {
-            type: "local",
-            skills: [
-              {
-                name: "excalidraw-diagrams",
-                description: "Generate beautiful, structured architecture diagrams, flowcharts, and mind maps in Excalidraw JSON format.",
-                path: path.join(__dirname, "..", "..", "..", "excalidraw-diagram-skill"),
-              },
-            ],
-          },
-        },]
+    const tools:toolsStrucure = []
+
     if(isWebSearch){
       tools.push(webSearch)
     }
-    console.log("Tools",tools);
+    
     
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Access-Control-Expose-Headers", "X-Conversation-Id");
@@ -109,13 +116,13 @@ export const chat = async (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-cache, no-transform");
     res.setHeader("X-Accel-Buffering", "no");
     res.setHeader("Connection", "keep-alive");
-
+    
     res.flushHeaders?.();
-
+    
     console.log("Agent started to call");
     const messages = await getConversation(userId, finalConversationId)
     console.log("messages in controller:", messages);
-
+    
     const historyMessages: AgentInputItem[] = (messages ?? []).map(msg => {
       if (msg.role === 'assistant') {
         return {
@@ -135,46 +142,41 @@ export const chat = async (req: Request, res: Response) => {
       role: 'user',
       content: query
     });
+    
 
-    // MCP
-      // excalidrawMcp = new MCPServerStreamableHttp({
-      //   url: "https://excalidraw-mcp-igrx.vercel.app/mcp",
-      //   name: "Excalidraw MCP Server",
-      // });
-
-      tldrawMcp = new MCPServerStreamableHttp({
-        url:"https://tldraw-mcp-app.tldraw.workers.dev/mcp",
-        name:"tldraw MCP Server"
-      })
-      
-      try {
-        // await excalidrawMcp.connect();
-        await tldrawMcp.connect();
-        
-        // console.log(await excalidrawMcp.listTools());
-        console.log(await tldrawMcp.listTools());        
-      } catch (error) {
-        throw new Error("Someting went wrong while connecting")
+    let mcpSelectedArray: MCPServerStreamableHttp[] = []
+    let eventName
+    try {
+      if(mcpSelected?.includes("excalidraw")){
+        eventName = "excalidraw"
+        const result = await excalidrawMCP(mcpSelected)
+        tools.push(result.excalidrawSkills)
+        mcpSelectedArray = result.mcpSelectedArray
+      }else if(mcpSelected?.includes("tldraw")){
+        eventName = "tldraw"
+        const result = await tldrawMCP(mcpSelected)        
+        mcpSelectedArray = result.mcpSelectedArray
       }
-       
+    } catch (error) {
+      console.log("Something went wrong while calling MCP");
+      throw new Error("MCP Error:")
+    }
+    // console.log("Tools",tools);
 
     const notesmanAgent = new Agent({
       name: "NotesmanAI",
       instructions: buildInstructions,
-      model: "gpt-5-nano-2025-08-07",
+      model: selectedModel,
       modelSettings: {
         reasoning: {
-          effort: "medium",
-          summary: "concise",
+          effort,
+          summary: thinkingSummary,
         },
         toolChoice: "auto",
         parallelToolCalls: true,
       },
-      tools: [getContext],
-      mcpServers: [
-        // excalidrawMcp,
-        tldrawMcp
-      ]
+      tools:[getContext],
+      mcpServers:mcpSelectedArray
     })
 
     const result = await run(
@@ -230,6 +232,7 @@ export const chat = async (req: Request, res: Response) => {
             continue;
           }
           try {
+            if(eventName === "excalidraw"){
             const args = JSON.parse(data.event.arguments);
             if(args && args.elements){
               if(typeof args.elements === "string"){
@@ -240,16 +243,38 @@ export const chat = async (req: Request, res: Response) => {
             }else{
               console.log("Arguments object was Empty");
               continue;
-            }
+            }}else if (eventName === "tldraw") {
+              const args = JSON.parse(data.event.arguments)
+              if (args && args.code) {
+                const shapesMatch = args.code.match(/const shapes = (\[[\s\S]*?\]);/);
+                const arrowsMatch = args.code.match(/const arrows = (\[[\s\S]*?\]);/);
+
+                let shapesArray = [];
+                let arrowsArray = [];
+
+                if (shapesMatch) {                  
+                  const validShapesJSON = shapesMatch[1].replace(/'/g, '"');
+                  shapesArray = JSON.parse(validShapesJSON);
+                }
+
+                if (arrowsMatch) {
+                  const validArrowsJSON = arrowsMatch[1].replace(/'/g, '"');
+                  arrowsArray = JSON.parse(validArrowsJSON);
+                }
+
+                
+                elements = [...shapesArray, ...arrowsArray];
+                console.log("Elements",elements);
+            }}
             res.write(`event: message\ndata: ${JSON.stringify({
               json:{
-                type: "diagram",
+                type: eventName,
                 id: "0",
                 elements,
               }
             })}\n\n`)
           } catch (error) {
-            console.log("Failed parsing Excalidraw payload",error);
+            console.log(`Failed parsing ${data.event.type}  payload`,error);
           }
           continue;
         }
@@ -275,7 +300,7 @@ export const chat = async (req: Request, res: Response) => {
     // log the events in file
     
 
-    // const logFilePath = './stream_debug.json';
+    // const logFilePath = './excalidraw.json';
 
     // fs.writeFileSync(logFilePath, '[\n');
     // let isFirstEntry = true;
@@ -306,11 +331,32 @@ export const chat = async (req: Request, res: Response) => {
 
     // fs.appendFileSync(logFilePath, '\n]');
 
-
     console.log("Response:", result.rawResponses);
     await result.completed;
     // const usage = result.state.usage
     // console.log("usage:", usage);
+
+    if (mcpSelectedArray && mcpSelectedArray.length > 0) {
+    console.log("Cleaning up active MCP server connections...");
+    
+    // Use Promise.all to close all servers simultaneously and efficiently
+    await Promise.all(
+        mcpSelectedArray.map(async (server) => {
+            try {
+                // Check if the close method exists before executing it
+                if (typeof server.close === 'function') {
+                    await server.close();
+                    console.log(`Successfully disconnected from MCP Server`);
+                }
+            } catch (closeError) {
+                console.error("Failed to close an MCP server connection cleanly:", closeError);
+            }
+        })
+    );
+    
+    // Clear out the array references to free system memory leaks
+    mcpSelectedArray = []; 
+}
 
 
     // end the HTTP stream
@@ -365,9 +411,6 @@ export const chat = async (req: Request, res: Response) => {
     } else {
       res.end();
     }
-  }finally{
-    // await excalidrawMcp?.close()
-    await tldrawMcp?.close()
   }
 };
 

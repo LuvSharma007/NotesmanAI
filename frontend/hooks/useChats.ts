@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Source } from './useSources';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { ExcalidrawElementSkeleton } from '@excalidraw/excalidraw/data/transform';
+import { aiModels, ModelsList } from '@/components/Modelslist';
 
 interface Message {
     _id: string;
@@ -23,26 +24,40 @@ interface MessageResponse {
     diagramData?: ExcalidrawElementSkeleton[] | null;
 }
 
+export type ThinkingEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
+export type ThinkingSummary = "auto" | "concise" | "detailed" | null | undefined;
+export type AvailableModels = typeof aiModels[number]["models"][number]["name"];
+export type McpTool = "tldraw" | "excalidraw";
+
 export const useChats = () => {
 
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [messages, setMessages] = useState<Message[]>([])
     const [isThinking,setIsThinking] = useState(false);
-
+    const [mcpSelected , setMcpSelected] = useState<McpTool[]>([])
+    const [webSearchEnabled, setWebSearchEnabled] = useState<boolean>(false);  
     const [activeChat, setActiveChat] = useState<string | null>(null)
+    const [thinkingSummary, setThinkingSummary] = useState<ThinkingSummary>("concise");
+    const [effort, setEffort] = useState<ThinkingEffort>("low");
     const params = useParams();
     const currentActiveId = params.id
     // console.log("currentActiveId:",currentActiveId);
-
-
     const { selectedSources, setSelectedSources } = useSourcesContext()
     const router = useRouter()
     const queryClient = useQueryClient();
 
-    const doChat = async (conversationID: string,isWebSearch:boolean) => {
 
-        const trimmedInput = input.trim();
+    const doChat = async (
+        conversationID: string,
+        isWebSearch:boolean,
+        thinkingSummary:ThinkingSummary,
+        effort:ThinkingEffort="low",
+        selectedModel:AvailableModels,
+        mcpSelected:McpTool[]
+    ) => {
+
+    const trimmedInput = input.trim();
     if (!trimmedInput) {
         return;
     }
@@ -86,7 +101,11 @@ export const useChats = () => {
                 body: JSON.stringify({
                     query: trimmedInput,
                     sourceIds: sourceIdsPayload,
-                    isWebSearch
+                    isWebSearch,
+                    thinkingSummary,
+                    effort,
+                    selectedModel,
+                    mcpSelected
                 })
             })
 
@@ -94,6 +113,8 @@ export const useChats = () => {
                 console.log("No response body received from the stream");
                 return;
             }
+            console.log("resquest to backend",res);
+            
 
             const convId = res.headers.get('X-Conversation-Id')
             // console.log("ConvId:", convId);
@@ -189,9 +210,9 @@ export const useChats = () => {
                                         );
                                         break;
                                     }
-                                    case "diagram": {
+                                    case "excalidraw": {
                                             setIsThinking(false)
-                                            console.log("Raw streaming message Elements:", message.elements);
+                                            // console.log("Raw streaming message Elements:", message.elements);
                                         setMessages((prev) =>
                                             prev.map((msg) => {
                                                 if (msg._id !== assistantMsgId){
@@ -354,6 +375,14 @@ export const useChats = () => {
         deleteChat,
         renameChat,
         shareChat,
-        isThinking
+        isThinking,
+        webSearchEnabled,
+        setWebSearchEnabled,
+        mcpSelected,
+        setMcpSelected,
+        thinkingSummary,
+        setThinkingSummary,
+        effort,
+        setEffort        
     }
 }
