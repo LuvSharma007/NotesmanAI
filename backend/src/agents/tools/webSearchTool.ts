@@ -7,7 +7,7 @@ export const webSearch = tool({
     description: "Use this tool to returns the latest information from the web about the user query.",
     parameters: z.object({ query: z.string() }),
     async execute({ query }) {
-        console.log("web search tool called");
+        console.log("-------------------------------------------------------------web search tool called");
         console.log("query:", query);
 
         if (!query) {

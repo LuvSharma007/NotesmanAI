@@ -121,45 +121,45 @@ services:
     - api
     - redis-stack
 
-  save-message-worker:
-    <<: *default-logging
-    build: 
-      context: ./backend
-      target: development
-    command: npm run worker:saveMessage
-    container_name: save-message-worker
-    env_file: ./backend/.env
-    depends_on:
-    - api
-    - redis-stack
-    networks:
-    - notesmanAI-network
-    restart: always
-    environment:
-    - REDIS_HOST=redis-stack
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+  # save-message-worker:
+  #   <<: *default-logging
+  #   build: 
+  #     context: ./backend
+  #     target: development
+  #   command: npm run worker:saveMessage
+  #   container_name: save-message-worker
+  #   env_file: ./backend/.env
+  #   depends_on:
+  #   - api
+  #   - redis-stack
+  #   networks:
+  #   - notesmanAI-network
+  #   restart: always
+  #   environment:
+  #   - REDIS_HOST=redis-stack
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
 
-  get-message-worker:
-    <<: *default-logging
-    build: 
-      context: ./backend
-      target: development
-    command: npm run worker:getMessage
-    container_name: get-message-worker
-    env_file: ./backend/.env
-    networks:
-    - notesmanAI-network
-    restart: always
-    environment:
-    - REDIS_HOST=redis-stack
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    depends_on:
-    - api
-    - redis-stack
+  # get-message-worker:
+  #   <<: *default-logging
+  #   build: 
+  #     context: ./backend
+  #     target: development
+  #   command: npm run worker:getMessage
+  #   container_name: get-message-worker
+  #   env_file: ./backend/.env
+  #   networks:
+  #   - notesmanAI-network
+  #   restart: always
+  #   environment:
+  #   - REDIS_HOST=redis-stack
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #   - api
+  #   - redis-stack
 
   url-worker:
     <<: *default-logging
@@ -185,28 +185,28 @@ services:
     - api
     - redis-stack
 
-  delete-chat-worker:
-    <<: *default-logging
-    build: 
-      context: ./backend
-      target: development
-    command: npm run worker:deleteChat
-    container_name: delete-chat-worker
-    env_file: ./backend/.env
-    networks:
-    - notesmanAI-network
-    dns:                  
-      - 8.8.8.8
-      - 1.1.1.1
-    restart: always
-    environment:
-    - REDIS_HOST=redis-stack
-    volumes:
-    - ./backend:/app 
-    - /app/node_modules
-    depends_on:
-    - api
-    - redis-stack
+  # delete-chat-worker:
+  #   <<: *default-logging
+  #   build: 
+  #     context: ./backend
+  #     target: development
+  #   command: npm run worker:deleteChat
+  #   container_name: delete-chat-worker
+  #   env_file: ./backend/.env
+  #   networks:
+  #   - notesmanAI-network
+  #   dns:                  
+  #     - 8.8.8.8
+  #     - 1.1.1.1
+  #   restart: always
+  #   environment:
+  #   - REDIS_HOST=redis-stack
+  #   volumes:
+  #   - ./backend:/app 
+  #   - /app/node_modules
+  #   depends_on:
+  #   - api
+  #   - redis-stack
 
 
   frontend:

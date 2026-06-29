@@ -13,6 +13,7 @@ import { webSearch } from "../agents/tools/webSearchTool.js";
 import {z} from "zod"
 import { excalidrawMCP } from "../agents/MCP/excalidrawMcp.js";
 import { tldrawMCP } from "../agents/MCP/tldraw.Mcp.js";
+import messageModel from "../models/messages.model.js";
 
 export interface SourceItem {
   sourceId: string;
@@ -102,12 +103,11 @@ export const chat = async (req: Request, res: Response) => {
       finalConversationId = newConversation._id;
     }  
     
-    const tools:toolsStrucure = []
+    const tools = []
 
-    if(isWebSearch){
-      tools.push(webSearch)
-    }
-    
+    // if(isWebSearch){
+    //   tools.push(webSearch)
+    // }    
     
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Access-Control-Expose-Headers", "X-Conversation-Id");
@@ -161,7 +161,7 @@ export const chat = async (req: Request, res: Response) => {
       console.log("Something went wrong while calling MCP");
       throw new Error("MCP Error:")
     }
-    // console.log("Tools",tools);
+    console.log("Tools",tools);
 
     const notesmanAgent = new Agent({
       name: "NotesmanAI",
@@ -175,7 +175,7 @@ export const chat = async (req: Request, res: Response) => {
         toolChoice: "auto",
         parallelToolCalls: true,
       },
-      tools:[getContext],
+      tools:[getContext,webSearch],
       mcpServers:mcpSelectedArray
     })
 
@@ -390,20 +390,57 @@ export const chat = async (req: Request, res: Response) => {
 
     console.log("user usage saved:", userUsageSaved);
 
+    // saving message in DB
+
+    try {
+      if (!conversationId || !userId || !query || !aiMessage) {
+        throw new Error("Context is missing")
+      }
+      const messageSaved = await messageModel.insertMany(
+        [
+          {
+            conversationId:finalConversationId,
+            userId,
+            role: "user",
+            content: query
+          },
+          {
+            conversationId:finalConversationId,
+            userId,
+            role: 'assistant',
+            content: aiMessage,
+            reasoning: reasoning,
+            diagramData: elements
+          }
+        ],)
+      if (!messageSaved) {
+        console.error("Error saving message")
+
+        return res.status(500).json({
+          success: false,
+          message: "Error saving message"
+        })
+      }
+      console.log("message saved successfully");
+    } catch (error) {
+      console.error("Error saving message:", error);
+      throw new Error("Error , Failed to save message")
+    }
+
     // Starting worker
-    console.log("Adding job to processing queue");
-
-    const job = await messageQueue.add("save-message-queue", {
-      userId,
-      conversationId: finalConversationId,
-      userMessage: query,
-      aiMessage,
-      reasoning,
-      diagramData:elements
-    }, { removeOnComplete: true, removeOnFail: true })
-
-    console.log(`Job added to the queue ${job}`);
-
+    // console.log("Adding job to processing queue");
+    
+    // const job = await messageQueue.add("save-message-queue", {
+      //   userId,
+      //   conversationId: finalConversationId,
+    //   userMessage: query,
+    //   aiMessage,
+    //   reasoning,
+    //   diagramData:elements
+    // }, { removeOnComplete: true, removeOnFail: true })
+    
+    // console.log(`Job added to the queue ${job}`);
+    
   } catch (error) {
     console.error("Error in chat controller", error);
     if (!res.headersSent) {
@@ -441,12 +478,16 @@ export const deleteChat = async (req: Request, res: Response) => {
       })
     }
 
-    const job = await deleteChatQueue.add("delete-chat-queue", {
-      userId,
-      chatId
-    }, { removeOnComplete: true, removeOnFail: true })
+    // const job = await deleteChatQueue.add("delete-chat-queue", {
+    //   userId,
+    //   chatId
+    // }, { removeOnComplete: true, removeOnFail: true })
 
-    console.log(`Job added to the queue ${job}`);
+    // console.log(`Job added to the queue ${job}`);
+
+    await messageModel.deleteMany({conversationId:chatId,userId})
+
+    await conversationModel.deleteOne({_id:chatId})
 
     return res.status(200).json({
       success: true,
