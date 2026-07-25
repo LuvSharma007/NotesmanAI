@@ -27,7 +27,7 @@ services:
       - notesmanAI-network
 
   nginx:
-    image: nginx:1.31.0
+    image: nginx:alpine
     container_name: nginx
     ports:
       - "80:80"
@@ -39,6 +39,7 @@ services:
     depends_on:
       - redis-stack
       - frontend
+      - api
     networks:
       - notesmanAI-network
 
@@ -58,8 +59,8 @@ services:
     env_file: ./backend/.env
     depends_on:
     - redis-stack
-    ports:
-    - "4000:4000"
+    # ports:
+    # - "4000:4000"
     networks:
     - notesmanAI-network
     - shared-network
@@ -191,8 +192,8 @@ services:
         - NEXT_PUBLIC_APP_ENV=production        
         - INTERNAL_BACKEND_URL=http://api:4000 
     env_file: ./frontend/.env
-    ports:
-    - "3000:3000"
+    # ports:
+    # - "3000:3000"
     networks:
     - notesmanAI-network
     depends_on:
