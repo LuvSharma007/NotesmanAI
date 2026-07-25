@@ -50,7 +50,7 @@ services:
     volumes:
     - ./backend:/app
     - /app/node_modules
-    - temp_files:/app/public/temp
+    - ./backend/public/temp:/app/public/temp
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -70,7 +70,7 @@ services:
     volumes:
     - ./backend:/app
     - /app/node_modules
-    - temp_files:/app/public/temp
+    - ./backend/public/temp:/app/public/temp
     depends_on:
     - api
     - redis-stack
@@ -171,6 +171,7 @@ services:
     env_file: ./backend/.env
     networks:
     - notesmanAI-network
+    - shared-network
     dns:                 
       - 8.8.8.8
       - 1.1.1.1
@@ -180,7 +181,7 @@ services:
     volumes:
     - ./backend:/app
     - /app/node_modules
-    - temp_files:/app/public/temp
+    - ./backend/public/temp:/app/public/temp
     depends_on:
     - api
     - redis-stack
@@ -235,7 +236,6 @@ services:
     - redis-stack
       
 volumes:
-  temp_files:
   redis_data:
   # frontend_node_modules:
 

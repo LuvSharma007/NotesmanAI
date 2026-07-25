@@ -107,7 +107,7 @@ export const useSource = () => {
 
     // upload URL
 
-    const uploadUrl = async (url: string) => {
+    const uploadUrl = async (urls: string[]) => {
         setLoading(true)
         try {
             const res = await fetch(`/api/v1/url/uploadUrl`, {
@@ -116,7 +116,7 @@ export const useSource = () => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ url })
+                body: JSON.stringify(urls)
             })
 
             const data = await res.json()

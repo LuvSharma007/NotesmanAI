@@ -36,6 +36,7 @@
     "express": "^5.1.0",
     "file-type": "^21.3.0",
     "ioredis": "^5.8.1",
+    "markitdown-js": "^0.0.14",
     "mongodb": "^6.21.0",
     "mongoose": "^8.19.0",
     "multer": "^2.0.2",

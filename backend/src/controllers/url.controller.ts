@@ -15,48 +15,50 @@ export const scrapeUrl = async (req: Request, res: Response) => {
     // push data into queue
 
     try {
-        const { url } = req.body
+        const urls:string[]  = req.body
         const userId = (req as any).user.id;
 
-        if (!userId || !url) {
+        if (!userId || urls.length === 0) {
             return res.status(400).json({
                 success: false,
                 message: "Not Authorized or Url is required"
             })
         }
 
-        console.log("User URL:", url);
+        console.log("User URLs:", urls);
         console.log("User Id:", userId);
 
         // validate URL 
         // A HEAD request is more efficient because it asks the server for the response headers only, without downloading the entire body content. A successful response (status code in the 2xx range) confirms the URL exists. 
 
-        try {
-            const response = await axios.head(url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-                },
-                timeout:5000
-            });
-            if (response.status >= 200 && response.status < 300) {
-                console.log("response checked");
-            }
-        } catch (error) {
-            console.log(error);
-            return res.status(400).json({
-                success: false,
-                message: "Invalid URL"
-            })
-        }
+        // try {
+        //     const response = await axios.head(url, {
+        //         headers: {
+        //             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+        //         },
+        //         timeout:5000
+        //     });
+        //     if (response.status >= 200 && response.status < 300) {
+        //         console.log("response checked");
+        //     }
+        // } catch (error) {
+        //     console.log(error);
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: "Invalid URL"
+        //     })
+        // }
 
-        // send to frontend
-        const parsedUrl = new URL(url)
-        const fileName = parsedUrl.hostname.replace(/^www\./, '')
-        console.log("Filename:", fileName);
+        // for send to frontend ease of read
+        // const parsedUrl = new URL(url)
+        // const fileName = parsedUrl.hostname.replace(/^www\./, '')
+        // console.log("Filename:", fileName);
 
         // validate sources 
-        // find the user exists in customUserModel
-        // if exists then (matlab qdrant collection hoga)
+        // find the user exiconst parsedUrl = new URL(url)
+        // const fileName = parsedUrl.hostname.replace(/^www\./, '')
+        // console.log("Filename:", fileName);sts in customUserModel
+        // if exists then (means qdrant collection exists)
         // if not exists then create it
         try {
             const customUserExists = await customUserModel.findOne({ userId })
@@ -96,11 +98,22 @@ export const scrapeUrl = async (req: Request, res: Response) => {
         }
 
         // save the data into mongoDB
+                
+        const linkAndNameArray = urls.map((url:string)=>{
+            const absoluteUrl = url.startsWith('http') ? url : `https://${url}`;
+            
+            const parsedUrl = new URL(absoluteUrl);
+            const hostname = parsedUrl.hostname.replace(/^www\./, '');
+
+            return {
+                link: url,
+                name: hostname
+            };
+        })
 
         const dataSaved = await urlModel.create({
             userId,
-            url,
-            name: fileName
+            urls:linkAndNameArray
         })
         if (!dataSaved) {
             return res.status(500).json({
@@ -110,25 +123,20 @@ export const scrapeUrl = async (req: Request, res: Response) => {
         }
 
         // push the data into the queue
-
+        
         const job = await urlQueue.add("url-queue", {
             urlId: dataSaved._id,
-            url,
+            urls,
             userId,
             qdrantCollection: `user_${userId}`,
-            name: fileName
+            name: `userUrlsFile_${userId}` 
         }, { removeOnComplete: true, removeOnFail: true })
 
         console.log(`Job added to the queue${job}`);
 
         return res.status(200).json({
             success: true,
-            message: "Extracting content through URL",
-            url: {
-                id: dataSaved._id.toString(),
-                name: fileName,
-                createdAt:dataSaved.createdAt
-            }
+            message: "Processing URLs",
         })
     } catch (error) {
         console.log("Error extracting URL:", error);

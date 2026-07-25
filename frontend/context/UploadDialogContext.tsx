@@ -32,7 +32,10 @@ export function UploadDialogProvider({ children }: { children: React.ReactNode }
                 open={open}
                 onOpenChange={setOpen}
                 onFileSelect={handleFileSelect}
-                onUrlAdd={(url) => uploadUrl(url)}
+                onUrlAdd={(urls) => {
+                    uploadUrl(urls) 
+                    setOpen(false)}
+                }
             />
             {children}
         </UploadDialogContext.Provider>

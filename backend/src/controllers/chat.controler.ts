@@ -1,12 +1,10 @@
 import { Request, Response } from "express";
 import { getContext } from "../agents/tools/getContextTool.js";
-import { messageQueue } from "../bullmq/queues/message.queue.js";
 import { getConversation } from "../agents/tools/getConversation.js";
 import { Agent, AgentInputItem, FunctionTool, MCPServerStreamableHttp, run } from "@openai/agents";
 import conversationModel from "../models/conversation.model.js";
 import mongoose from "mongoose";
 import usageModel from "../models/usage.model.js";
-import { deleteChatQueue } from "../bullmq/queues/deleteChat.queue.js";
 import buildInstructions from "../lib/systemPrompt.js";
 import { ObjectId } from "mongodb";
 import { webSearch } from "../agents/tools/webSearchTool.js";
@@ -402,7 +400,7 @@ export const chat = async (req: Request, res: Response) => {
             conversationId:finalConversationId,
             userId,
             role: "user",
-            content: query
+            content: query,
           },
           {
             conversationId:finalConversationId,
@@ -410,7 +408,7 @@ export const chat = async (req: Request, res: Response) => {
             role: 'assistant',
             content: aiMessage,
             reasoning: reasoning,
-            diagramData: elements
+            diagramData: elements,
           }
         ],)
       if (!messageSaved) {

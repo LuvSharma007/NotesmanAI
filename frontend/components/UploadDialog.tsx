@@ -3,12 +3,13 @@
 import React, { useRef, useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
 import { Upload } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface UploadDialogProps {
     open: boolean,
     onOpenChange: (open: boolean) => void
     onFileSelect?: (files: File[]) => void
-    onUrlAdd?:(url:string)=> void
+    onUrlAdd?:(url:string[])=> void
 }
 
 const UploadDialog = ({
@@ -19,7 +20,7 @@ const UploadDialog = ({
 }: UploadDialogProps) => {
 
     const [dragActive, setDragActive] = useState(false)
-    const [url, setUrl] = useState("");
+    const [urls, setUrls] = useState<string[]>([]);
     const inputRef = useRef<HTMLInputElement>(null)
 
     const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
@@ -51,11 +52,22 @@ const UploadDialog = ({
     }
 
     const handleAddUrl = () => {
-        if (url.trim()) {
-            onUrlAdd?.(url)
-            setUrl('')
-        }
+
+        // const validUrls = urls.filter(url=>url.length>0)
+        // if(validUrls.length === 0){
+        //     toast.error("No URLs provided");
+        //     return;
+        // }
+        // console.log(urls);
+        
+        // onUrlAdd?.(validUrls)
+        // setUrls([])
+        
+        toast.error("URL fecthing is under working");
+        
     }
+
+
     
     return (
         <>
@@ -103,23 +115,26 @@ const UploadDialog = ({
                         </button>
                     </div>
 
-                    <div className="mt-6 pt-6">
-                        <p className="text-sm font-medium text-foreground mb-3">Or Add URL</p>
+                    <div className="mt-1 pt-1">
+                        <p className="text-sm font-medium text-foreground mb-3">Or Add URLs - (For multiple URLs use comma)</p>
                         <div className="flex gap-2">
                             <input
                                 type="url"
-                                placeholder="Enter URL..."
-                                value={url}
-                                onChange={(e) => setUrl(e.target.value)}
+                                placeholder="https://example1.com , https://example2.com"
+                                value={urls}
+                                onChange={(e) => {
+                                    const urlArray = e.target.value.split(',').map(url => url.trim());
+                                    setUrls(urlArray)
+                                }}
                                 onKeyPress={(e) => e.key === 'Enter' && handleAddUrl()}
-                                className="flex-1 px-3 py-2 rounded-md border-2 bg-background text-foreground placeholder:text-muted-foreground text-sm outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors duration-200 hover:bg-stone-100 dark:hover:bg-stone-900"
+                                className="flex-1 px-3 py-5 rounded-md border-2 bg-background text-foreground placeholder:text-muted-foreground text-sm outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors duration-200 hover:bg-stone-100 dark:hover:bg-stone-900"
 
                             />
                             <button
                                 onClick={handleAddUrl}
                                 className="px-4 py-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm font-medium"
                             >
-                                Add URL
+                                Add URLs
                             </button>
                         </div>
                     </div>

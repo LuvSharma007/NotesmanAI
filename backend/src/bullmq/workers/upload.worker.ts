@@ -46,7 +46,7 @@ const worker = new Worker('file-processing-queue', async (job: Job) => {
         console.log(filePath);  //public/temp/BCA SEM-6 SYLLABUS .pdf
 
 
-        // convert the file and save in public/convertedFile
+        // convert the file and save in public/temp
 
         // const EncodedUrl = encodeURI(fileUrl)
         // console.log("EncodedUrl:",EncodedUrl);

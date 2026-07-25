@@ -1,8 +1,15 @@
 import mongoose, { Model, Schema } from "mongoose"
+import { isArray } from "util";
+import { lowercase } from "zod";
+
+interface IUrlItem {
+    link:string,
+    name:string
+}
 
 export interface IUrl extends Document{
     userId:mongoose.Types.ObjectId,
-    url:string,
+    urls:IUrlItem[],
     status:string,
     name:string,
     createdAt:string,
@@ -15,13 +22,18 @@ const urlSchema:Schema<IUrl> = new Schema({
         ref:'user',
         required:true
     },
-    url:{
-        type:String,
-        required:true
-    },
-    name:{
-        type:String,
-        required:true
+    urls: {
+        type: [{
+            link:{type:String,trim:true,lowercase:true,required:true},
+            name:{type:String,trim:true,required:true},
+        }],
+        required: [true, "You must provide at least one URL"],
+        validate: {
+            validator: function (v: any[]) {
+                return Array.isArray(v) && v.length > 0;
+            },
+            message: "You must provide at least one URL"
+        }
     },
     sourceType:{
         type:String,
